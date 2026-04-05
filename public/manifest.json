@@ -1,0 +1,32 @@
+{
+  "name": "Advy Health",
+  "short_name": "Advy Health",
+  "description": "The Gold Standard in Health Advocacy. Your private chronic illness companion.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "en",
+  "categories": ["health", "medical", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Log Symptoms",
+      "short_name": "Symptoms",
+      "description": "Quickly log today's symptoms",
+      "url": "/?tab=symptoms",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Diary",
+      "short_name": "Diary",
+      "description": "Open your private diary",
+      "url": "/?tab=diary",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
