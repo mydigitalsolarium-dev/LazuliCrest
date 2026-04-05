@@ -1,200 +1,283 @@
-import { useState, useEffect, useRef } from "react";
-import { todayStr } from "../utils";
+import { useState, useEffect } from "react";
+import { todayStr, fmtDate } from "../utils";
 
-// Brain regions with proper anatomical SVG paths
-const BRAIN_REGIONS = [
+// Brain lobes styled exactly like the medical illustration reference:
+// Frontal (gold/yellow-green), Motor Cortex (orange), Somatosensory (red-orange),
+// Parietal (purple), Temporal (olive-green), Occipital (blue), Cerebellum (teal), Brainstem (light teal)
+const BRAIN_LOBES = [
   {
     id: 'frontal',
     label: 'Frontal Lobe',
-    desc: 'Decision-making, focus, mood',
-    d: 'M100,30 C70,28 44,38 30,58 C20,72 18,88 22,102 C28,116 40,122 54,124 L100,126 Z',
-    color: '#9b59b6',
+    desc: 'Emotion, decision-making, organization',
+    // Large forward lobe — left side dominant
+    d: 'M90,46 C72,44 52,52 40,68 C30,80 28,98 34,112 C40,124 52,132 66,136 L82,134 L90,118 L94,100 L96,80 L96,58 Z',
+    color: '#b8a830',
+    labelPos: { x:58, y:88 },
+  },
+  {
+    id: 'prefrontal',
+    label: 'Prefrontal Cortex',
+    desc: 'Short term memory, attention',
+    d: 'M96,58 L96,80 L94,100 L90,118 L96,130 L104,132 L110,118 L112,100 L110,78 L106,60 Z',
+    color: '#c8a020',
+    labelPos: { x:103, y:95 },
+  },
+  {
+    id: 'motor',
+    label: 'Motor Cortex',
+    desc: 'Movement and coordination',
+    d: 'M110,78 L112,100 L110,118 L116,132 L124,136 L132,132 L136,116 L136,96 L130,78 L120,72 Z',
+    color: '#d4661a',
+    labelPos: { x:122, y:104 },
+  },
+  {
+    id: 'somatosensory',
+    label: 'Somatosensory',
+    desc: 'Sensation processing',
+    d: 'M130,78 L136,96 L136,116 L132,132 L138,138 L148,140 L156,134 L158,116 L156,94 L148,78 Z',
+    color: '#c03010',
+    labelPos: { x:144, y:108 },
   },
   {
     id: 'parietal',
     label: 'Parietal Lobe',
-    desc: 'Sensation, spatial awareness',
-    d: 'M100,30 L170,30 C182,44 186,62 184,78 C182,94 174,108 164,118 L100,126 Z',
-    color: '#3498db',
+    desc: 'Sensory info, spatial awareness',
+    d: 'M148,78 L156,94 L158,116 L156,134 L164,136 L174,130 L180,118 L180,96 L174,78 L162,70 Z',
+    color: '#7040b0',
+    labelPos: { x:164, y:104 },
   },
   {
-    id: 'temporal_left',
-    label: 'Left Temporal',
+    id: 'temporal',
+    label: 'Temporal Lobe',
     desc: 'Memory, language, hearing',
-    d: 'M22,102 C18,116 18,132 22,146 C26,160 34,170 46,176 L76,168 L54,124 Z',
-    color: '#e67e22',
-  },
-  {
-    id: 'temporal_right',
-    label: 'Right Temporal',
-    desc: 'Music, faces, emotions',
-    d: 'M164,118 C176,128 182,142 180,158 C178,172 170,180 158,184 L132,174 L164,118 Z',
-    color: '#e74c3c',
+    d: 'M34,112 C28,126 28,146 34,160 C40,172 52,180 66,182 L78,178 L86,166 L90,148 L88,132 L82,134 L66,136 Z',
+    color: '#6a7820',
+    labelPos: { x:56, y:152 },
   },
   {
     id: 'occipital',
     label: 'Occipital Lobe',
-    desc: 'Vision, visual processing',
-    d: 'M76,168 C80,182 90,192 100,194 C110,192 120,182 124,168 L100,172 Z',
-    color: '#27ae60',
+    desc: 'Visual processing',
+    d: 'M164,136 L174,130 L180,118 L182,138 L180,156 L170,168 L156,172 L144,168 L138,156 L138,138 L148,140 L156,134 Z',
+    color: '#2060b0',
+    labelPos: { x:160, y:152 },
   },
   {
     id: 'cerebellum',
     label: 'Cerebellum',
-    desc: 'Balance, coordination',
-    d: 'M46,176 C50,192 62,204 78,208 C88,212 100,212 112,210 C126,208 138,200 148,188 L124,168 C120,182 110,192 100,194 C90,192 80,182 76,168 Z',
-    color: '#16a085',
+    desc: 'Skill memory, movement coordination',
+    d: 'M86,166 L78,178 L66,182 L68,196 L80,208 L96,214 L112,216 L128,214 L142,208 L152,196 L152,180 L142,170 L130,168 L118,166 L104,164 Z',
+    color: '#148888',
+    labelPos: { x:109, y:194 },
   },
   {
     id: 'brainstem',
     label: 'Brain Stem',
-    desc: 'Vital functions, alertness',
-    d: 'M88,210 Q100,214 112,210 L114,230 Q106,238 94,238 L86,230 Z',
-    color: '#8e44ad',
+    desc: 'Heart rate, breathing, alertness, sleep',
+    d: 'M104,164 L118,166 L130,168 L134,182 L132,196 L128,214 L116,218 L104,218 L96,214 L96,198 L98,182 Z',
+    color: '#20a898',
+    labelPos: { x:115, y:198 },
   },
 ];
 
 const BRAIN_SYMPTOMS = [
-  { id:'migraine',    label:'Migraine / Headache', icon:'⚡', anim:'lightning' },
-  { id:'pressure',   label:'Pressure / Tension',  icon:'🔴', anim:'heatmap'   },
-  { id:'brain_fog',  label:'Brain Fog',            icon:'☁️', anim:'fog'       },
-  { id:'fatigue',    label:'Mental Fatigue',       icon:'💤', anim:'fatigue'   },
-  { id:'tingling',   label:'Tingling / Numbness',  icon:'✦', anim:'pulse'     },
-  { id:'confusion',  label:'Confusion',            icon:'◎', anim:'spin'      },
+  { id:'migraine',   label:'Migraine / Headache',  icon:'⚡', anim:'lightning' },
+  { id:'pressure',   label:'Pressure / Tension',   icon:'🔴', anim:'heatmap'   },
+  { id:'brain_fog',  label:'Brain Fog',             icon:'☁️', anim:'fog'       },
+  { id:'fatigue',    label:'Mental Fatigue',        icon:'💤', anim:'fatigue'   },
+  { id:'tingling',   label:'Tingling / Numbness',   icon:'✦',  anim:'pulse'     },
+  { id:'confusion',  label:'Confusion / Disorientation', icon:'◎', anim:'spin' },
 ];
 
-const BRAIN_ANIM_CSS = `
+const ANIM_CSS = `
 @keyframes lightning {
-  0%,100%{opacity:0} 10%,30%{opacity:.9} 20%,40%{opacity:0} 50%,70%{opacity:.7} 60%{opacity:0} 80%{opacity:.5}
+  0%,100%{opacity:0} 8%,24%{opacity:.95} 16%,40%{opacity:0} 52%,68%{opacity:.75} 60%{opacity:0} 80%{opacity:.5}
 }
 @keyframes heatPulse {
-  0%,100%{opacity:.35} 50%{opacity:.65}
+  0%,100%{opacity:.3} 50%{opacity:.65}
 }
 @keyframes fogDrift {
-  0%{transform:translateX(-20px) translateY(-8px);opacity:0}
-  20%{opacity:.6}
+  0%{transform:translate(-14px,-6px);opacity:0}
+  20%{opacity:.55}
   80%{opacity:.5}
-  100%{transform:translateX(20px) translateY(4px);opacity:0}
+  100%{transform:translate(16px,4px);opacity:0}
 }
-@keyframes fatigueDrop {
-  0%{transform:translateY(-10px);opacity:0}
-  20%{opacity:.9}
-  100%{transform:translateY(32px);opacity:0}
+@keyframes fatigueBob {
+  0%{transform:translateY(0);opacity:0}
+  15%{opacity:1}
+  85%{opacity:.9}
+  100%{transform:translateY(-28px);opacity:0}
 }
-@keyframes brainPulse {
-  0%,100%{transform:scale(1);opacity:.4}
-  50%{transform:scale(1.04);opacity:.8}
+@keyframes gentlePulse {
+  0%,100%{opacity:.35;transform:scale(1)}
+  50%{opacity:.75;transform:scale(1.03)}
 }
-@keyframes spinSlow {
+@keyframes slowSpin {
   from{transform:rotate(0deg)} to{transform:rotate(360deg)}
 }
-@keyframes popIn {
-  from{opacity:0;transform:scale(.93) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)}
+@keyframes lobeHover {
+  from{filter:brightness(1)} to{filter:brightness(1.25)}
 }
-.brain-region { cursor:pointer; transition:all .2s ease; }
-.brain-region path { transition:all .2s ease; stroke-width:1.5; }
-.brain-region:hover path { filter:brightness(1.3); stroke-width:2.5; }
-.brain-region.active path { stroke-width:2.5; filter:brightness(1.2) drop-shadow(0 0 6px currentColor); }
 `;
 
-function BrainSVG({ selectedRegions, activeSymptom, onToggle }) {
+function BrainIllustration({ selectedRegions, activeSymptom, onToggle }) {
   return (
-    <svg viewBox="0 0 200 250" style={{ width:'100%', maxWidth:280 }}>
+    <svg viewBox="0 0 220 240" style={{ width:'100%', maxWidth:260, display:'block', margin:'0 auto' }}>
+      <style>{ANIM_CSS}</style>
       <defs>
-        <radialGradient id="brainBg" cx="50%" cy="45%" r="52%">
-          <stop offset="0%" stopColor="rgba(123,47,190,.08)"/>
-          <stop offset="100%" stopColor="rgba(0,0,0,0)"/>
-        </radialGradient>
-        {/* Lightning filter */}
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <filter id="lobeGlow">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
+        <filter id="softShadow">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,.5)" floodOpacity="0.5"/>
+        </filter>
+        <clipPath id="brainClip">
+          <path d="M34,60 C20,80 16,112 22,140 C28,168 44,190 68,204 C84,214 100,218 116,218 C132,218 150,214 164,204 C180,192 190,174 192,154 C196,132 188,110 178,94 C166,76 148,64 130,58 C114,52 96,48 80,48 C64,48 46,52 34,60 Z"/>
+        </clipPath>
       </defs>
 
-      <style>{BRAIN_ANIM_CSS}</style>
+      {/* Brain base — cream/tan like the illustration */}
+      <path d="M34,60 C20,80 16,112 22,140 C28,168 44,190 68,204 C84,214 100,218 116,218 C132,218 150,214 164,204 C180,192 190,174 192,154 C196,132 188,110 178,94 C166,76 148,64 130,58 C114,52 96,48 80,48 C64,48 46,52 34,60 Z"
+        fill="rgba(15,6,30,.85)" stroke="rgba(123,47,190,.3)" strokeWidth="1.5"/>
 
-      {/* Outer brain silhouette */}
-      <ellipse cx="100" cy="115" rx="88" ry="96" fill="rgba(10,4,20,.6)" stroke="rgba(123,47,190,.25)" strokeWidth="1"/>
+      {/* Render lobes */}
+      {BRAIN_LOBES.map(lobe => {
+        const isActive  = selectedRegions.includes(lobe.id);
+        const sym       = activeSymptom;
+        const baseAlpha = isActive ? '.65' : '.28';
+        const col       = lobe.color;
 
-      {BRAIN_REGIONS.map(r => {
-        const isActive = selectedRegions.includes(r.id);
-        const sym = activeSymptom;
+        // Parse hex → rgba
+        const hex = col.replace('#','');
+        const r = parseInt(hex.slice(0,2),16);
+        const g = parseInt(hex.slice(2,4),16);
+        const b = parseInt(hex.slice(4,6),16);
+
         return (
-          <g key={r.id} className={`brain-region${isActive ? ' active' : ''}`} onClick={() => onToggle(r.id)}>
+          <g key={lobe.id} onClick={() => onToggle(lobe.id)} style={{ cursor:'pointer' }}>
+            {/* Main lobe fill */}
             <path
-              d={r.d}
-              fill={isActive ? r.color + '55' : r.color + '22'}
-              stroke={isActive ? r.color : r.color + '66'}
-              strokeWidth={isActive ? '2' : '1'}
+              d={lobe.d}
+              fill={`rgba(${r},${g},${b},${isActive?'.55':'.22'})`}
+              stroke={`rgba(${r},${g},${b},${isActive?'.9':'.5'})`}
+              strokeWidth={isActive ? 2 : 1}
+              strokeLinejoin="round"
+              filter={isActive ? 'url(#lobeGlow)' : undefined}
+              style={{ transition:'all .2s ease' }}
             />
+
             {/* Symptom overlays */}
             {isActive && sym === 'lightning' && (
-              <path d={r.d} fill="rgba(255,220,50,.15)" style={{ animation:'lightning 1.4s ease-in-out infinite', filter:'url(#glow)' }}/>
+              <path d={lobe.d} fill={`rgba(255,220,50,.18)`}
+                style={{ animation:'lightning 1.3s ease-in-out infinite', filter:'url(#lobeGlow)', pointerEvents:'none' }}/>
             )}
             {isActive && sym === 'heatmap' && (
-              <path d={r.d} fill="rgba(239,68,68,.3)" style={{ animation:'heatPulse 1.8s ease-in-out infinite' }}/>
+              <path d={lobe.d} fill={`rgba(239,68,68,.28)`}
+                style={{ animation:'heatPulse 1.8s ease-in-out infinite', pointerEvents:'none' }}/>
             )}
             {isActive && sym === 'fog' && (
-              <path d={r.d} fill="rgba(148,163,184,.3)" style={{ animation:'fogDrift 3s ease-in-out infinite' }}/>
+              <path d={lobe.d} fill={`rgba(180,190,210,.22)`}
+                style={{ animation:'fogDrift 3.2s ease-in-out infinite', pointerEvents:'none' }}/>
             )}
             {isActive && sym === 'pulse' && (
-              <path d={r.d} fill="rgba(192,132,252,.3)" style={{ animation:'brainPulse 1.5s ease-in-out infinite' }}/>
+              <path d={lobe.d} fill={`rgba(192,132,252,.25)`}
+                style={{ animation:'gentlePulse 1.6s ease-in-out infinite', pointerEvents:'none' }}/>
             )}
           </g>
         );
       })}
 
-      {/* Fatigue zzz particles */}
+      {/* Sulci / gyri lines — gives the brain texture */}
+      <g fill="none" strokeLinejoin="round" style={{ pointerEvents:'none' }}>
+        <path d="M80,60 Q74,72 72,86 Q70,96 74,106" stroke="rgba(123,47,190,.12)" strokeWidth="1"/>
+        <path d="M96,52 Q90,64 90,80 Q90,94 88,108" stroke="rgba(123,47,190,.1)" strokeWidth="1"/>
+        <path d="M116,50 Q112,64 112,82" stroke="rgba(123,47,190,.1)" strokeWidth="1"/>
+        <path d="M134,56 Q130,70 128,86 Q126,100 128,114" stroke="rgba(123,47,190,.1)" strokeWidth="1"/>
+        <path d="M150,68 Q148,82 146,96 Q144,110 146,124" stroke="rgba(123,47,190,.1)" strokeWidth="1"/>
+        <path d="M164,88 Q162,102 160,116" stroke="rgba(123,47,190,.1)" strokeWidth="1"/>
+        <path d="M60,120 Q58,136 60,150 Q62,162 66,172" stroke="rgba(123,47,190,.1)" strokeWidth="1"/>
+        <path d="M76,136 Q78,150 76,164" stroke="rgba(123,47,190,.1)" strokeWidth="0.8"/>
+        {/* Lobe dividing fissures */}
+        <path d="M96,130 Q104,120 116,118 Q128,116 136,124" stroke="rgba(200,200,220,.12)" strokeWidth="1.2" strokeDasharray="3,2"/>
+        <path d="M88,168 Q100,160 116,158 Q132,156 144,164" stroke="rgba(200,200,220,.12)" strokeWidth="1.2" strokeDasharray="3,2"/>
+      </g>
+
+      {/* Lightning bolts (migraine) */}
+      {activeSymptom === 'lightning' && selectedRegions.length > 0 && (
+        <>
+          <polyline points="104,42 97,62 105,62 88,88" fill="none" stroke="rgba(255,220,50,.85)" strokeWidth="2.2" strokeLinecap="round"
+            style={{ animation:'lightning 1.1s ease-in-out infinite', filter:'url(#lobeGlow)', pointerEvents:'none' }}/>
+          <polyline points="120,40 115,58 121,58 110,80" fill="none" stroke="rgba(255,200,50,.65)" strokeWidth="1.6" strokeLinecap="round"
+            style={{ animation:'lightning 1.4s ease-in-out .25s infinite', filter:'url(#lobeGlow)', pointerEvents:'none' }}/>
+          <polyline points="134,44 130,62 136,62 126,82" fill="none" stroke="rgba(255,220,50,.55)" strokeWidth="1.3" strokeLinecap="round"
+            style={{ animation:'lightning 1.6s ease-in-out .5s infinite', filter:'url(#lobeGlow)', pointerEvents:'none' }}/>
+        </>
+      )}
+
+      {/* Fog overlay */}
+      {activeSymptom === 'fog' && selectedRegions.length > 0 && (
+        <>
+          {[0,1,2].map(i => (
+            <ellipse key={i} cx={80+i*22} cy={52+i*6} rx={18+i*4} ry={8+i*2}
+              fill="rgba(180,190,220,.18)"
+              style={{ animation:`fogDrift ${2.8+i*0.7}s ease-in-out ${i*0.8}s infinite`, pointerEvents:'none' }}/>
+          ))}
+        </>
+      )}
+
+      {/* Fatigue zzz */}
       {activeSymptom === 'fatigue' && selectedRegions.length > 0 && (
         <>
           {['💤','💤','💤'].map((z,i) => (
-            <text key={i} x={80+i*18} y={70} fontSize={14} style={{ animation:`fatigueDrop ${1.8+i*0.5}s ease-in-out ${i*0.6}s infinite` }}>{z}</text>
+            <text key={i} x={85+i*18} y={55} fontSize={12}
+              style={{ animation:`fatigueBob ${2+i*0.6}s ease-in-out ${i*0.7}s infinite`, pointerEvents:'none' }}>
+              {z}
+            </text>
           ))}
         </>
       )}
 
       {/* Confusion spin */}
       {activeSymptom === 'spin' && selectedRegions.length > 0 && (
-        <g transform="translate(100,115)">
-          <circle r={70} fill="none" stroke="rgba(192,132,252,.2)" strokeWidth="1" strokeDasharray="8 4" style={{ animation:'spinSlow 4s linear infinite', transformOrigin:'0 0' }}/>
-          <circle r={50} fill="none" stroke="rgba(201,168,76,.15)" strokeWidth="1" strokeDasharray="6 6" style={{ animation:'spinSlow 6s linear reverse infinite', transformOrigin:'0 0' }}/>
+        <g transform="translate(113,130)" style={{ pointerEvents:'none' }}>
+          <circle r="72" fill="none" stroke="rgba(192,132,252,.18)" strokeWidth="1" strokeDasharray="8 5"
+            style={{ animation:'slowSpin 5s linear infinite', transformOrigin:'0 0' }}/>
+          <circle r="52" fill="none" stroke="rgba(201,168,76,.12)" strokeWidth="1" strokeDasharray="6 6"
+            style={{ animation:'slowSpin 8s linear reverse infinite', transformOrigin:'0 0' }}/>
         </g>
       )}
 
-      {/* Lightning bolts for migraine */}
-      {activeSymptom === 'lightning' && selectedRegions.length > 0 && (
-        <>
-          <polyline points="95,45 88,68 96,68 82,95" fill="none" stroke="rgba(255,220,50,.8)" strokeWidth="2" strokeLinecap="round" style={{ animation:'lightning 1.2s ease-in-out infinite', filter:'url(#glow)' }}/>
-          <polyline points="110,55 105,74 111,74 100,98" fill="none" stroke="rgba(255,200,50,.6)" strokeWidth="1.5" strokeLinecap="round" style={{ animation:'lightning 1.5s ease-in-out .3s infinite', filter:'url(#glow)' }}/>
-        </>
-      )}
-
-      {/* Region labels */}
-      {BRAIN_REGIONS.filter(r => selectedRegions.includes(r.id) || true).map(r => {
-        const isActive = selectedRegions.includes(r.id);
-        // Approximate label positions
-        const lp = {
-          frontal:       { x:55,  y:85  },
-          parietal:      { x:150, y:78  },
-          temporal_left: { x:36,  y:140 },
-          temporal_right:{ x:168, y:148 },
-          occipital:     { x:100, y:183 },
-          cerebellum:    { x:100, y:202 },
-          brainstem:     { x:100, y:225 },
-        };
-        const lpos = lp[r.id] || { x:100, y:100 };
+      {/* Lobe labels — clean, anatomical style */}
+      {BRAIN_LOBES.map(lobe => {
+        const isActive = selectedRegions.includes(lobe.id);
+        const hex = lobe.color.replace('#','');
+        const r2 = parseInt(hex.slice(0,2),16);
+        const g2 = parseInt(hex.slice(2,4),16);
+        const b2 = parseInt(hex.slice(4,6),16);
+        const lines = lobe.label.split(' / ');
         return (
-          <text key={r.id+'lbl'} x={lpos.x} y={lpos.y} textAnchor="middle"
-            fontSize={isActive ? 9 : 8}
-            fill={isActive ? r.color : 'rgba(240,232,255,.3)'}
-            fontFamily="'DM Sans',sans-serif"
-            fontWeight={isActive ? '700' : '400'}
-            style={{ pointerEvents:'none', transition:'all .2s' }}>
-            {r.label.split(' ')[0]}
-          </text>
+          <g key={lobe.id+'_lbl'} style={{ pointerEvents:'none' }}>
+            {lines.map((line, li) => (
+              <text key={li}
+                x={lobe.labelPos.x}
+                y={lobe.labelPos.y + li * 11}
+                textAnchor="middle"
+                fontSize={isActive ? 8.5 : 7.5}
+                fontWeight={isActive ? '700' : '500'}
+                fill={isActive ? `rgba(${r2},${g2},${b2},1)` : `rgba(${r2},${g2},${b2},.7)`}
+                fontFamily="'DM Sans',sans-serif"
+                style={{ transition:'all .2s', letterSpacing:.2 }}>
+                {line}
+              </text>
+            ))}
+          </g>
         );
       })}
+
+      {/* Outer brain border */}
+      <path d="M34,60 C20,80 16,112 22,140 C28,168 44,190 68,204 C84,214 100,218 116,218 C132,218 150,214 164,204 C180,192 190,174 192,154 C196,132 188,110 178,94 C166,76 148,64 130,58 C114,52 96,48 80,48 C64,48 46,52 34,60 Z"
+        fill="none" stroke="rgba(123,47,190,.35)" strokeWidth="1.5"/>
     </svg>
   );
 }
@@ -202,12 +285,11 @@ function BrainSVG({ selectedRegions, activeSymptom, onToggle }) {
 export default function BrainSection({ data, upd }) {
   const brainLogs = data.brain || [];
   const [selectedRegions, setSelectedRegions] = useState([]);
-  const [activeSymptom, setActiveSymptom] = useState('');
-  const [notes, setNotes] = useState('');
-  const [intensity, setIntensity] = useState(5);
-  const [saveMsg, setSaveMsg] = useState('');
+  const [activeSymptom, setActiveSymptom]     = useState('');
+  const [notes, setNotes]                     = useState('');
+  const [intensity, setIntensity]             = useState(5);
+  const [saveMsg, setSaveMsg]                 = useState('');
 
-  // Restore today's state on mount
   useEffect(() => {
     const todayLog = brainLogs.find(l => l.date === todayStr());
     if (todayLog) {
@@ -218,13 +300,11 @@ export default function BrainSection({ data, upd }) {
     }
   }, []);
 
-  const toggleRegion = id => {
-    setSelectedRegions(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  };
+  const toggleRegion = id => setSelectedRegions(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const save = () => {
     if (!selectedRegions.length || !activeSymptom) {
-      setSaveMsg('Please select at least one region and a symptom type.');
+      setSaveMsg('Please select at least one brain region and a symptom type.');
       setTimeout(() => setSaveMsg(''), 3000);
       return;
     }
@@ -232,46 +312,48 @@ export default function BrainSection({ data, upd }) {
       id: todayStr() + '-' + activeSymptom,
       date: todayStr(),
       regions: selectedRegions,
-      regionLabels: selectedRegions.map(id => BRAIN_REGIONS.find(r => r.id === id)?.label || id),
+      regionLabels: selectedRegions.map(id => BRAIN_LOBES.find(r => r.id === id)?.label || id),
       symptom: activeSymptom,
       symptomLabel: BRAIN_SYMPTOMS.find(s => s.id === activeSymptom)?.label || activeSymptom,
       intensity,
       notes,
     };
-    const updated = [...brainLogs.filter(l => l.date !== todayStr()), entry];
-    upd('brain', updated);
-    setSaveMsg('Saved for today ✓');
+    upd('brain', [...brainLogs.filter(l => l.date !== todayStr()), entry]);
+    setSaveMsg('Saved ✓');
     setTimeout(() => setSaveMsg(''), 2500);
   };
 
-  const UPLIFTING = [
-    'Your brain is working hard every day — even when it feels like it isn\'t.',
-    'Tracking your neurological symptoms is one of the most powerful forms of self-advocacy.',
-    'Every data point you log helps tell your story to your care team.',
-    'Rest is productive. Recovery is not failure.',
+  const MESSAGES = [
+    'Your brain is doing remarkable work even on the hardest days.',
+    'Tracking neurological symptoms is one of the most powerful forms of self-advocacy.',
+    'Every data point you log helps your care team understand your experience.',
+    'Rest is healing. Recovery is not failure.',
     'You know your brain better than anyone. Trust what you feel.',
   ];
-  const quote = UPLIFTING[Math.floor(new Date().getDate() % UPLIFTING.length)];
+  const quote = MESSAGES[new Date().getDate() % MESSAGES.length];
 
   return (
     <div>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:24, flexWrap:'wrap', gap:12 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22, flexWrap:'wrap', gap:12 }}>
         <div>
           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:30, fontWeight:600, color:'#C9A84C', marginBottom:4 }}>🧠 The Brain</div>
-          <div style={{ fontSize:14, color:'rgba(240,232,255,.4)' }}>Track neurological symptoms with real-time visual feedback</div>
+          <div style={{ fontSize:13, color:'rgba(240,232,255,.4)' }}>Track neurological symptoms with real-time visual feedback</div>
         </div>
       </div>
 
-      {/* Quote */}
-      <div style={{ marginBottom:20, padding:'12px 18px', background:'rgba(123,47,190,.06)', border:'1px solid rgba(123,47,190,.12)', borderRadius:13, fontFamily:"'Cormorant Garamond',serif", fontSize:14, color:'rgba(192,132,252,.65)', fontStyle:'italic', lineHeight:1.7 }}>
+      <div style={{ marginBottom:20, padding:'12px 18px', background:'rgba(123,47,190,.06)', border:'1px solid rgba(123,47,190,.11)', borderRadius:13, fontFamily:"'Cormorant Garamond',serif", fontSize:14, color:'rgba(192,132,252,.62)', fontStyle:'italic', lineHeight:1.7 }}>
         💜 {quote}
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'auto 1fr', gap:24, alignItems:'start' }} className="two-col">
-        {/* Brain SVG */}
+      <div style={{ display:'grid', gridTemplateColumns:'auto 1fr', gap:22, alignItems:'start' }} className="two-col">
+        {/* Brain diagram */}
         <div className="glass-card-static" style={{ padding:20, display:'flex', flexDirection:'column', alignItems:'center', minWidth:200 }}>
-          <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.4)', letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Select regions</div>
-          <BrainSVG selectedRegions={selectedRegions} activeSymptom={BRAIN_SYMPTOMS.find(s => s.id === activeSymptom)?.anim || ''} onToggle={toggleRegion}/>
+          <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.45)', letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Select Regions</div>
+          <BrainIllustration
+            selectedRegions={selectedRegions}
+            activeSymptom={BRAIN_SYMPTOMS.find(s => s.id === activeSymptom)?.anim || ''}
+            onToggle={toggleRegion}
+          />
           <button onClick={() => setSelectedRegions([])} style={{ marginTop:10, background:'transparent', border:'none', color:'rgba(240,232,255,.25)', fontSize:11, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
             Clear selection
           </button>
@@ -279,15 +361,23 @@ export default function BrainSection({ data, upd }) {
 
         {/* Controls */}
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {/* Region chips */}
+          {/* Lobe chips */}
           <div className="glass-card-static" style={{ padding:18 }}>
             <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'#C9A84C', marginBottom:12 }}>Brain Regions</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
-              {BRAIN_REGIONS.map(r => (
-                <button key={r.id} onClick={() => toggleRegion(r.id)} style={{ padding:'6px 14px', borderRadius:20, fontSize:12, border:`1.5px solid ${selectedRegions.includes(r.id) ? r.color : 'rgba(123,47,190,.2)'}`, background:selectedRegions.includes(r.id) ? r.color+'22' : 'rgba(255,255,255,.03)', color:selectedRegions.includes(r.id) ? r.color : 'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s' }}>
-                  {r.label}
-                </button>
-              ))}
+              {BRAIN_LOBES.map(r => {
+                const hex = r.color.replace('#','');
+                const rv = parseInt(hex.slice(0,2),16);
+                const gv = parseInt(hex.slice(2,4),16);
+                const bv = parseInt(hex.slice(4,6),16);
+                const isOn = selectedRegions.includes(r.id);
+                return (
+                  <button key={r.id} onClick={() => toggleRegion(r.id)}
+                    style={{ padding:'6px 14px', borderRadius:20, fontSize:12, border:`1.5px solid ${isOn?r.color:'rgba(123,47,190,.2)'}`, background:isOn?`rgba(${rv},${gv},${bv},.18)`:'rgba(255,255,255,.03)', color:isOn?r.color:'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s' }}>
+                    {r.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -296,9 +386,10 @@ export default function BrainSection({ data, upd }) {
             <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'#C9A84C', marginBottom:12 }}>Symptom Type</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }} className="two-col">
               {BRAIN_SYMPTOMS.map(s => (
-                <button key={s.id} onClick={() => setActiveSymptom(activeSymptom === s.id ? '' : s.id)} style={{ padding:'10px 14px', borderRadius:12, fontSize:12, border:`1.5px solid ${activeSymptom===s.id ? '#C9A84C' : 'rgba(123,47,190,.2)'}`, background:activeSymptom===s.id ? 'rgba(201,168,76,.1)' : 'rgba(255,255,255,.03)', color:activeSymptom===s.id ? '#C9A84C' : 'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", textAlign:'left', display:'flex', alignItems:'center', gap:8, transition:'all .15s' }}>
-                  <span style={{ fontSize:16 }}>{s.icon}</span>
-                  <span>{s.label}</span>
+                <button key={s.id} onClick={() => setActiveSymptom(activeSymptom === s.id ? '' : s.id)}
+                  style={{ padding:'10px 14px', borderRadius:12, fontSize:12, border:`1.5px solid ${activeSymptom===s.id?'#C9A84C':'rgba(123,47,190,.2)'}`, background:activeSymptom===s.id?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)', color:activeSymptom===s.id?'#C9A84C':'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", display:'flex', alignItems:'center', gap:8, transition:'all .15s' }}>
+                  <span style={{ fontSize:15 }}>{s.icon}</span>
+                  <span style={{ textAlign:'left', lineHeight:1.3 }}>{s.label}</span>
                 </button>
               ))}
             </div>
@@ -316,11 +407,12 @@ export default function BrainSection({ data, upd }) {
           {/* Notes */}
           <div className="glass-card-static" style={{ padding:18 }}>
             <label>Notes</label>
-            <textarea className="field" rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe what you're experiencing — duration, triggers, what helps…" style={{ resize:'vertical', marginTop:6 }}/>
+            <textarea className="field" rows={3} value={notes} onChange={e => setNotes(e.target.value)}
+              placeholder="Duration, triggers, what helps or worsens it…" style={{ resize:'vertical', marginTop:6 }}/>
           </div>
 
           {saveMsg && (
-            <div style={{ padding:'10px 16px', borderRadius:10, background:saveMsg.includes('✓') ? 'rgba(110,231,183,.1)' : 'rgba(255,80,80,.1)', border:`1px solid ${saveMsg.includes('✓') ? 'rgba(110,231,183,.25)' : 'rgba(255,80,80,.2)'}`, fontSize:13, color:saveMsg.includes('✓') ? '#6ee7b7' : '#ff8080' }}>
+            <div style={{ padding:'10px 16px', borderRadius:10, background:saveMsg.includes('✓')?'rgba(110,231,183,.1)':'rgba(255,80,80,.1)', border:`1px solid ${saveMsg.includes('✓')?'rgba(110,231,183,.25)':'rgba(255,80,80,.2)'}`, fontSize:13, color:saveMsg.includes('✓')?'#6ee7b7':'#ff8080' }}>
               {saveMsg}
             </div>
           )}
@@ -335,16 +427,17 @@ export default function BrainSection({ data, upd }) {
       {brainLogs.length > 0 && (
         <div style={{ marginTop:28 }}>
           <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.4)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>History</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {[...brainLogs].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10).map(l => {
+          <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+            {[...brainLogs].sort((a,b) => b.date.localeCompare(a.date)).slice(0,12).map(l => {
               const sym = BRAIN_SYMPTOMS.find(s => s.id === l.symptom);
               return (
-                <div key={l.id} className="glass-card-static" style={{ padding:'14px 18px', display:'flex', gap:14, alignItems:'center', flexWrap:'wrap' }}>
-                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:14, color:'#C9A84C', minWidth:80, flexShrink:0 }}>{fmtDate(l.date)}</div>
-                  {sym && <span style={{ fontSize:14 }}>{sym.icon}</span>}
+                <div key={l.id} className="glass-card-static" style={{ padding:'13px 16px', display:'flex', gap:13, alignItems:'center', flexWrap:'wrap' }}>
+                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:13, color:'#C9A84C', minWidth:76, flexShrink:0 }}>{fmtDate(l.date)}</div>
+                  {sym && <span style={{ fontSize:13 }}>{sym.icon}</span>}
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:13, fontWeight:500, color:'#F0E8FF' }}>{l.symptomLabel}</div>
                     <div style={{ fontSize:11, color:'rgba(240,232,255,.35)' }}>{l.regionLabels?.join(', ')}</div>
+                    {l.notes && <div style={{ fontSize:11, color:'rgba(240,232,255,.3)', marginTop:2, fontStyle:'italic' }}>{l.notes}</div>}
                   </div>
                   <div style={{ fontSize:13, fontWeight:700, color:'#f87171', fontFamily:"'Cormorant Garamond',serif" }}>{l.intensity}/10</div>
                 </div>
