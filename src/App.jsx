@@ -17,7 +17,7 @@ import BodyMap from './components/BodyMap';
 import BrainSection from './components/BrainSection';
 import InfusionHub from './components/InfusionHub';
 import MetabolicLab from './components/MetabolicLab';
-import HydrationFridge from './components/HydrationFridge';
+import HydrationTracker from './components/HydrationTracker';
 
 // ─── Data model ───────────────────────────────────────────────
 const BLANK_DATA = {
@@ -602,7 +602,7 @@ function Dashboard({ data, setTab, upd, user }) {
       </div>
 
       <div style={{ marginBottom:18 }}>
-        <HydrationFridge data={data} upd={upd}/>
+        <HydrationTracker data={data} upd={upd}/>
       </div>
 
       {activeMeds.length > 0 && (
