@@ -35,7 +35,7 @@ export const UPLIFTING = [
   'Advocating for yourself is one of the bravest things you can do.',
   'Your story matters — and you deserve a doctor who listens.',
   'When a provider doesn’t see you, they might be stuck in their own world. Invite them to cross the bridge into yours.',
-  '🥣 Your "living energy" needs maintenance. Have you eaten anything nourishing today?'
+  '🥣 Your "living energy" needs maintenance. Have you eaten anything nourishing today?',
   'You deserve a care team that mirrors your value and validates your reality.',
   'Healing is not linear. Be gentle with yourself today.',
   'Advocacy isn’t an attack; it’s a request for a deeper connection to your care.',
