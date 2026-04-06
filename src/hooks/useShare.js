@@ -32,3 +32,4 @@ export function useShare() {
 
 export const getShareLabel = (status, def = 'Share') =>
   ({ sharing: '⏳ Sharing…', shared: '✓ Shared!', copied: '✓ Copied!', error: '✗ Failed' }[status] || def);
+export const getShareButtonLabel = (status, def = 'Share') => ({ sharing: '? Sharing�', shared: '? Shared!', copied: '? Copied!', error: '? Failed' }[status] || def);
