@@ -131,7 +131,10 @@ export const UPLIFTING = [
   'Your "Inner Advocate" just checked the logs. She says you’re a legend and to drink some water.',
   'The "Space Between" a mystery and a diagnosis is just a few more data points. Stay the course.',
   'Spotted: Someone looking at their data and realizing they were right all along. We love a "told you so" moment.'
+<<<<<<< HEAD
 ];
+=======
+>>>>>>> 8c3f1fc9687841d599edb433ab452a015b7af84b
 
 // ─── Blank data shape ─────────────────────────────────────────
 export const BLANK_DATA = {
