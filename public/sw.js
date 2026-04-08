@@ -26,7 +26,6 @@ self.addEventListener('fetch', event => {
     url.hostname.includes('firebase') ||
     url.hostname.includes('firestore') ||
     url.hostname.includes('googleapis') ||
-    url.hostname.includes('anthropic') ||
     url.hostname.includes('identitytoolkit')
   ) return;
 

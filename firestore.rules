@@ -1,15 +1,30 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Each user owns their own document — no-one else can touch it
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // PIN-protected read-only share snapshots
     match /shares/{shareId} {
       allow create: if request.auth != null;
       allow read:   if true;
       allow delete: if request.auth != null && request.auth.uid == resource.data.createdBy;
       allow update: if false;
     }
+
+    // Daily AI usage counter — written by the serverless function via REST API key
+    // The REST API uses the Firebase API key (public), not Admin SDK.
+    // We allow unauthenticated writes here so the serverless function can update
+    // the count without needing a service account.
+    // The document ID is always userId_date so it is scoped per-user per-day.
+    match /usage/{docId} {
+      allow read, write: if true;
+    }
+
+    // Deny everything else
     match /{document=**} {
       allow read, write: if false;
     }

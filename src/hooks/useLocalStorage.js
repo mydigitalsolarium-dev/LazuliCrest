@@ -1,12 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
-export function usePersistedTab(defaultTab) {
-  const [tab, setTab] = useState(() => {
-    try { return localStorage.getItem('advy_last_tab') || defaultTab; } 
-    catch { return defaultTab; }
+// Persists state to localStorage so a phone-switch or refresh returns the user
+// to exactly the same spot. Falls back gracefully if localStorage is unavailable.
+
+export function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch {
+      return initialValue;
+    }
   });
-  useEffect(() => {
-    try { localStorage.setItem('advy_last_tab', tab); } catch {}
-  }, [tab]);
-  return [tab, setTab];
+
+  const set = useCallback(val => {
+    try {
+      const toStore = typeof val === 'function' ? val(value) : val;
+      setValue(toStore);
+      window.localStorage.setItem(key, JSON.stringify(toStore));
+    } catch {
+      setValue(typeof val === 'function' ? val(value) : val);
+    }
+  }, [key, value]);
+
+  return [value, set];
+}
+
+// Persist the active tab so refresh returns user to same section
+export function usePersistedTab(defaultTab = 'dashboard') {
+  return useLocalStorage('advy_active_tab', defaultTab);
 }
