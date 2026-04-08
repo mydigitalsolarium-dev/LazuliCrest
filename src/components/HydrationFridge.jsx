@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-
 const FRIDGE_ITEMS = [
   { id:'water',      label:'Water',       icon:'💧', color:'#93c5fd', ml:250  },
   { id:'matcha',     label:'Matcha',      icon:'🍵', color:'#6ee7b7', ml:240  },

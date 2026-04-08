@@ -8,8 +8,6 @@ import { auth, db } from './firebase';
 import {
   uid, todayStr, fmtDate, greet, getDailyMessage,
   getProactiveGreeting, buildDoctorSummary,
-  FRONT_MUSCLES, BACK_MUSCLES, getMuscleBaseColor, BODY_PAIN_TYPES, BODY_PART_GROUPS,
-  BRAIN_LOBES, BRAIN_SYMPTOMS,
 } from './utils/helpers';
 import { useShare, getShareButtonLabel } from './hooks/useShare';
 import { usePersistedTab } from './hooks/useLocalStorage';
@@ -34,17 +32,6 @@ const BLANK_DATA = {
   metabolicLogs: [],
   hydrationLogs: [],
 };
-
-const ILLNESS_TYPES = [
-  'Cold / Flu',
-  'Respiratory infection',
-  'UTI',
-  'Sinus infection',
-  'GI infection',
-  'Skin infection',
-  'Ear infection',
-  'Other infection'
-];
 
 const SYMS = [
   'Fatigue','Pain','Headache','Nausea','Brain fog','Dizziness','Joint pain','Muscle aches',
@@ -92,17 +79,6 @@ export default function App() {
   const [sideOpen, setSideOpen]   = useState(false);
   const saveTimer                 = useRef(null);
   const unsubRef                  = useRef(null);
-
-const addSymptom = (name, type = '') => {
-    const newEntry = {
-      id: uid(),
-      date: todayStr(),
-      name: name,
-      type: type,
-      severity: 3
-    };
-    upd('symptoms', [newEntry, ...data.symptoms]);
-  };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => { setUser(u); setAuthReady(true); });

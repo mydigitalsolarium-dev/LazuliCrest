@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 // Add fmtDate and point to the correct file
 import { todayStr, fmtDate } from "../utils/helpers"; 
 
@@ -218,7 +218,7 @@ export default function BrainSection({ data, upd }) {
       setIntensity(todayLog.intensity || 5);
       setNotes(todayLog.notes || '');
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleRegion = id => {
     setSelectedRegions(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);

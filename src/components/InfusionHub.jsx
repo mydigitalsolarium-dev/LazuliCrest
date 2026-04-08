@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { uid, todayStr, fmtDate } from '../utils/helpers';
 
 const PREP_ITEMS = [

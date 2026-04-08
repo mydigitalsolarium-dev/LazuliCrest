@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { todayStr, fmtDate } from "../utils";
+import { todayStr } from "../utils";
 
 const PAIN_TYPES = [
   'Aching','Sharp','Burning','Throbbing','Stabbing',
