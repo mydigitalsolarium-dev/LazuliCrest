@@ -1,4 +1,6 @@
-const FRIDGE_ITEMS = [
+import { useState } from 'react';
+
+const DEFAULT_FRIDGE = [
   { id:'water',      label:'Water',       icon:'💧', color:'#93c5fd', ml:250  },
   { id:'matcha',     label:'Matcha',      icon:'🍵', color:'#6ee7b7', ml:240  },
   { id:'coffee',     label:'Coffee',      icon:'☕', color:'#d97706', ml:240  },
@@ -14,12 +16,32 @@ export default function HydrationFridge({ data, upd }) {
   const logs   = (data.hydrationLogs || []).filter(l => l.date === today);
   const total  = logs.reduce((s, l) => s + (l.ml || 0), 0);
   const pct    = Math.min(100, Math.round((total / DAILY_GOAL) * 100));
-  const fillH  = Math.round((pct / 100) * 160); // px inside pitcher
+  const fillH  = Math.round((pct / 100) * 160);
+
+  // Custom amount state per fridge item
+  const [amounts, setAmounts] = useState({});
+  // Custom drink adder
+  const [showCustom, setShowCustom] = useState(false);
+  const [customForm, setCustomForm] = useState({ label:'', icon:'🥤', ml:200, color:'#a78bfa' });
+
+  const fridgeItems = data.customDrinks
+    ? [...DEFAULT_FRIDGE, ...data.customDrinks]
+    : DEFAULT_FRIDGE;
 
   const addDrink = item => {
-    const entry = { id: Math.random().toString(36).slice(2), date: today, ...item, timestamp: Date.now() };
+    const ml = amounts[item.id] ? parseInt(amounts[item.id], 10) : item.ml;
+    const entry = { id: Math.random().toString(36).slice(2), date: today, ...item, ml, timestamp: Date.now() };
     upd('hydrationLogs', [...(data.hydrationLogs || []), entry]);
   };
+
+  const saveCustomDrink = () => {
+    if (!customForm.label) return;
+    const drink = { ...customForm, id: 'custom_' + Date.now(), ml: parseInt(customForm.ml,10)||200 };
+    upd('customDrinks', [...(data.customDrinks||[]), drink]);
+    setCustomForm({ label:'', icon:'🥤', ml:200, color:'#a78bfa' });
+    setShowCustom(false);
+  };
+
   const undo = () => {
     const all = data.hydrationLogs || [];
     const todayLogs = all.filter(l => l.date === today);
@@ -89,20 +111,48 @@ export default function HydrationFridge({ data, upd }) {
 
       {/* Mini fridge shelf */}
       <div style={{ borderTop:'1px solid rgba(123,47,190,.1)', paddingTop:16 }}>
-        <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.45)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>🧊 My Fridge — Tap to log</div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.45)', textTransform:'uppercase', letterSpacing:1.5 }}>🧊 My Fridge — Tap to log</div>
+          <button onClick={()=>setShowCustom(s=>!s)} style={{ fontSize:10, color:'rgba(201,168,76,.6)', background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:20, padding:'3px 10px', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>+ Custom drink</button>
+        </div>
+
+        {showCustom && (
+          <div style={{ background:'rgba(255,255,255,.04)', borderRadius:12, padding:'12px 14px', marginBottom:12, border:'1px solid rgba(201,168,76,.15)' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr auto auto', gap:8, marginBottom:8, alignItems:'center' }}>
+              <input className="field" placeholder="Drink name (e.g. Coconut Water)" value={customForm.label} onChange={e=>setCustomForm(f=>({...f,label:e.target.value}))} style={{ margin:0, fontSize:12 }}/>
+              <input className="field" placeholder="Icon" value={customForm.icon} onChange={e=>setCustomForm(f=>({...f,icon:e.target.value}))} style={{ margin:0, width:60, fontSize:12, textAlign:'center' }}/>
+              <input className="field" type="number" placeholder="ml" value={customForm.ml} onChange={e=>setCustomForm(f=>({...f,ml:e.target.value}))} style={{ margin:0, width:70, fontSize:12 }}/>
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button className="btn btn-gold" style={{ fontSize:11 }} onClick={saveCustomDrink}>Add to fridge</button>
+              <button className="btn btn-ghost" style={{ fontSize:11 }} onClick={()=>setShowCustom(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-          {FRIDGE_ITEMS.map(item => (
-            <button
-              key={item.id}
-              onClick={() => addDrink(item)}
-              style={{ padding:'10px 8px', borderRadius:13, border:`1px solid ${item.color}22`, background:`${item.color}0d`, cursor:'pointer', textAlign:'center', transition:'all .16s', fontFamily:"'DM Sans',sans-serif" }}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor=item.color+'66';e.currentTarget.style.background=item.color+'1a';e.currentTarget.style.transform='translateY(-2px)';}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor=item.color+'22';e.currentTarget.style.background=item.color+'0d';e.currentTarget.style.transform='none';}}
-            >
-              <div style={{ fontSize:20, marginBottom:3 }}>{item.icon}</div>
-              <div style={{ fontSize:11, fontWeight:600, color:item.color, lineHeight:1.2 }}>{item.label}</div>
-              <div style={{ fontSize:10, color:'rgba(240,232,255,.3)', marginTop:1 }}>{item.ml}ml</div>
-            </button>
+          {fridgeItems.map(item => (
+            <div key={item.id} style={{ borderRadius:13, border:`1px solid ${item.color}22`, background:`${item.color}0d`, textAlign:'center', overflow:'hidden' }}>
+              <button
+                onClick={() => addDrink(item)}
+                style={{ width:'100%', padding:'10px 8px 4px', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}
+                onMouseEnter={e=>{e.currentTarget.parentElement.style.borderColor=item.color+'66';e.currentTarget.parentElement.style.background=item.color+'1a';e.currentTarget.parentElement.style.transform='translateY(-2px)';}}
+                onMouseLeave={e=>{e.currentTarget.parentElement.style.borderColor=item.color+'22';e.currentTarget.parentElement.style.background=item.color+'0d';e.currentTarget.parentElement.style.transform='none';}}
+              >
+                <div style={{ fontSize:20, marginBottom:3 }}>{item.icon}</div>
+                <div style={{ fontSize:11, fontWeight:600, color:item.color, lineHeight:1.2 }}>{item.label}</div>
+              </button>
+              <div style={{ padding:'4px 8px 8px', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                <input
+                  type="number"
+                  value={amounts[item.id] !== undefined ? amounts[item.id] : item.ml}
+                  onChange={e=>setAmounts(a=>({...a,[item.id]:e.target.value}))}
+                  onClick={e=>e.stopPropagation()}
+                  style={{ width:52, padding:'2px 4px', borderRadius:6, border:'1px solid rgba(255,255,255,.1)', background:'rgba(0,0,0,.3)', color:'rgba(240,232,255,.6)', fontSize:10, textAlign:'center', fontFamily:"'DM Sans',sans-serif" }}
+                />
+                <span style={{ fontSize:9, color:'rgba(240,232,255,.3)' }}>ml</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>
