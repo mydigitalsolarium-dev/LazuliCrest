@@ -1829,7 +1829,7 @@ function Advocate({ data, user }) {
               <div style={{ marginBottom:13,display:'inline-block',animation:'floatUp 3s ease-in-out infinite' }}><LogoImg size={56}/></div>
               <div style={{ fontFamily:"'Cinzel',serif",fontSize:22,color:'#C9A84C',marginBottom:5 }}>Hi{data.profile?.name?`, ${data.profile.name}`:''}! 💙</div>
               <p style={{ fontSize:14,color:'rgba(240,232,255,.38)',lineHeight:1.8,maxWidth:420,margin:'0 auto 7px' }}>{getProactiveGreeting(data.profile?.name, data.appointments)}</p>
-              <p style={{ fontSize:11,color:'rgba(168,196,240,.3)',fontStyle:'italic',fontFamily:"'Cormorant Garamond',serif' }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
+              <p style={{ fontSize:11,color:'rgba(168,196,240,.3)',fontStyle:'italic',fontFamily:"'Cormorant Garamond',serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
             </div>
             <div className="two-col" style={{ gap:7 }}>
               {STARTERS.map(s=>(
