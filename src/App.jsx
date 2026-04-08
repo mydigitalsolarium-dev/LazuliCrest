@@ -80,6 +80,8 @@ const NAV = [
   { id:'advocate',     icon:'🫂',  label:'Lazuli AI'         },
   { id:'profile',      icon:'◈',   label:'My Profile'        },
   { id:'share',        icon:'🔗',  label:'Share & Privacy'   },
+  { id:'updates',     icon:'✦',   label:'What\'s New'       },
+  { id:'gym',         icon:'🏋️',  label:'Lazuli Gym'        },
 ];
 
 const DIARY_FONTS = [
@@ -229,6 +231,8 @@ export default function App() {
             {tab==='advocate'     && <Advocate     data={data} user={user}/>}
             {tab==='profile'      && <Profile      data={data} upd={upd} user={user}/>}
             {tab==='share'        && <SharePrivacy data={data} upd={upd} user={user}/>}
+            {tab==='updates'      && <Updates/>}
+            {tab==='gym'          && <LazuliGym data={data}/>}
           </div>
         </main>
       </div>
@@ -245,21 +249,21 @@ function LogoImg({ size=56 }) {
 
 // ─── Animated background (symbols rise bottom → top) ──────────
 const FLOAT_ITEMS = [
-  {sym:'⚕',  x:5,  size:28, delay:0,   dur:18},
-  {sym:'🧬', x:15, size:22, delay:3,   dur:22},
-  {sym:'💊', x:25, size:18, delay:7,   dur:20},
-  {sym:'🔬', x:35, size:20, delay:1,   dur:25},
-  {sym:'💉', x:48, size:22, delay:5,   dur:19},
-  {sym:'🩺', x:60, size:24, delay:9,   dur:23},
-  {sym:'❤️', x:70, size:18, delay:2,   dur:21},
-  {sym:'⚕',  x:80, size:20, delay:11,  dur:17},
-  {sym:'🧬', x:90, size:26, delay:4,   dur:24},
-  {sym:'🌸', x:12, size:16, delay:14,  dur:26},
-  {sym:'💜', x:55, size:18, delay:8,   dur:22},
-  {sym:'🦋', x:78, size:20, delay:6,   dur:20},
-  {sym:'✦',  x:42, size:14, delay:12,  dur:18},
-  {sym:'💙', x:92, size:16, delay:16,  dur:28},
-  {sym:'🩻', x:30, size:18, delay:10,  dur:24},
+  {sym:'⚕',  x:5,  size:52, delay:0,   dur:55},
+  {sym:'🧬', x:15, size:44, delay:6,   dur:62},
+  {sym:'💊', x:25, size:38, delay:14,  dur:58},
+  {sym:'🔬', x:35, size:42, delay:2,   dur:65},
+  {sym:'💉', x:48, size:46, delay:10,  dur:52},
+  {sym:'🩺', x:60, size:50, delay:18,  dur:60},
+  {sym:'❤️', x:70, size:40, delay:4,   dur:57},
+  {sym:'⚕',  x:80, size:44, delay:22,  dur:50},
+  {sym:'🧬', x:90, size:48, delay:8,   dur:63},
+  {sym:'🌸', x:12, size:36, delay:28,  dur:68},
+  {sym:'💜', x:55, size:40, delay:16,  dur:54},
+  {sym:'🦋', x:78, size:42, delay:12,  dur:56},
+  {sym:'✦',  x:42, size:32, delay:24,  dur:70},
+  {sym:'💙', x:92, size:38, delay:32,  dur:64},
+  {sym:'🩻', x:30, size:40, delay:20,  dur:59},
 ];
 
 const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
@@ -275,55 +279,127 @@ function AnimatedBackground() {
       {/* Deep background */}
       <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 25% 15%, rgba(42,92,173,.22) 0%, transparent 50%), radial-gradient(ellipse at 75% 85%, rgba(88,28,135,.28) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(15,5,35,.85) 0%, #03000C 100%)' }}/>
       {/* Aurora orbs */}
-      <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.12) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(124,58,237,.1) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
-      <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.06) 0%,transparent 65%)', filter:'blur(100px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.22) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.18) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
+      <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.1) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
       {/* Rising medical symbols */}
       {FLOAT_ITEMS.map((s,i) => (
         <div key={`sym-${i}`} style={{
           position:'absolute', left:`${s.x}%`, bottom:'-10%',
           fontSize:s.size, opacity:0,
           animation:`riseUp ${s.dur}s ${s.delay}s ease-in-out infinite`,
-          userSelect:'none', filter:'drop-shadow(0 0 4px rgba(42,92,173,.4))',
+          userSelect:'none', filter:'drop-shadow(0 0 12px rgba(42,92,173,.8)) drop-shadow(0 0 24px rgba(42,92,173,.4))',
         }}>{s.sym}</div>
       ))}
       {/* Floating chronic illness quotes */}
       {FLOAT_QUOTES.map((q,i) => (
         <div key={`quote-${i}`} style={{
           position:'absolute', left:`${q.x}%`, bottom:'-5%',
-          fontSize:11, opacity:0, color:'rgba(201,168,76,.35)',
+          fontSize:16, opacity:0, color:'rgba(201,168,76,.55)',
           fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
           whiteSpace:'nowrap', letterSpacing:.5,
           animation:`riseUp ${q.dur}s ${q.delay}s linear infinite`,
           userSelect:'none',
         }}>{q.text}</div>
       ))}
-      {/* Constellation */}
+      {/* Named Medical Constellations */}
       <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }} xmlns="http://www.w3.org/2000/svg">
-        {/* Connection lines */}
-        <line x1="8%" y1="18%" x2="22%" y2="32%" stroke="rgba(168,196,240,.12)" strokeWidth="0.6" style={{animation:'constellFade 9s 0s ease-in-out infinite alternate'}}/>
-        <line x1="22%" y1="32%" x2="38%" y2="16%" stroke="rgba(168,196,240,.1)" strokeWidth="0.5" style={{animation:'constellFade 11s 2s ease-in-out infinite alternate'}}/>
-        <line x1="38%" y1="16%" x2="52%" y2="28%" stroke="rgba(168,196,240,.11)" strokeWidth="0.5" style={{animation:'constellFade 8s 4s ease-in-out infinite alternate'}}/>
-        <line x1="52%" y1="28%" x2="68%" y2="14%" stroke="rgba(168,196,240,.09)" strokeWidth="0.6" style={{animation:'constellFade 13s 1s ease-in-out infinite alternate'}}/>
-        <line x1="68%" y1="14%" x2="82%" y2="26%" stroke="rgba(168,196,240,.1)" strokeWidth="0.5" style={{animation:'constellFade 10s 3s ease-in-out infinite alternate'}}/>
-        <line x1="82%" y1="26%" x2="92%" y2="16%" stroke="rgba(168,196,240,.08)" strokeWidth="0.5" style={{animation:'constellFade 7s 5s ease-in-out infinite alternate'}}/>
-        <line x1="14%" y1="58%" x2="28%" y2="72%" stroke="rgba(168,196,240,.09)" strokeWidth="0.5" style={{animation:'constellFade 12s 2s ease-in-out infinite alternate'}}/>
-        <line x1="28%" y1="72%" x2="46%" y2="76%" stroke="rgba(168,196,240,.1)" strokeWidth="0.5" style={{animation:'constellFade 9s 6s ease-in-out infinite alternate'}}/>
-        <line x1="46%" y1="76%" x2="62%" y2="62%" stroke="rgba(168,196,240,.08)" strokeWidth="0.6" style={{animation:'constellFade 11s 1s ease-in-out infinite alternate'}}/>
-        <line x1="62%" y1="62%" x2="78%" y2="68%" stroke="rgba(168,196,240,.09)" strokeWidth="0.5" style={{animation:'constellFade 8s 4s ease-in-out infinite alternate'}}/>
-        <line x1="22%" y1="32%" x2="14%" y2="58%" stroke="rgba(201,168,76,.07)" strokeWidth="0.5" style={{animation:'constellFade 14s 0s ease-in-out infinite alternate'}}/>
-        <line x1="52%" y1="28%" x2="62%" y2="62%" stroke="rgba(201,168,76,.06)" strokeWidth="0.5" style={{animation:'constellFade 10s 3s ease-in-out infinite alternate'}}/>
-        <line x1="82%" y1="26%" x2="78%" y2="68%" stroke="rgba(168,196,240,.08)" strokeWidth="0.5" style={{animation:'constellFade 12s 2s ease-in-out infinite alternate'}}/>
-        {/* Stars */}
-        {[
-          [8,18,2.2,0],[22,32,1.8,1.5],[38,16,2,3],[52,28,1.6,2],[68,14,2.4,0.5],
-          [82,26,1.8,4],[92,16,1.4,1],[14,58,2,2.5],[28,72,1.6,0],[46,76,2.2,3.5],
-          [62,62,1.8,1],[78,68,2,4.5],[90,72,1.4,2],[35,88,1.6,1.5],[55,48,1.2,6],
-          [70,40,1.6,0.5],[18,42,1.4,3],[48,52,1.8,2],[88,50,1.4,1]
-        ].map(([cx,cy,r,delay],i)=>(
-          <circle key={i} cx={`${cx}%`} cy={`${cy}%`} r={r} fill="#A8C4F0"
-            style={{animation:`twinkle ${5+i%4}s ${delay}s ease-in-out infinite alternate`}}/>
-        ))}
+        <defs>
+          <filter id="starGlow">
+            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        {/* ORION — The Hunter/Healer (upper left) */}
+        <g style={{animation:'constellFade 14s 0s ease-in-out infinite alternate'}}>
+          <line x1="9%" y1="12%" x2="13%" y2="16%" stroke="rgba(168,196,240,.25)" strokeWidth="0.7"/>
+          <line x1="13%" y1="16%" x2="11%" y2="21%" stroke="rgba(168,196,240,.22)" strokeWidth="0.7"/>
+          <line x1="11%" y1="21%" x2="15%" y2="24%" stroke="rgba(168,196,240,.2)" strokeWidth="0.6"/>
+          <line x1="15%" y1="24%" x2="18%" y2="21%" stroke="rgba(168,196,240,.22)" strokeWidth="0.6"/>
+          <line x1="18%" y1="21%" x2="16%" y2="16%" stroke="rgba(168,196,240,.2)" strokeWidth="0.6"/>
+          <line x1="16%" y1="16%" x2="13%" y2="16%" stroke="rgba(168,196,240,.22)" strokeWidth="0.6"/>
+          <line x1="13%" y1="19%" x2="18%" y2="19%" stroke="rgba(168,196,240,.3)" strokeWidth="0.8"/>
+          <circle cx="9%" cy="12%" r="2.2" fill="#A8C4F0" filter="url(#starGlow)" style={{animation:'twinkle 6s 0s infinite alternate'}}/>
+          <circle cx="13%" cy="16%" r="1.6" fill="#A8C4F0" filter="url(#starGlow)" style={{animation:'twinkle 7s 1s infinite alternate'}}/>
+          <circle cx="11%" cy="21%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 5s 2s infinite alternate'}}/>
+          <circle cx="15%" cy="24%" r="1.6" fill="#A8C4F0" filter="url(#starGlow)" style={{animation:'twinkle 8s 0.5s infinite alternate'}}/>
+          <circle cx="18%" cy="21%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 6s 3s infinite alternate'}}/>
+          <circle cx="16%" cy="16%" r="2" fill="#A8C4F0" filter="url(#starGlow)" style={{animation:'twinkle 7s 1.5s infinite alternate'}}/>
+          <circle cx="13%" cy="19%" r="1.5" fill="#ddd" style={{animation:'twinkle 5s 0.8s infinite alternate'}}/>
+          <circle cx="15.5%" cy="19%" r="1.5" fill="#ddd" style={{animation:'twinkle 6s 1.2s infinite alternate'}}/>
+          <circle cx="18%" cy="19%" r="1.4" fill="#ddd" style={{animation:'twinkle 5s 1.8s infinite alternate'}}/>
+          <text x="9%" y="10%" fontSize="8" fill="rgba(201,168,76,.4)" fontFamily="Cinzel,serif" letterSpacing="1">ORION</text>
+        </g>
+        {/* PLEIADES — The Seven Sisters (upper right) */}
+        <g style={{animation:'constellFade 12s 3s ease-in-out infinite alternate'}}>
+          <line x1="72%" y1="8%" x2="76%" y2="10%" stroke="rgba(168,196,240,.2)" strokeWidth="0.5"/>
+          <line x1="76%" y1="10%" x2="79%" y2="8%" stroke="rgba(168,196,240,.2)" strokeWidth="0.5"/>
+          <line x1="79%" y1="8%" x2="82%" y2="11%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <line x1="82%" y1="11%" x2="78%" y2="13%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <line x1="78%" y1="13%" x2="74%" y2="12%" stroke="rgba(168,196,240,.2)" strokeWidth="0.5"/>
+          <line x1="74%" y1="12%" x2="72%" y2="8%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <circle cx="72%" cy="8%" r="1.8" fill="#C9A84C" filter="url(#starGlow)" style={{animation:'twinkle 7s 2s infinite alternate'}}/>
+          <circle cx="76%" cy="10%" r="1.4" fill="#A8C4F0" style={{animation:'twinkle 5s 1s infinite alternate'}}/>
+          <circle cx="79%" cy="8%" r="1.6" fill="#A8C4F0" filter="url(#starGlow)" style={{animation:'twinkle 8s 0s infinite alternate'}}/>
+          <circle cx="82%" cy="11%" r="1.3" fill="#C4D8F8" style={{animation:'twinkle 6s 2.5s infinite alternate'}}/>
+          <circle cx="78%" cy="13%" r="1.5" fill="#A8C4F0" style={{animation:'twinkle 7s 1.5s infinite alternate'}}/>
+          <circle cx="74%" cy="12%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 5s 3s infinite alternate'}}/>
+          <circle cx="80%" cy="10%" r="1.2" fill="#fff" style={{animation:'twinkle 9s 0.5s infinite alternate'}}/>
+          <text x="70%" y="6%" fontSize="8" fill="rgba(201,168,76,.4)" fontFamily="Cinzel,serif" letterSpacing="1">PLEIADES</text>
+        </g>
+        {/* CADUCEUS — The Healer's Cross (center) */}
+        <g style={{animation:'constellFade 16s 6s ease-in-out infinite alternate'}}>
+          <line x1="47%" y1="42%" x2="47%" y2="58%" stroke="rgba(201,168,76,.2)" strokeWidth="0.6"/>
+          <line x1="43%" y1="45%" x2="51%" y2="45%" stroke="rgba(201,168,76,.2)" strokeWidth="0.6"/>
+          <line x1="43%" y1="50%" x2="51%" y2="50%" stroke="rgba(168,196,240,.2)" strokeWidth="0.5"/>
+          <line x1="44%" y1="54%" x2="50%" y2="54%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <circle cx="47%" cy="42%" r="2.2" fill="#C9A84C" filter="url(#starGlow)" style={{animation:'twinkle 8s 1s infinite alternate'}}/>
+          <circle cx="47%" cy="45%" r="1.6" fill="#A8C4F0" style={{animation:'twinkle 6s 2s infinite alternate'}}/>
+          <circle cx="43%" cy="45%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 5s 0.5s infinite alternate'}}/>
+          <circle cx="51%" cy="45%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 7s 1.5s infinite alternate'}}/>
+          <circle cx="43%" cy="50%" r="1.3" fill="#A8C4F0" style={{animation:'twinkle 6s 3s infinite alternate'}}/>
+          <circle cx="51%" cy="50%" r="1.5" fill="#A8C4F0" style={{animation:'twinkle 5s 2.5s infinite alternate'}}/>
+          <circle cx="44%" cy="54%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 8s 0s infinite alternate'}}/>
+          <circle cx="50%" cy="54%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 6s 1s infinite alternate'}}/>
+          <circle cx="47%" cy="58%" r="2" fill="#C9A84C" filter="url(#starGlow)" style={{animation:'twinkle 7s 2s infinite alternate'}}/>
+          <text x="44%" y="40%" fontSize="8" fill="rgba(201,168,76,.35)" fontFamily="Cinzel,serif" letterSpacing="1">CADUCEUS</text>
+        </g>
+        {/* SCORPIUS — Resilience (lower right) */}
+        <g style={{animation:'constellFade 11s 8s ease-in-out infinite alternate'}}>
+          <line x1="78%" y1="68%" x2="82%" y2="65%" stroke="rgba(168,196,240,.2)" strokeWidth="0.6"/>
+          <line x1="82%" y1="65%" x2="85%" y2="67%" stroke="rgba(168,196,240,.18)" strokeWidth="0.6"/>
+          <line x1="85%" y1="67%" x2="87%" y2="71%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <line x1="87%" y1="71%" x2="86%" y2="75%" stroke="rgba(168,196,240,.2)" strokeWidth="0.5"/>
+          <line x1="86%" y1="75%" x2="88%" y2="79%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <line x1="88%" y1="79%" x2="86%" y2="83%" stroke="rgba(168,196,240,.15)" strokeWidth="0.5"/>
+          <circle cx="78%" cy="68%" r="2.4" fill="#f87171" filter="url(#starGlow)" style={{animation:'twinkle 7s 0s infinite alternate'}}/>
+          <circle cx="82%" cy="65%" r="1.5" fill="#A8C4F0" style={{animation:'twinkle 5s 1s infinite alternate'}}/>
+          <circle cx="85%" cy="67%" r="1.6" fill="#C4D8F8" style={{animation:'twinkle 8s 2s infinite alternate'}}/>
+          <circle cx="87%" cy="71%" r="1.4" fill="#A8C4F0" style={{animation:'twinkle 6s 1.5s infinite alternate'}}/>
+          <circle cx="86%" cy="75%" r="1.5" fill="#C4D8F8" style={{animation:'twinkle 7s 0.5s infinite alternate'}}/>
+          <circle cx="88%" cy="79%" r="1.3" fill="#A8C4F0" style={{animation:'twinkle 5s 2.5s infinite alternate'}}/>
+          <circle cx="86%" cy="83%" r="1.6" fill="#C4D8F8" filter="url(#starGlow)" style={{animation:'twinkle 9s 1s infinite alternate'}}/>
+          <text x="76%" y="66%" fontSize="8" fill="rgba(168,196,240,.4)" fontFamily="Cinzel,serif" letterSpacing="1">SCORPIUS</text>
+        </g>
+        {/* URSA MAJOR — The Caregiver (lower left) */}
+        <g style={{animation:'constellFade 13s 4s ease-in-out infinite alternate'}}>
+          <line x1="8%" y1="72%" x2="12%" y2="70%" stroke="rgba(168,196,240,.2)" strokeWidth="0.6"/>
+          <line x1="12%" y1="70%" x2="16%" y2="71%" stroke="rgba(168,196,240,.18)" strokeWidth="0.6"/>
+          <line x1="16%" y1="71%" x2="19%" y2="74%" stroke="rgba(168,196,240,.2)" strokeWidth="0.5"/>
+          <line x1="19%" y1="74%" x2="22%" y2="72%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <line x1="22%" y1="72%" x2="25%" y2="69%" stroke="rgba(168,196,240,.2)" strokeWidth="0.5"/>
+          <line x1="25%" y1="69%" x2="28%" y2="71%" stroke="rgba(168,196,240,.18)" strokeWidth="0.5"/>
+          <line x1="28%" y1="71%" x2="30%" y2="68%" stroke="rgba(168,196,240,.15)" strokeWidth="0.5"/>
+          <circle cx="8%" cy="72%" r="1.8" fill="#A8C4F0" filter="url(#starGlow)" style={{animation:'twinkle 7s 0s infinite alternate'}}/>
+          <circle cx="12%" cy="70%" r="1.5" fill="#C4D8F8" style={{animation:'twinkle 5s 2s infinite alternate'}}/>
+          <circle cx="16%" cy="71%" r="1.6" fill="#A8C4F0" style={{animation:'twinkle 8s 1s infinite alternate'}}/>
+          <circle cx="19%" cy="74%" r="1.4" fill="#C4D8F8" style={{animation:'twinkle 6s 3s infinite alternate'}}/>
+          <circle cx="22%" cy="72%" r="1.8" fill="#A8C4F0" filter="url(#starGlow)" style={{animation:'twinkle 7s 0.5s infinite alternate'}}/>
+          <circle cx="25%" cy="69%" r="1.6" fill="#C4D8F8" style={{animation:'twinkle 5s 1.5s infinite alternate'}}/>
+          <circle cx="28%" cy="71%" r="1.4" fill="#A8C4F0" style={{animation:'twinkle 9s 2s infinite alternate'}}/>
+          <circle cx="30%" cy="68%" r="2" fill="#C9A84C" filter="url(#starGlow)" style={{animation:'twinkle 6s 1s infinite alternate'}}/>
+          <text x="6%" y="70%" fontSize="8" fill="rgba(168,196,240,.4)" fontFamily="Cinzel,serif" letterSpacing="1">URSA MAJOR</text>
+        </g>
       </svg>
       {/* Subtle grain */}
       <div style={{ position:'absolute', inset:0, opacity:.025, backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize:'200px 200px' }}/>
@@ -374,7 +450,7 @@ const GLOBAL_CSS = `
   @keyframes heartbeat{0%,100%{transform:scale(1)}14%{transform:scale(1.15)}28%{transform:scale(1)}42%{transform:scale(1.08)}70%{transform:scale(1)}}
   @keyframes inkDrop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
   @keyframes slideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
-  @keyframes auroraFloat{0%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-14px) scale(1.04)}100%{transform:translate(-12px,20px) scale(0.97)}}
+  @keyframes auroraFloat{0%{transform:translate(0,0) scale(1);opacity:.8}25%{transform:translate(20px,-14px) scale(1.08);opacity:1}50%{transform:translate(5px,10px) scale(1.04);opacity:.85}75%{transform:translate(-10px,5px) scale(0.96);opacity:.95}100%{transform:translate(-12px,20px) scale(1.02);opacity:.9}}
   @keyframes riseUp{0%{transform:translateY(0) rotate(0deg);opacity:0}8%{opacity:.65}88%{opacity:.65}100%{transform:translateY(-105vh) rotate(20deg);opacity:0}}
   @keyframes breatheIn{0%{transform:scale(.75);opacity:.5}100%{transform:scale(1.18);opacity:1}}
   @keyframes breatheOut{0%{transform:scale(1.18);opacity:1}100%{transform:scale(.75);opacity:.5}}
@@ -412,7 +488,7 @@ const GLOBAL_CSS = `
   }
 
   .matriarch-quote{font-family:'Cormorant Garamond',serif;font-style:italic;color:#C9A84C;line-height:1.8;font-size:18px;text-shadow:0 0 10px rgba(201,168,76,.25)}
-  .matriarch-tag{text-transform:uppercase;letter-spacing:.45em;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;display:block}
+  .matriarch-tag{text-transform:uppercase;letter-spacing:.45em;font-size:13px;color:rgba(255,255,255,.4);margin-bottom:6px;display:block}
 
   /* ── Buttons ─────────────────────────────────────────────── */
   .btn{border:none;border-radius:12px;padding:13px 26px;font-weight:600;font-size:15px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;letter-spacing:.15px}
@@ -630,6 +706,47 @@ function AuthScreen() {
   );
 }
 
+const SIDEBAR_QUOTES = [
+  "The strength it takes to get through a hard health day is immeasurable.",
+  "You are not your diagnosis — you are so much more.",
+  "Rest is not giving up. Rest is how you survive.",
+  "Your pain is real, your experience is valid, you deserve to be believed.",
+  "Healing is not linear, and that's okay.",
+  "Every doctor visit where you speak up is an act of bravery.",
+  "You are the expert on your own body. Always.",
+  "Flares do not erase your progress.",
+  "It's okay to grieve the life you had before illness.",
+  "Surviving is enough. Thriving is a bonus.",
+  "Bad days do not cancel out good ones.",
+  "Your body is doing its absolute best.",
+  "You are worthy of compassionate, thoughtful care.",
+  "Advocating for yourself is one of the bravest things you can do.",
+  "One moment at a time is enough.",
+  "Pain that persists deserves answers, not dismissal.",
+  "You are not lazy. You are ill, and that is not the same thing.",
+  "In ancient times, lapis lazuli was worn to heal the spirit. Your healing matters too.",
+  "Invisible illness is still illness.",
+  "Being chronically ill and still showing up is extraordinary.",
+];
+
+function DailyQuoteSidebar() {
+  const [idx, setIdx] = useState(0);
+  const [fade, setFade] = useState(true);
+  useEffect(() => {
+    const t = setInterval(() => {
+      setFade(false);
+      setTimeout(() => { setIdx(i => (i+1) % SIDEBAR_QUOTES.length); setFade(true); }, 500);
+    }, 12000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div style={{ background:'rgba(42,92,173,.09)', borderRadius:11, padding:'11px 13px', marginBottom:9, border:'1px solid rgba(42,92,173,.18)', minHeight:70, transition:'opacity .5s', opacity:fade?1:0 }}>
+      <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.7)', marginBottom:5, letterSpacing:1.5, textTransform:'uppercase' }}>💜 Today</div>
+      <div style={{ fontSize:13, color:'rgba(240,232,255,.7)', lineHeight:1.65, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{SIDEBAR_QUOTES[idx]}</div>
+    </div>
+  );
+}
+
 // ─── Sidebar ──────────────────────────────────────────────────
 function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
   const isCare      = data.profile?.accountType === 'caree';
@@ -647,8 +764,8 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18 }}>
           <LogoImg size={38}/>
           <div>
-            <div style={{ fontFamily:"'Cinzel',serif", fontSize:14, fontWeight:700, color:'#fff', letterSpacing:3 }}>LAZULI</div>
-            <div style={{ fontSize:8, fontWeight:500, color:'#C9A84C', letterSpacing:3 }}>LABS</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:13, fontWeight:700, color:'#fff', letterSpacing:2 }}>LAZULI</div>
+            <div style={{ fontSize:9, fontWeight:600, color:'#C9A84C', letterSpacing:3 }}>CREST</div>
           </div>
           {saving && <div style={{ marginLeft:'auto', width:6, height:6, borderRadius:'50%', background:'#C9A84C', animation:'pulseGlow 1s infinite' }}/>}
         </div>
@@ -685,10 +802,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
         })}
       </nav>
       <div style={{ padding:'10px 12px', borderTop:'1px solid rgba(42,92,173,.1)' }}>
-        <div style={{ background:'rgba(42,92,173,.06)', borderRadius:11, padding:'10px 12px', marginBottom:9, border:'1px solid rgba(42,92,173,.1)' }}>
-          <div style={{ fontSize:10, fontWeight:600, color:'rgba(201,168,76,.55)', marginBottom:3 }}>💜 Today</div>
-          <div style={{ fontSize:11, color:'rgba(240,232,255,.3)', lineHeight:1.55, fontStyle:'italic' }}>{getDailyMessage()}</div>
-        </div>
+        <DailyQuoteSidebar/>
         <button onClick={()=>signOut(auth)} className="btn btn-subtle" style={{ width:'100%', justifyContent:'center', fontSize:12, padding:'8px' }}>Sign out</button>
       </div>
     </aside>
@@ -1829,13 +1943,13 @@ function Advocate({ data, user }) {
               <div style={{ marginBottom:13,display:'inline-block',animation:'floatUp 3s ease-in-out infinite' }}><LogoImg size={56}/></div>
               <div style={{ fontFamily:"'Cinzel',serif",fontSize:22,color:'#C9A84C',marginBottom:5 }}>Hi{data.profile?.name?`, ${data.profile.name}`:''}! 💙</div>
               <p style={{ fontSize:14,color:'rgba(240,232,255,.38)',lineHeight:1.8,maxWidth:420,margin:'0 auto 7px' }}>{getProactiveGreeting(data.profile?.name, data.appointments)}</p>
-              <p style={{ fontSize:11,color:'rgba(168,196,240,.3)',fontStyle:'italic',fontFamily:"'Cormorant Garamond',serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
+              <p style={{ fontSize:14,color:'rgba(168,196,240,.3)',fontStyle:'italic',fontFamily:"'Cormorant Garamond',serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
             </div>
             <div className="two-col" style={{ gap:7 }}>
               {STARTERS.map(s=>(
-                <button key={s} onClick={()=>send(s)} style={{ background:'rgba(42,92,173,.05)',border:'1px solid rgba(42,92,173,.15)',borderRadius:12,padding:'11px 13px',textAlign:'left',fontSize:13,fontWeight:500,color:'rgba(240,232,255,.38)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",lineHeight:1.4,transition:'all .16s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(42,92,173,.12)';e.currentTarget.style.color='rgba(240,232,255,.75)';}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(42,92,173,.05)';e.currentTarget.style.color='rgba(240,232,255,.38)';}}>
+                <button key={s} onClick={()=>send(s)} style={{ background:'rgba(4,16,52,.85)',border:'1px solid rgba(42,92,173,.45)',borderRadius:12,padding:'11px 13px',textAlign:'left',fontSize:13,fontWeight:500,color:'rgba(240,232,255,.82)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",lineHeight:1.4,transition:'all .16s' }}
+                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(42,92,173,.25)';e.currentTarget.style.color='#fff';}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(4,16,52,.85)';e.currentTarget.style.color='rgba(240,232,255,.82)';}}>
                   💙 {s}
                 </button>
               ))}
@@ -1864,6 +1978,203 @@ function Advocate({ data, user }) {
           {msgs.length>0&&<button onClick={handleShare} style={{ fontSize:11,color:'rgba(201,168,76,.45)',background:'transparent',border:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Updates / What's New ─────────────────────────────────────
+function Updates() {
+  const features = [
+    { icon:'💙', title:'Lazuli AI Health Advocate', desc:'Your personal AI health companion trained to support chronic illness patients — answers questions, helps you prep for appointments, and always believes you.', status:'live' },
+    { icon:'🗺', title:'Body Map & Brain Map', desc:'Interactive anatomical maps to track pain, symptoms, and neurological patterns over time with visual heat mapping.', status:'live' },
+    { icon:'💉', title:'Infusion Hub', desc:'Full infusion appointment management — gentle prep checklists, side effect tracking, and your personal companion message before each infusion.', status:'live' },
+    { icon:'💧', title:'Hydration Station', desc:'Track daily hydration with a gorgeous animated glass pitcher. Customize drink types and amounts to your routine.', status:'live' },
+    { icon:'📖', title:'Secure Diary', desc:'A fully private, beautiful diary with custom fonts, mood tracking, and photo uploads. Never shared, always encrypted.', status:'live' },
+    { icon:'🔗', title:'Shareable Health Summary', desc:'Generate a PIN-protected, read-only health snapshot to share with doctors, caregivers, or specialists — you control exactly what\'s included.', status:'live' },
+    { icon:'🏋️', title:'Lazuli Gym — Adaptive Fitness', desc:'AI-powered gentle exercise guidance designed specifically for chronic illness patients. Your occupational therapist in your pocket.', status:'coming' },
+    { icon:'📱', title:'Google Play Store App', desc:'Take Lazuli Crest everywhere — the full native Android app is in development and coming to Google Play Store soon.', status:'coming' },
+    { icon:'🤝', title:'Care Team Collaboration', desc:'Invite a caregiver, family member, or care coordinator to view your health data in a separate read-only care portal.', status:'coming' },
+    { icon:'📊', title:'Advanced Health Analytics', desc:'Trend charts, symptom correlations, flare pattern detection, and exportable health reports for your medical team.', status:'coming' },
+    { icon:'🏥', title:'Doctor Finder & Specialist Map', desc:'Find chronic illness specialists, patient advocates, and rare disease centers near you — filtered by your conditions.', status:'coming' },
+    { icon:'💊', title:'Medication Interaction Checker', desc:'AI-powered medication safety checker that flags potential interactions and reminds you of time-sensitive doses.', status:'coming' },
+  ];
+
+  return (
+    <div style={{ position:'relative' }}>
+      {/* Hero */}
+      <div style={{ textAlign:'center', padding:'40px 20px 32px', position:'relative' }}>
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 30%, rgba(42,92,173,.2) 0%, transparent 65%)', pointerEvents:'none' }}/>
+        <div style={{ display:'inline-block', marginBottom:16, animation:'floatUp 3s ease-in-out infinite' }}>
+          <div style={{ fontSize:56, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}>💎</div>
+        </div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:6, textShadow:'0 0 30px rgba(201,168,76,.4)', letterSpacing:2 }}>Lazuli Crest</div>
+        <div style={{ fontFamily:"'Cinzel',serif", fontSize:14, color:'rgba(168,196,240,.7)', letterSpacing:4, textTransform:'uppercase', marginBottom:18 }}>The Gold Standard in Health Advocacy</div>
+        <div style={{ maxWidth:540, margin:'0 auto', fontSize:16, color:'rgba(240,232,255,.65)', lineHeight:1.8, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>
+          Lazuli Crest is always evolving — every update is built around real patient needs. New features, refinements, and tools are added constantly to better support your health journey.
+        </div>
+        <div style={{ marginTop:22, display:'flex', flexWrap:'wrap', justifyContent:'center', gap:10 }}>
+          <div style={{ padding:'8px 20px', borderRadius:20, background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.3)', fontSize:14, color:'#6ee7b7', fontWeight:600 }}>✓ Live Features</div>
+          <div style={{ padding:'8px 20px', borderRadius:20, background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', fontSize:14, color:'#C9A84C', fontWeight:600, animation:'pulseGlow 3s ease-in-out infinite' }}>🚀 Coming Soon</div>
+        </div>
+      </div>
+
+      {/* Play Store banner */}
+      <div style={{ margin:'0 0 28px', padding:'22px 24px', background:'linear-gradient(135deg,rgba(42,92,173,.18),rgba(201,168,76,.08))', border:'1.5px solid rgba(201,168,76,.3)', borderRadius:18, display:'flex', gap:18, alignItems:'center', flexWrap:'wrap', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', top:0, right:0, width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle,rgba(201,168,76,.08) 0%,transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ fontSize:44, animation:'heartbeat 2.5s ease-in-out infinite', filter:'drop-shadow(0 0 12px rgba(201,168,76,.5))' }}>📱</div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:18, color:'#C9A84C', marginBottom:6, fontWeight:700 }}>Google Play Store — Coming Soon</div>
+          <div style={{ fontSize:15, color:'rgba(240,232,255,.7)', lineHeight:1.7 }}>The full Lazuli Crest native Android app is in development. Take your complete health vault with you — offline access, push reminders, and the same luxury experience on every device.</div>
+        </div>
+        <div style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', color:'#000', fontWeight:700, fontSize:14, cursor:'default', boxShadow:'0 4px 20px rgba(201,168,76,.4)' }}>Notify Me</div>
+      </div>
+
+      {/* Features grid */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
+        {features.map((f,i)=>(
+          <div key={i} className="glass-card-static" style={{ padding:22, position:'relative', overflow:'hidden', animation:`fadeUp .4s ${i*.05}s both` }}>
+            <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:`radial-gradient(circle,${f.status==='live'?'rgba(110,231,183,.08)':'rgba(201,168,76,.08)'} 0%,transparent 70%)` }}/>
+            <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
+              <div style={{ fontSize:28, filter:'drop-shadow(0 0 8px rgba(42,92,173,.4))', flexShrink:0 }}>{f.icon}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7 }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:15, color:'#C9A84C', fontWeight:600, flex:1 }}>{f.title}</div>
+                  <span style={{ fontSize:11, fontWeight:700, padding:'2px 9px', borderRadius:20, background:f.status==='live'?'rgba(110,231,183,.15)':'rgba(201,168,76,.12)', color:f.status==='live'?'#6ee7b7':'#C9A84C', border:`1px solid ${f.status==='live'?'rgba(110,231,183,.3)':'rgba(201,168,76,.3)'}`, whiteSpace:'nowrap' }}>
+                    {f.status==='live'?'● LIVE':'◈ SOON'}
+                  </span>
+                </div>
+                <div style={{ fontSize:14, color:'rgba(240,232,255,.6)', lineHeight:1.7 }}>{f.desc}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom alchemy quote */}
+      <div style={{ textAlign:'center', padding:'36px 20px 16px' }}>
+        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:18, color:'rgba(201,168,76,.6)', lineHeight:1.9, maxWidth:480, margin:'0 auto' }}>
+          "In alchemy, lapis lazuli was called the philosopher's stone of healing — rare, precious, and transformative. We built Lazuli Crest on that same principle."
+        </div>
+        <div style={{ fontSize:13, color:'rgba(240,232,255,.2)', marginTop:8, letterSpacing:2 }}>— THE LAZULI CREST TEAM</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Lazuli Gym ───────────────────────────────────────────────
+const GYM_EXERCISES = [
+  { id:'breath', title:'Box Breathing', icon:'🌬️', category:'Breath & Calm', duration:'5 min', intensity:'Very Light', benefit:'Nervous system reset, reduces flares', steps:['Sit or lie comfortably','Inhale slowly for 4 counts','Hold for 4 counts','Exhale for 4 counts','Hold for 4 counts','Repeat 4–8 times'] },
+  { id:'neck', title:'Gentle Neck Rolls', icon:'🔄', category:'Mobility', duration:'3 min', intensity:'Very Light', benefit:'Reduces neck tension, improves circulation', steps:['Sit tall with shoulders relaxed','Slowly drop chin to chest','Roll ear to shoulder slowly — feel the stretch','Roll back to center, then to other side','Never force — stop if dizzy','5 slow rolls each direction'] },
+  { id:'ankle', title:'Ankle Circles', icon:'🦶', category:'Circulation', duration:'3 min', intensity:'Very Light', benefit:'Improves circulation, reduces swelling', steps:['Sit or lie down','Lift one foot slightly off the ground','Rotate ankle slowly clockwise 10 times','Rotate counter-clockwise 10 times','Switch feet','Can be done in bed on bad days'] },
+  { id:'shoulder', title:'Shoulder Shrugs & Rolls', icon:'🤷', category:'Mobility', duration:'4 min', intensity:'Light', benefit:'Releases shoulder tension, eases muscle stiffness', steps:['Sit upright if able','Raise both shoulders to your ears','Hold 2 seconds','Roll them back and down slowly','Forward roll: reverse the direction','10 slow repetitions each direction'] },
+  { id:'seated', title:'Seated Marching', icon:'🪑', category:'Strength', duration:'5 min', intensity:'Light', benefit:'Leg strength, circulation, energy boost', steps:['Sit in a sturdy chair','Lift right knee up slowly','Lower, then lift left knee','Alternate like slow marching','Keep breathing steadily','Start with 10 total, build up over days'] },
+  { id:'wall', title:'Wall Push-Ups', icon:'🧱', category:'Strength', duration:'5 min', intensity:'Light-Moderate', benefit:'Upper body strength, minimal joint stress', steps:['Stand facing a wall, arm\'s length away','Place hands flat on wall at shoulder height','Bend elbows to lean toward wall slowly','Straighten arms to push back','Keep core gently engaged','5–10 reps to start'] },
+  { id:'catcow', title:'Cat-Cow Stretch', icon:'🐱', category:'Flexibility', duration:'4 min', intensity:'Light', benefit:'Spinal mobility, pain relief, reduces stiffness', steps:['Come to hands and knees if able (or adapt in chair)','Inhale: let belly drop, lift head gently (Cow)','Exhale: round back up like a cat, tuck chin','Move slowly with your breath','8–10 slow repetitions','Stop if any sharp pain'] },
+  { id:'supine', title:'Supine Leg Slides', icon:'🛌', category:'Gentle Strength', duration:'5 min', intensity:'Very Light', benefit:'Core activation, hip mobility — fully in bed', steps:['Lie flat on your back','Bend both knees, feet flat','Slowly slide one heel out to straighten leg','Slide it back slowly','Alternate legs','Great for flare days — requires no floor transfer'] },
+];
+
+const GYM_GOALS = ['Reduce pain & stiffness','Improve energy levels','Build gentle strength','Improve circulation','Reduce anxiety','Support sleep','Maintain mobility'];
+
+function LazuliGym({ data }) {
+  const [selectedGoals, setSelectedGoals] = useState([]);
+  const [activeEx, setActiveEx] = useState(null);
+  const [step, setStep] = useState(0);
+  const [aiSuggestion, setAiSuggestion] = useState('');
+
+  const toggleGoal = g => setSelectedGoals(prev => prev.includes(g) ? prev.filter(x=>x!==g) : [...prev, g]);
+
+  const recommended = selectedGoals.length > 0
+    ? GYM_EXERCISES.filter(() => true) // show all, sorted by relevance
+    : GYM_EXERCISES;
+
+  const conditions = data.profile?.conditions || '';
+
+  useEffect(() => {
+    if (conditions) {
+      const msg = conditions.includes('POTS') || conditions.includes('Dysautonomia')
+        ? "With POTS/Dysautonomia, start with all exercises horizontal or seated. Avoid standing exercises on bad days. Ankle circles and supine leg slides are ideal starting points."
+        : conditions.includes('Fibromyalgia') || conditions.includes('ME/CFS')
+        ? "With Fibromyalgia or ME/CFS, pacing is everything. Start with 2–3 minutes maximum. Rest between exercises. Box breathing is your best friend."
+        : conditions.includes('EDS') || conditions.includes('Hypermobility')
+        ? "With EDS or hypermobility, avoid pushing joints to end range. Focus on strengthening muscles around joints rather than stretching. Wall push-ups and seated marching are safe."
+        : "Always listen to your body. Stop any exercise that increases pain. On flare days, box breathing and ankle circles in bed are enough — that is still movement.";
+      setAiSuggestion(msg);
+    }
+  }, [conditions]);
+
+  return (
+    <div>
+      <PH emoji="🏋️" title="Lazuli Gym" sub="Gentle, adaptive movement curated for chronic illness — designed with occupational therapy principles"/>
+
+      {aiSuggestion && (
+        <div style={{ marginBottom:20, padding:'18px 22px', background:'rgba(42,92,173,.1)', border:'1px solid rgba(42,92,173,.3)', borderRadius:16, display:'flex', gap:14, alignItems:'flex-start' }}>
+          <div style={{ fontSize:24, flexShrink:0, animation:'heartbeat 3s ease-in-out infinite' }}>💙</div>
+          <div>
+            <div style={{ fontSize:12, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:6 }}>Lazuli — Personal Trainer</div>
+            <div style={{ fontSize:15, color:'rgba(240,232,255,.8)', lineHeight:1.75, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>{aiSuggestion}</div>
+          </div>
+        </div>
+      )}
+
+      <div className="glass-card-static" style={{ padding:20, marginBottom:20 }}>
+        <label>What are your goals today? (select all that apply)</label>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:10 }}>
+          {GYM_GOALS.map(g=>(
+            <button key={g} onClick={()=>toggleGoal(g)} style={{ padding:'7px 15px', borderRadius:20, fontSize:14, border:`1.5px solid ${selectedGoals.includes(g)?'#C9A84C':'rgba(42,92,173,.35)'}`, background:selectedGoals.includes(g)?'rgba(201,168,76,.12)':'rgba(4,16,52,.8)', color:selectedGoals.includes(g)?'#C9A84C':'rgba(240,232,255,.7)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s' }}>
+              {selectedGoals.includes(g)?'✓ ':''}{g}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeEx ? (
+        <div className="glass-card-static" style={{ padding:28 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+            <div>
+              <div style={{ fontSize:36, marginBottom:8 }}>{activeEx.icon}</div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:22, color:'#C9A84C', marginBottom:4 }}>{activeEx.title}</div>
+              <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                <span style={{ fontSize:13, color:'rgba(168,196,240,.7)', background:'rgba(42,92,173,.15)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(42,92,173,.3)' }}>{activeEx.duration}</span>
+                <span style={{ fontSize:13, color:'rgba(201,168,76,.7)', background:'rgba(201,168,76,.08)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(201,168,76,.2)' }}>{activeEx.intensity}</span>
+              </div>
+            </div>
+            <button className="btn btn-ghost" onClick={()=>{setActiveEx(null);setStep(0);}}>← Back</button>
+          </div>
+          <div style={{ marginBottom:20, padding:'14px 18px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:12 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.65)', marginBottom:4, textTransform:'uppercase', letterSpacing:1 }}>Benefit</div>
+            <div style={{ fontSize:15, color:'rgba(240,232,255,.7)', lineHeight:1.7 }}>{activeEx.benefit}</div>
+          </div>
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'#C9A84C', marginBottom:14 }}>Step-by-Step Guide</div>
+            {activeEx.steps.map((s,i)=>(
+              <div key={i} onClick={()=>setStep(i)} style={{ display:'flex', alignItems:'flex-start', gap:14, marginBottom:12, padding:'12px 16px', borderRadius:12, background:step===i?'rgba(42,92,173,.2)':'rgba(255,255,255,.03)', border:`1px solid ${step===i?'rgba(42,92,173,.5)':'rgba(42,92,173,.1)'}`, cursor:'pointer', transition:'all .18s' }}>
+                <div style={{ width:26, height:26, borderRadius:'50%', background:step===i?'linear-gradient(135deg,#2A5CAD,#C9A84C)':'rgba(42,92,173,.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#fff', flexShrink:0 }}>{i+1}</div>
+                <div style={{ fontSize:15, color:step===i?'#F0E8FF':'rgba(240,232,255,.65)', lineHeight:1.6, flex:1 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:'flex', gap:10 }}>
+            {step > 0 && <button className="btn btn-ghost" onClick={()=>setStep(s=>s-1)}>← Prev Step</button>}
+            {step < activeEx.steps.length-1 && <button className="btn btn-gold" onClick={()=>setStep(s=>s+1)}>Next Step →</button>}
+            {step === activeEx.steps.length-1 && <div style={{ padding:'12px 20px', background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.25)', borderRadius:12, fontSize:15, color:'#6ee7b7', flex:1, textAlign:'center' }}>✓ Great work! Rest and listen to your body. 💙</div>}
+          </div>
+        </div>
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:14 }}>
+          {recommended.map((ex,i)=>(
+            <div key={ex.id} className="glass-card" style={{ padding:22, cursor:'pointer', animation:`fadeUp .3s ${i*.04}s both` }} onClick={()=>{setActiveEx(ex);setStep(0);}}>
+              <div style={{ fontSize:32, marginBottom:12, filter:'drop-shadow(0 0 8px rgba(42,92,173,.5))' }}>{ex.icon}</div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'#C9A84C', marginBottom:6 }}>{ex.title}</div>
+              <div style={{ fontSize:13, color:'rgba(168,196,240,.6)', marginBottom:10 }}>{ex.category} · {ex.duration}</div>
+              <div style={{ fontSize:14, color:'rgba(240,232,255,.55)', lineHeight:1.6, marginBottom:14 }}>{ex.benefit}</div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:13, color:'rgba(201,168,76,.65)', background:'rgba(201,168,76,.08)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(201,168,76,.15)' }}>{ex.intensity}</span>
+                <span style={{ fontSize:13, color:'rgba(42,92,173,.8)', fontWeight:600 }}>Start →</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
