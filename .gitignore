@@ -1,2 +1,6 @@
 .vercel
 .env*.local
+node_modules/
+build/
+.claude/
+chat.js
