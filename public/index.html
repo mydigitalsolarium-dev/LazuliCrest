@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Advy Health" />
+
+    <meta name="description" content="Advy Health — The Gold Standard in Health Advocacy. Your private chronic illness companion." />
+    <meta property="og:title" content="Advy Health" />
+    <meta property="og:description" content="The Gold Standard in Health Advocacy. Your personal chronic illness advocate and health diary." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/icons/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Advy Health" />
+    <meta name="twitter:description" content="The Gold Standard in Health Advocacy." />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="32x32"   href="/icons/icon-192.png" />
+
+    <link rel="preconnect" href="https://firestore.googleapis.com" />
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
+
+    <title>Advy Health — The Gold Standard in Health Advocacy</title>
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        background: #000000;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      #root-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #000000;
+        gap: 12px;
+        padding: 20px;
+      }
+      #root-loader img {
+        width: 80px;
+        height: 80px;
+        border-radius: 18px;
+        animation: floatUp 2s ease-in-out infinite;
+      }
+      #root-loader .splash-wordmark {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 2.2rem;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        color: #ffffff;
+        line-height: 1;
+      }
+      #root-loader .splash-wordmark em {
+        font-style: normal;
+        font-weight: 300;
+        color: rgba(255,255,255,.8);
+        margin-left: 6px;
+      }
+      #root-loader .splash-tagline {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 0.62rem;
+        letter-spacing: 0.22em;
+        color: #C9A84C;
+        text-transform: uppercase;
+      }
+      #root-loader .splash-bar {
+        width: 180px;
+        height: 2px;
+        background: rgba(201,168,76,.12);
+        border-radius: 99px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+      #root-loader .splash-fill {
+        height: 100%;
+        width: 45%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, #A064F0 0%, #C9A84C 100%);
+        animation: splashSlide 1.5s ease-in-out infinite;
+      }
+      @keyframes floatUp {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+      @keyframes splashSlide {
+        0%   { transform: translateX(-120%); }
+        100% { transform: translateX(380%); }
+      }
+      #root-loader.fade-out {
+        opacity: 0;
+        transition: opacity 0.35s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>Advy Health requires JavaScript. Please enable it in your browser settings.</noscript>
+
+    <div id="root-loader" role="status" aria-label="Loading Advy Health">
+      <img src="/icons/icon-192.png" alt="Advy Health logo" onerror="this.style.display='none'"/>
+      <div class="splash-wordmark">ADVY<em>Health</em></div>
+      <div class="splash-tagline">The Gold Standard in Health Advocacy</div>
+      <div class="splash-bar"><div class="splash-fill"></div></div>
+    </div>
+
+    <div id="root"></div>
+
+    <script>
+      (function () {
+        var loader = document.getElementById('root-loader');
+        var root   = document.getElementById('root');
+        if (!loader || !root) return;
+        var obs = new MutationObserver(function () {
+          if (root.children.length > 0) {
+            loader.classList.add('fade-out');
+            setTimeout(function () { loader.style.display = 'none'; }, 380);
+            obs.disconnect();
+          }
+        });
+        obs.observe(root, { childList: true });
+      })();
+    </script>
+  </body>
+</html>
