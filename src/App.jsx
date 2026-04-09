@@ -63,26 +63,53 @@ const PHYSICIAN_TYPES = [
   'Infusion Nurse','Surgeon','Custom…',
 ];
 
-const NAV = [
-  { id:'dashboard',    icon:'🏠',  label:'Home'              },
-  { id:'updates',      icon:'✦',   label:"What's New"        },
-  { id:'profile',      icon:'◈',   label:'My Profile'        },
-  { id:'symptoms',     icon:'◈',   label:'Symptoms'          },
-  { id:'bodymap',      icon:'👤',  label:'Body Map'          },
-  { id:'brain',        icon:'🧠',  label:'The Brain'         },
-  { id:'medications',  icon:'◉',   label:'Medications'       },
-  { id:'appointments', icon:'🗓',  label:'Appointments'      },
-  { id:'infusion',     icon:'💉',  label:'Infusion Hub'      },
-  { id:'metabolic',    icon:'🔬',  label:'Metabolic Lab'     },
-  { id:'hydration',    icon:'💧',  label:'Hydration Station' },
-  { id:'diet',         icon:'✿',   label:'AI Nutrition'      },
-  { id:'diary',        icon:'📖',  label:'My Diary'          },
-  { id:'documents',    icon:'🗂',  label:'Documents'         },
-  { id:'gym',          icon:'🏋️',  label:'Lazuli Gym'        },
-  { id:'mindfulness',  icon:'🌸',  label:'Mindfulness'       },
-  { id:'advocate',     icon:'🫂',  label:'Lazuli AI'         },
-  { id:'share',        icon:'🔗',  label:'Share & Privacy'   },
+const NAV_GROUPS = [
+  {
+    label: 'Overview',
+    items: [
+      { id:'dashboard',   icon:'⌂',   label:'Home'         },
+      { id:'updates',     icon:'✦',   label:"What's New"   },
+      { id:'profile',     icon:'◈',   label:'My Profile'   },
+    ]
+  },
+  {
+    label: 'Health Tracking',
+    items: [
+      { id:'symptoms',    icon:'◉',   label:'Symptoms'         },
+      { id:'bodymap',     icon:'◎',   label:'Body Map'          },
+      { id:'brain',       icon:'◐',   label:'The Brain'         },
+      { id:'medications', icon:'⊕',   label:'Medications'       },
+      { id:'appointments',icon:'▷',   label:'Appointments'      },
+      { id:'infusion',    icon:'∿',   label:'Infusion Hub'      },
+      { id:'metabolic',   icon:'⚗',   label:'Metabolic Lab'     },
+    ]
+  },
+  {
+    label: 'Wellness',
+    items: [
+      { id:'hydration',   icon:'◇',   label:'Hydration'         },
+      { id:'diet',        icon:'✿',   label:'AI Nutrition'      },
+      { id:'gym',         icon:'△',   label:'Lazuli Gym'        },
+      { id:'mindfulness', icon:'◌',   label:'Mindfulness'       },
+    ]
+  },
+  {
+    label: 'My Records',
+    items: [
+      { id:'diary',       icon:'▣',   label:'My Diary'          },
+      { id:'documents',   icon:'▤',   label:'Documents'         },
+    ]
+  },
+  {
+    label: 'AI & Settings',
+    items: [
+      { id:'advocate',    icon:'◈',   label:'Lazuli AI'         },
+      { id:'share',       icon:'◫',   label:'Share & Privacy'   },
+    ]
+  },
 ];
+// Flat nav for backward compat
+const NAV = NAV_GROUPS.flatMap(g => g.items);
 
 const DIARY_FONTS = [
   { label:'Dancing Script',    value:"'Dancing Script',cursive",      size:20 },
@@ -143,6 +170,7 @@ export default function App() {
   const [saving, setSaving]       = useState(false);
   const [tab, setTab]             = usePersistedTab('dashboard');
   const [sideOpen, setSideOpen]   = useState(false);
+  const [privacyOn, setPrivacyOn] = useState(false);
   const saveTimer                 = useRef(null);
   const unsubRef                  = useRef(null);
 
@@ -197,9 +225,12 @@ export default function App() {
 
       <div style={{ display:'flex', maxWidth:1280, margin:'0 auto', minHeight:'100vh', position:'relative', zIndex:1 }}>
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
-        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen}/>
+        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn}/>
 
-        <main className="main-content" style={{ contain:'layout style' }}>
+        {privacyOn && (
+          <div style={{ position:'fixed', inset:0, zIndex:200, backdropFilter:'blur(18px) brightness(.4)', WebkitBackdropFilter:'blur(18px) brightness(.4)', pointerEvents:'none' }}/>
+        )}
+        <main className={`main-content${privacyOn?' privacy-on':''}`} style={{ contain:'layout style' }}>
           <div className="mobile-topbar">
             <button className="hamburger" onClick={()=>setSideOpen(o=>!o)}>
               <span/><span/><span/>
@@ -208,7 +239,12 @@ export default function App() {
               <LogoImg size={28}/>
               <span style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:700, fontSize:20, color:'#C9A84C', letterSpacing:1, textShadow:'0 0 15px rgba(201,168,76,.3)' }}>Lazuli <em style={{ fontStyle:'italic' }}>Crest</em></span>
             </div>
-            {saving && <div style={{ marginLeft:'auto', width:6, height:6, borderRadius:'50%', background:'#C9A84C', animation:'pulseGlow 1s infinite' }}/>}
+            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+              {saving && <div style={{ width:6, height:6, borderRadius:'50%', background:'#C9A84C', animation:'pulseGlow 1s infinite' }}/>}
+              <button onClick={()=>setPrivacyOn(p=>!p)} style={{ padding:'5px 12px', borderRadius:20, border:`1px solid ${privacyOn?'rgba(201,168,76,.4)':'rgba(42,92,173,.3)'}`, background:privacyOn?'rgba(201,168,76,.08)':'rgba(4,14,52,.6)', color:privacyOn?'#C9A84C':'rgba(168,196,240,.5)', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+                {privacyOn?'🔓':'🔒'}
+              </button>
+            </div>
           </div>
 
           <div className="page-fade page-inner" key={tab}>
@@ -283,29 +319,42 @@ function AnimatedBackground() {
       <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.1) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
       <div style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.12) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
       <div style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.15) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
-      {/* Rising scientific symbols — outline ghost style */}
+      {/* Rising scientific symbols — SVG outline with blue glow pulse */}
       {FLOAT_ITEMS.map((s,i) => (
         <div key={`sym-${i}`} style={{
           position:'absolute', left:`${s.x}%`, bottom:'-10%',
-          fontSize:s.size, opacity:0,
+          width:s.size, height:s.size, opacity:0,
           animation:`riseUp ${s.dur}s ${s.delay}s ease-in-out infinite`,
           userSelect:'none',
-          color:'transparent',
-          WebkitTextStroke:`1px rgba(42,92,173,0.35)`,
-          filter:'drop-shadow(0 0 8px rgba(42,92,173,.5)) drop-shadow(0 0 16px rgba(42,92,173,.2))',
-          fontFamily:"'DM Sans',sans-serif",
-          fontWeight:100,
-        }}>{s.sym}</div>
+        }}>
+          <svg viewBox="0 0 40 40" width={s.size} height={s.size} style={{ overflow:'visible' }}>
+            <defs>
+              <filter id={`sg${i}`} x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <text x="20" y="30" textAnchor="middle" fontSize="32"
+              fill="none"
+              stroke="rgba(42,92,173,0.45)"
+              strokeWidth="0.8"
+              filter={`url(#sg${i})`}
+              fontFamily="'DM Sans',Georgia,serif"
+              style={{ animation:`breathePulse ${6+i%4}s ease-in-out infinite` }}
+            >{s.sym}</text>
+          </svg>
+        </div>
       ))}
-      {/* Floating chronic illness quotes */}
+      {/* Floating chronic illness quotes — larger, spaced out */}
       {FLOAT_QUOTES.map((q,i) => (
         <div key={`quote-${i}`} style={{
           position:'absolute', left:`${q.x}%`, bottom:'-5%',
-          fontSize:16, opacity:0, color:'rgba(201,168,76,.55)',
+          fontSize:18, opacity:0, color:'rgba(201,168,76,.38)',
           fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
-          whiteSpace:'nowrap', letterSpacing:.5,
-          animation:`riseUp ${q.dur}s ${q.delay}s linear infinite`,
+          whiteSpace:'nowrap', letterSpacing:.8, maxWidth:'40vw',
+          animation:`riseUp ${q.dur + 20}s ${q.delay}s linear infinite`,
           userSelect:'none',
+          textShadow:'0 0 20px rgba(201,168,76,.2)',
         }}>{q.text}</div>
       ))}
       {/* Named Medical Constellations */}
@@ -460,6 +509,7 @@ const GLOBAL_CSS = `
   @keyframes slideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
   @keyframes auroraFloat{0%{transform:translate(0,0) scale(1);opacity:.8}25%{transform:translate(20px,-14px) scale(1.08);opacity:1}50%{transform:translate(5px,10px) scale(1.04);opacity:.85}75%{transform:translate(-10px,5px) scale(0.96);opacity:.95}100%{transform:translate(-12px,20px) scale(1.02);opacity:.9}}
   @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+  @keyframes glowPulse{0%,100%{stroke-opacity:.3;filter:drop-shadow(0 0 4px rgba(42,92,173,.4))}50%{stroke-opacity:.6;filter:drop-shadow(0 0 12px rgba(42,92,173,.8)) drop-shadow(0 0 24px rgba(42,92,173,.4))}}
   @keyframes orbitX{0%,100%{transform:translateX(0)}50%{transform:translateX(30px)}}
   @keyframes breathePulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.08);opacity:.9}}
   @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
@@ -537,6 +587,11 @@ const GLOBAL_CSS = `
   .nav-item.active{background:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));color:#C9A84C;border-color:rgba(201,168,76,.3);font-weight:600}
 
   .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;contain:layout style}
+  .privacy-sensitive{transition:filter .3s ease}
+  .privacy-on .privacy-sensitive{filter:blur(8px)}
+  .privacy-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;borderRadius:20px;border:1.5px solid rgba(42,92,173,.35);background:rgba(4,14,52,.8);color:rgba(168,196,240,.7);fontSize:14px;fontWeight:600;cursor:pointer;fontFamily:'DM Sans',sans-serif;transition:all .18s;backdropFilter:blur(8px)}
+  .privacy-btn.active{border-color:rgba(201,168,76,.5);background:rgba(201,168,76,.1);color:#C9A84C}
+  .privacy-btn:hover{border-color:rgba(42,92,173,.6);color:#F0E8FF}
   .page-inner{flex:1;padding:28px 36px;padding-bottom:48px}
   .mobile-topbar{display:none;align-items:center;gap:12px;padding:14px 18px;background:rgba(4,1,16,.97);backdrop-filter:blur(20px);border-bottom:1.5px solid rgba(42,92,173,.2);position:sticky;top:0;z-index:90;flex-shrink:0}
   .hamburger{background:transparent;border:none;cursor:pointer;padding:5px;display:flex;flex-direction:column;gap:5px;flex-shrink:0}
@@ -840,7 +895,7 @@ function DailyQuoteSidebar() {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
-function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
+function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn }) {
   const isCare      = data.profile?.accountType === 'caree';
   const displayName = isCare ? data.profile?.careeName||'Your Caree' : (user.displayName||'Your Account');
   const [factIdx, setFactIdx] = useState(0);
@@ -881,20 +936,28 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
         </div>
       </div>
       <nav style={{ padding:'4px 8px', overflowY:'auto' }}>
-        {NAV.map(n => {
-          const active = tab===n.id;
-          return (
-            <button key={n.id} onClick={()=>setTab(n.id)} className={`nav-item${active?' active':''}`} style={{ marginBottom:1 }}>
-              {active && <div style={{ position:'absolute', left:0, top:'18%', bottom:'18%', width:3, background:'linear-gradient(180deg,#2A5CAD,#C9A84C)', borderRadius:'0 3px 3px 0' }}/>}
-              <span style={{ fontSize:16, width:20, textAlign:'center', lineHeight:1 }}>{n.icon}</span>
-              <span style={{ flex:1, fontSize:13 }}>{n.label}</span>
-              {active && <span style={{ width:4, height:4, borderRadius:'50%', background:'#C9A84C', boxShadow:'0 0 6px #C9A84C' }}/>}
-            </button>
-          );
-        })}
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi}>
+            <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.35)', textTransform:'uppercase', letterSpacing:1.8, padding:'10px 8px 4px', userSelect:'none' }}>{group.label}</div>
+            {group.items.map(n => {
+              const active = tab===n.id;
+              return (
+                <button key={n.id} onClick={()=>setTab(n.id)} className={`nav-item${active?' active':''}`} style={{ marginBottom:1 }}>
+                  {active && <div style={{ position:'absolute', left:0, top:'18%', bottom:'18%', width:3, background:'linear-gradient(180deg,#2A5CAD,#C9A84C)', borderRadius:'0 3px 3px 0' }}/>}
+                  <span style={{ fontSize:15, width:20, textAlign:'center', lineHeight:1, color:active?'#C9A84C':'rgba(168,196,240,.5)' }}>{n.icon}</span>
+                  <span style={{ flex:1, fontSize:14 }}>{n.label}</span>
+                  {active && <span style={{ width:4, height:4, borderRadius:'50%', background:'#C9A84C', boxShadow:'0 0 6px #C9A84C' }}/>}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </nav>
       <div style={{ padding:'10px 12px 14px', borderTop:'1px solid rgba(42,92,173,.15)', display:'flex', flexDirection:'column', gap:8, flex:1 }}>
         <DailyQuoteSidebar/>
+        <button onClick={()=>setPrivacyOn(p=>!p)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:`1.5px solid ${privacyOn?'rgba(201,168,76,.5)':'rgba(42,92,173,.3)'}`, background:privacyOn?'rgba(201,168,76,.1)':'rgba(42,92,173,.08)', color:privacyOn?'#C9A84C':'rgba(168,196,240,.6)', fontWeight:600, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', marginBottom:6 }}>
+          {privacyOn ? '🔓 Show Details' : '🔒 Privacy Screen'}
+        </button>
         <button onClick={()=>signOut(auth)} className="btn btn-subtle" style={{ width:'100%', justifyContent:'center', fontSize:16, padding:'9px' }}>Sign out</button>
       </div>
     </aside>
