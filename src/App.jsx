@@ -2392,7 +2392,7 @@ function ZenGardenCanvas() {
   const isDrawing = useRef(false);
   const lastPos   = useRef(null);
   const audioCtxRef = useRef(null);
-  const rakeNodeRef = useRef(null);
+  const rakeNodeRef = useRef(null); // eslint-disable-line no-unused-vars
 
   // Draw the full canvas scene
   const draw = useCallback(() => {
@@ -2676,8 +2676,8 @@ function Mindfulness() {
   const stoneAudioCtxRef = useRef(null);
 
   // Zen garden
-  const [zenLines, setZenLines]   = useState([]);
-  const [zenTool, setZenTool]     = useState('rake');
+  const [zenLines, setZenLines]   = useState([]); // eslint-disable-line no-unused-vars
+  const [zenTool, setZenTool]     = useState('rake'); // eslint-disable-line no-unused-vars
 
   // Soundscape
   const [playingSound, setPlayingSound] = useState(null);
@@ -2746,9 +2746,11 @@ function Mindfulness() {
   },[]);
 
   useEffect(()=>{
+    const audioEls = audioElsRef.current;
+    const fadeTimers = fadeTimersRef.current;
     return ()=>{
-      Object.values(audioElsRef.current).forEach(el=>{ try{el.pause();el.src='';}catch(e){} });
-      clearInterval(Object.values(fadeTimersRef.current||{}));
+      Object.values(audioEls).forEach(el=>{ try{el.pause();el.src='';}catch(e){} });
+      clearInterval(Object.values(fadeTimers||{}));
     };
   },[]);
 
@@ -2798,7 +2800,7 @@ function Mindfulness() {
     setTimeout(()=>setGratBurst(false), 800);
   };
 
-  const drawZen = (e) => {
+  const drawZen = (e) => { // eslint-disable-line no-unused-vars
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left)/rect.width*100).toFixed(1);
     const y = ((e.clientY - rect.top)/rect.height*100).toFixed(1);
