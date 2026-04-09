@@ -2227,7 +2227,6 @@ function Mindfulness() {
   ];
 
   const [tool, setTool]           = useState(null);
-  const [roomEntering, setRoomEntering] = useState(null);
   const [active, setActive]       = useState(false);
   const [phaseIdx, setPhaseIdx]   = useState(0);
   const [secs, setSecs]           = useState(PHASES[0].dur);
