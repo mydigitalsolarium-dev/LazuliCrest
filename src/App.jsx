@@ -7,7 +7,7 @@ import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import {
   uid, todayStr, fmtDate, greet, getDailyMessage,
-  getProactiveGreeting, buildDoctorSummary,
+  getProactiveGreeting,
 } from './utils/helpers';
 import { useShare, getShareButtonLabel } from './hooks/useShare';
 import { usePersistedTab } from './hooks/useLocalStorage';
@@ -92,7 +92,7 @@ const DIARY_FONTS = [
   { label:'EB Garamond',       value:"'EB Garamond',serif",           size:18 },
 ];
 const DIARY_MOODS = ['💜 Loved','✨ Hopeful','🌿 Calm','💪 Determined','🌧 Low','😴 Exhausted','🔥 Frustrated','🦋 Transforming','🌊 Overwhelmed','☀️ Grateful'];
-const DIET_GOALS  = ['Reduce inflammation','Manage energy crashes','Support gut health','Reduce brain fog','Balance blood sugar','Support sleep','Reduce joint pain','Support immune function'];
+// DIET_GOALS removed — replaced by DIET_PROTOCOLS in new AIDiet component
 
 const CHRONIC_ILLNESS_QUOTES = [
   'You are not your diagnosis.',
@@ -426,8 +426,8 @@ function RotatingQuoteBanner() {
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  html{font-size:18px}
-  body{font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  html{font-size:19px}
+  body{font-size:19px;line-height:1.65;-webkit-font-smoothing:antialiased}
   button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:17px}
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}
@@ -452,6 +452,7 @@ const GLOBAL_CSS = `
   @keyframes breatheRest{0%,100%{transform:scale(.75)}}
   @keyframes pageTurn{from{transform:rotateY(-15deg) translateX(-10px);opacity:.7}to{transform:rotateY(0deg) translateX(0);opacity:1}}
   @keyframes fogDrift{0%,100%{opacity:.3}50%{opacity:.6}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
   @keyframes twinkle{0%{opacity:.2;r:1}50%{opacity:.9;r:2.5}100%{opacity:.35;r:1.5}}
   @keyframes constellFade{0%{opacity:.04}50%{opacity:.22}100%{opacity:.06}}
 
@@ -780,7 +781,7 @@ function DailyQuoteSidebar() {
   return (
     <div style={{ background:'rgba(4,14,52,.78)', backdropFilter:'blur(16px)', borderRadius:14, padding:'16px 15px', border:'1px solid rgba(42,92,173,.28)', flex:1, display:'flex', flexDirection:'column', justifyContent:'center', minHeight:120 }}>
       <div style={{ fontSize:11, fontWeight:700, color:'rgba(201,168,76,.8)', marginBottom:8, letterSpacing:1.8, textTransform:'uppercase' }}>💜 Today</div>
-      <div style={{ fontSize:15, color:'rgba(240,232,255,.88)', lineHeight:1.75, fontFamily:"'Georgia',serif", transition:'opacity .7s ease, transform .7s ease', opacity:textVisible?1:0, transform:textVisible?'translateY(0)':'translateY(6px)' }}>
+      <div style={{ fontSize:15, color:'rgba(240,232,255,.88)', lineHeight:1.75, fontFamily:"Georgia,serif", transition:'opacity .7s ease, transform .7s ease', opacity:textVisible?1:0, transform:textVisible?'translateY(0)':'translateY(6px)' }}>
         {SIDEBAR_QUOTES[idx]}
       </div>
     </div>
@@ -856,7 +857,7 @@ function PH({ emoji, title, sub, children }) {
       <div>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
           <span style={{ fontSize:22 }}>{emoji}</span>
-          <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:700, color:'#C9A84C', letterSpacing:.5, lineHeight:1.1, textShadow:'0 0 20px rgba(201,168,76,.25)' }}>{title}</span>
+          <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', letterSpacing:.5, lineHeight:1.1, textShadow:'0 0 20px rgba(201,168,76,.25)' }}>{title}</span>
         </div>
         {sub && <div style={{ fontSize:16, color:'rgba(240,232,255,.45)', marginLeft:32 }}>{sub}</div>}
       </div>
@@ -891,6 +892,57 @@ function NoteBlock({ title, text, color }) {
     <div style={{ marginBottom:14, padding:'13px 16px', background:'rgba(255,255,255,.03)', borderRadius:12, borderLeft:`3px solid ${color}44` }}>
       <div style={{ fontSize:16, fontWeight:700, color, textTransform:'uppercase', letterSpacing:1, marginBottom:5 }}>{title}</div>
       <div style={{ fontSize:16, color:'rgba(240,232,255,.58)', lineHeight:1.75, whiteSpace:'pre-wrap' }}>{text}</div>
+    </div>
+  );
+}
+
+// Pattern detection hook — runs silently in background
+function usePatternDetection(data) {
+  const [pattern, setPattern] = useState(null);
+  useEffect(() => {
+    if (!data?.symptoms?.length) return;
+    const recent = data.symptoms.slice(0, 14);
+    if (recent.length < 3) return;
+    // Pain trend check
+    const pains = recent.slice(0,7).map(s=>s.pain||0).filter(Boolean);
+    const older = recent.slice(7,14).map(s=>s.pain||0).filter(Boolean);
+    if (pains.length>=3 && older.length>=3) {
+      const avgNew = pains.reduce((a,b)=>a+b,0)/pains.length;
+      const avgOld = older.reduce((a,b)=>a+b,0)/older.length;
+      if (avgNew - avgOld >= 1.5) {
+        setPattern(`Your average pain score has increased by ${(avgNew-avgOld).toFixed(1)} points over the past week. This trend may be worth discussing with your care team.`);
+        return;
+      }
+    }
+    // Low energy days check
+    const lowEnergy = recent.slice(0,7).filter(s=>(s.energy||10)<4);
+    if (lowEnergy.length >= 4) {
+      setPattern(`You've logged low energy (below 4/10) on ${lowEnergy.length} of the last 7 tracked days. Consider mentioning this pattern at your next appointment.`);
+      return;
+    }
+    // Recurring symptom check
+    const symCounts = {};
+    recent.slice(0,7).forEach(s=>(s.entries||[]).forEach(e=>{symCounts[e.symptom]=(symCounts[e.symptom]||0)+1;}));
+    const top = Object.entries(symCounts).sort((a,b)=>b[1]-a[1])[0];
+    if (top && top[1]>=4) {
+      setPattern(`"${top[0]}" has appeared in ${top[1]} of your recent symptom logs. Tracking a recurring symptom like this builds a stronger case for your doctor.`);
+    }
+  }, [data?.symptoms]);
+  return pattern;
+}
+
+// ─── Pattern Detection AI ─────────────────────────────────────
+function PatternAlert({ data, setTab }) {
+  const pattern = usePatternDetection(data);
+  if (!pattern) return null;
+  return (
+    <div style={{ marginBottom:14, padding:'16px 20px', background:'linear-gradient(135deg,rgba(201,168,76,.1),rgba(42,92,173,.08))', border:'1.5px solid rgba(201,168,76,.35)', borderRadius:16, display:'flex', gap:14, alignItems:'flex-start', animation:'popIn .4s ease' }}>
+      <div style={{ fontSize:22, flexShrink:0 }}>🔍</div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.8)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:6 }}>Pattern Detected by Lazuli</div>
+        <div style={{ fontSize:16, color:'rgba(240,232,255,.88)', lineHeight:1.75, fontFamily:"Georgia,serif" }}>{pattern}</div>
+      </div>
+      <button onClick={()=>setTab('advocate')} style={{ background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', borderRadius:10, padding:'7px 14px', fontSize:14, color:'#C9A84C', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", whiteSpace:'nowrap', flexShrink:0 }}>Ask Lazuli →</button>
     </div>
   );
 }
@@ -934,6 +986,9 @@ function Dashboard({ data, setTab, upd, user }) {
         </div>
         {data.profile?.goal && <div style={{ marginTop:8, fontSize:16, color:'rgba(201,168,76,.65)', fontWeight:500, background:'rgba(201,168,76,.07)', border:'1px solid rgba(201,168,76,.14)', display:'inline-block', padding:'5px 14px', borderRadius:20 }}>✦ {data.profile.goal}</div>}
       </div>
+
+        {/* Pattern Detection Banner */}
+        <PatternAlert data={data} setTab={setTab}/>
 
       {/* Stat cards */}
       <div className="stats-grid">
@@ -1560,91 +1615,132 @@ function Diary({ data, upd }) {
 }
 
 // ─── AI Diet ──────────────────────────────────────────────────
-function AIDiet({ data, upd }) {
-  const [goal,setGoal]=useState('');
-  const [restrictions,setRestrictions]=useState('');
-  const [result,setResult]=useState('');
-  const [loading,setLoading]=useState(false);
-  const [logOpen,setLogOpen]=useState(false);
-  const [logDate,setLogDate]=useState(todayStr());
-  const [meal,setMeal]=useState('Breakfast');
-  const [food,setFood]=useState('');
-  const [logNote,setLogNote]=useState('');
-  const dietLogs=data.dietLogs||[];
+const DIET_PROTOCOLS = [
+  'AIP','Mediterranean','Low-FODMAP','Anti-Inflammatory','Keto','Gluten-Free',
+  'Dairy-Free','Paleo','Vegan','Low-Histamine','SIBO','Elimination',
+];
 
-  const generate = async () => {
-    if(!goal){alert('Please select a goal.');return;}
-    setLoading(true);setResult('');
-    try {
-      const res = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-        isTracking: true,
-        messages:[{role:'user',content:`You are Lazuli — a compassionate functional nutrition advisor for someone with chronic illness.\n\nConditions: ${data.profile?.conditions||'chronic illness'}\nMedications: ${data.medications?.filter(m=>m.active).map(m=>m.name).join(', ')||'none'}\nGoal: ${goal}\nRestrictions: ${restrictions||'none'}\n\nProvide: 1) Why this goal matters for their conditions 2) 6–8 anti-inflammatory foods to focus on 3) 4–5 foods to minimize 4) A one-day meal plan 5) One simple recipe 6) A warm reminder that eating well with chronic illness is genuinely hard and they are doing enough. Use clear section headers.`}]
-      })});
-      const json=await res.json();
-      if(!res.ok||json.error) throw new Error(json.error||`HTTP ${res.status}`);
-      setResult(json.content?.map(b=>b.text||'').join('')||'');
-    } catch(e){setResult(`Error: ${e.message}`);}
-    setLoading(false);
+function AIDiet({ data, upd }) {
+  const [protocol, setProtocol] = useState(data.dietProtocol||'');
+  const [mealLog, setMealLog]   = useState('');
+  const [mealTime, setMealTime] = useState('breakfast');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiReply, setAiReply]   = useState('');
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [showLog, setShowLog]   = useState(false);
+
+  const today = todayStr();
+  const todayMeals = (data.dietLogs||[]).filter(l=>l.date===today);
+
+  const saveProtocol = p => {
+    setProtocol(p);
+    upd('dietProtocol', p);
   };
-  const addLog = () => {if(!food.trim())return;upd('dietLogs',[...dietLogs,{id:uid(),date:logDate,meal,food:food.trim(),note:logNote.trim()}]);setFood('');setLogNote('');};
-  const delLog = id => upd('dietLogs',dietLogs.filter(l=>l.id!==id));
-  const todayLogs=dietLogs.filter(l=>l.date===todayStr());
-  const mealColors={Breakfast:'#93c5fd',Lunch:'#6ee7b7',Dinner:'#C084FC',Snack:'#C9A84C',Drink:'#f87171'};
-  return(
+
+  const logMeal = () => {
+    if (!mealLog.trim()) return;
+    const entry = { id:uid(), date:today, time:mealTime, text:mealLog.trim(), timestamp:Date.now() };
+    upd('dietLogs', [...(data.dietLogs||[]), entry]);
+    setMealLog(''); setShowLog(false);
+  };
+
+  const askAI = async () => {
+    if (!aiPrompt.trim()) return;
+    setLoadingAI(true); setAiReply('');
+    try {
+      const sys = `You are a nutritionist specializing in chronic illness dietary management. The user follows a ${protocol||'general healthy'} diet. Their conditions: ${data.profile?.conditions||'not specified'}. Their recent meals: ${todayMeals.map(m=>m.text).join(', ')||'none logged today'}. Be practical, specific, and kind. Flag any foods that conflict with their protocol.`;
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ messages:[{role:'user',content:aiPrompt}], system:sys, userId:data.uid }),
+      });
+      const json = await res.json();
+      setAiReply(json.content?.[0]?.text || json.text || 'Sorry, I could not get a response.');
+    } catch { setAiReply('Connection error — please try again.'); }
+    setLoadingAI(false);
+  };
+
+  return (
     <div>
-      <PH emoji="✿" title="AI Nutrition Advisor" sub="Personalized guidance from Lazuli + daily meal log"/>
-      <div className="glass-card-static" style={{ padding:22,marginBottom:20 }}>
-        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14 }}>
-          <div style={{ fontFamily:"'Cinzel',serif",fontSize:16,color:'#C9A84C' }}>📋 Daily Food Log</div>
-          <button className="btn btn-ghost" style={{ fontSize:16,padding:'6px 13px' }} onClick={()=>setLogOpen(o=>!o)}>{logOpen?'Close':'+ Add entry'}</button>
-        </div>
-        {logOpen&&(
-          <div className="two-col" style={{ marginBottom:14 }}>
-            <div><label>Date</label><input type="date" className="field" value={logDate} onChange={e=>setLogDate(e.target.value)}/></div>
-            <div><label>Meal</label><select className="field" value={meal} onChange={e=>setMeal(e.target.value)}>{['Breakfast','Lunch','Dinner','Snack','Drink'].map(x=><option key={x}>{x}</option>)}</select></div>
-            <div style={{ gridColumn:'1/-1' }}><label>What did you eat/drink?</label><input className="field" value={food} onChange={e=>setFood(e.target.value)} placeholder="e.g. Oatmeal with berries and chia seeds" onKeyDown={e=>e.key==='Enter'&&addLog()}/></div>
-            <div style={{ gridColumn:'1/-1' }}><label>Notes</label><input className="field" value={logNote} onChange={e=>setLogNote(e.target.value)} placeholder="e.g. Felt nauseous afterward…"/></div>
-            <div style={{ gridColumn:'1/-1',display:'flex',justifyContent:'flex-end' }}><button className="btn btn-gold" onClick={addLog} style={{ fontSize:16,padding:'8px 20px' }}>Add</button></div>
+      <PH emoji="✿" title="AI Nutrition" sub="Log meals, follow your protocol, and let Lazuli curate a diet for your health needs"/>
+
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, marginBottom:18 }} className="two-col">
+        {/* Left: Diet Protocol */}
+        <div className="glass-card-static" style={{ padding:22 }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, color:'#C9A84C', marginBottom:14 }}>My Diet Protocol</div>
+          <div style={{ fontSize:15, color:'rgba(240,232,255,.5)', marginBottom:14 }}>Select your current dietary approach</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+            {DIET_PROTOCOLS.map(p=>(
+              <button key={p} onClick={()=>saveProtocol(p)} style={{ padding:'6px 14px', borderRadius:20, fontSize:15, border:`1.5px solid ${protocol===p?'#C9A84C':'rgba(42,92,173,.3)'}`, background:protocol===p?'rgba(201,168,76,.15)':'rgba(4,16,52,.8)', color:protocol===p?'#C9A84C':'rgba(240,232,255,.65)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s' }}>
+                {p}
+              </button>
+            ))}
           </div>
-        )}
-        {todayLogs.length>0&&(
-          <div>
-            <div style={{ fontSize:16,fontWeight:700,color:'rgba(201,168,76,.5)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:9 }}>Today</div>
-            {todayLogs.map(l=>(
-              <div key={l.id} style={{ display:'flex',alignItems:'center',gap:10,padding:'8px 12px',background:'rgba(255,255,255,.03)',borderRadius:10,border:'1px solid rgba(42,92,173,.1)',marginBottom:6 }}>
-                <span style={{ fontSize:16,fontWeight:700,color:mealColors[l.meal]||'#C9A84C',minWidth:60,textTransform:'uppercase',letterSpacing:.8 }}>{l.meal}</span>
-                <div style={{ flex:1 }}><div style={{ fontSize:16,color:'#F0E8FF' }}>{l.food}</div>{l.note&&<div style={{ fontSize:16,color:'rgba(240,232,255,.35)',marginTop:1 }}>{l.note}</div>}</div>
-                <button onClick={()=>delLog(l.id)} style={{ border:'none',background:'transparent',color:'rgba(240,232,255,.25)',cursor:'pointer',fontSize:15 }}>×</button>
+          {protocol && (
+            <div style={{ marginTop:14, padding:'12px 15px', background:'rgba(110,231,183,.07)', border:'1px solid rgba(110,231,183,.2)', borderRadius:11 }}>
+              <div style={{ fontSize:15, color:'#6ee7b7', fontWeight:600 }}>{protocol} Protocol Active ✓</div>
+              <div style={{ fontSize:14, color:'rgba(240,232,255,.5)', marginTop:4, lineHeight:1.6 }}>Lazuli will flag conflicting ingredients and suggest compliant recipes based on your logged symptoms and known triggers.</div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Today's Meals */}
+        <div className="glass-card-static" style={{ padding:22 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, color:'#C9A84C' }}>Today's Meals</div>
+            <button className="btn btn-gold" style={{ fontSize:14, padding:'7px 16px' }} onClick={()=>setShowLog(s=>!s)}>+ Log meal</button>
+          </div>
+          {showLog && (
+            <div style={{ marginBottom:14, padding:'14px 16px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:12, animation:'popIn .2s ease' }}>
+              <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+                {['breakfast','lunch','dinner','snack'].map(t=>(
+                  <button key={t} onClick={()=>setMealTime(t)} style={{ padding:'5px 12px', borderRadius:20, fontSize:14, border:`1px solid ${mealTime===t?'#C9A84C':'rgba(42,92,173,.25)'}`, background:mealTime===t?'rgba(201,168,76,.1)':'transparent', color:mealTime===t?'#C9A84C':'rgba(240,232,255,.5)', cursor:'pointer', textTransform:'capitalize', fontFamily:"'DM Sans',sans-serif" }}>
+                    {t}
+                  </button>
+                ))}
               </div>
-            ))}
+              <textarea className="field" rows={2} value={mealLog} onChange={e=>setMealLog(e.target.value)} placeholder="What did you eat? e.g. Salmon with arugula, olive oil dressing" style={{ resize:'none', marginBottom:10 }}/>
+              <div style={{ display:'flex', gap:8 }}>
+                <button className="btn btn-gold" style={{ fontSize:14 }} onClick={logMeal}>Save</button>
+                <button className="btn btn-ghost" style={{ fontSize:14 }} onClick={()=>setShowLog(false)}>Cancel</button>
+              </div>
+            </div>
+          )}
+          {todayMeals.length === 0 && !showLog && <div style={{ fontSize:15, color:'rgba(240,232,255,.28)', fontStyle:'italic', textAlign:'center', padding:'20px 0' }}>No meals logged today yet.</div>}
+          {todayMeals.map(m=>(
+            <div key={m.id} style={{ marginBottom:10, padding:'10px 14px', background:'rgba(255,255,255,.03)', borderRadius:11, border:'1px solid rgba(42,92,173,.15)' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                <span style={{ fontSize:14, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'capitalize' }}>{m.time}</span>
+                <span style={{ fontSize:13, color:'rgba(240,232,255,.3)' }}>{new Date(m.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>
+              </div>
+              <div style={{ fontSize:16, color:'rgba(240,232,255,.75)', lineHeight:1.6 }}>{m.text}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Recipe Curator */}
+      <div className="glass-card-static" style={{ padding:22 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+          <div style={{ width:36, height:36, borderRadius:10, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>✦</div>
+          <div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, color:'#C9A84C' }}>Lazuli Recipe Curator</div>
+            <div style={{ fontSize:15, color:'rgba(240,232,255,.45)', marginTop:2 }}>Tell Lazuli what you have or what you're craving. I'll suggest recipes that fit your {protocol||'dietary'} protocol and avoid your known triggers.</div>
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:10, marginBottom:14 }}>
+          <input className="field" value={aiPrompt} onChange={e=>setAiPrompt(e.target.value)} placeholder={`e.g. "AIP breakfast with sweet potato" or "What can I eat for fatigue?"`} onKeyDown={e=>e.key==='Enter'&&askAI()} style={{ flex:1 }}/>
+          <button className="btn btn-gold" style={{ flexShrink:0, fontSize:15 }} onClick={askAI} disabled={loadingAI||!aiPrompt.trim()}>
+            {loadingAI ? <span style={{ display:'inline-block', width:15, height:15, border:'2px solid rgba(0,0,0,.3)', borderTopColor:'#000', borderRadius:'50%', animation:'spin .7s linear infinite' }}/> : 'Get recipes'}
+          </button>
+        </div>
+        {aiReply && (
+          <div style={{ padding:'16px 18px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:14, animation:'popIn .3s ease' }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:8 }}>✦ Suggested by Lazuli</div>
+            <div style={{ fontSize:16, color:'rgba(240,232,255,.82)', lineHeight:1.85, whiteSpace:'pre-wrap', fontFamily:"Georgia,serif" }}>{aiReply}</div>
           </div>
         )}
-        {dietLogs.length===0&&!logOpen&&<div style={{ fontSize:16,color:'rgba(240,232,255,.25)',fontStyle:'italic',textAlign:'center',padding:'14px 0' }}>No food logged yet</div>}
       </div>
-      <div className="glass-card-static" style={{ padding:22,marginBottom:20 }}>
-        <div style={{ fontFamily:"'Cinzel',serif",fontSize:16,color:'#C9A84C',marginBottom:16 }}>✿ Generate a Personalized Diet Plan</div>
-        <div className="two-col" style={{ marginBottom:14 }}>
-          <div><label>Your Conditions</label><input className="field" value={data.profile?.conditions||''} readOnly style={{ opacity:.55 }} placeholder="Add conditions in your profile…"/></div>
-          <div><label>Restrictions / Preferences</label><input className="field" value={restrictions} onChange={e=>setRestrictions(e.target.value)} placeholder="e.g. gluten-free, vegetarian…"/></div>
-        </div>
-        <div style={{ marginBottom:16 }}>
-          <label>Primary Goal</label>
-          <div style={{ display:'flex',flexWrap:'wrap',gap:7,marginTop:6 }}>
-            {DIET_GOALS.map(g=>(
-              <button key={g} onClick={()=>setGoal(g)} style={{ padding:'6px 13px',borderRadius:20,fontSize:16,border:`1px solid ${goal===g?'#C9A84C':'rgba(42,92,173,.25)'}`,background:goal===g?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)',color:goal===g?'#C9A84C':'rgba(240,232,255,.42)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>{g}</button>
-            ))}
-          </div>
-        </div>
-        <button className="btn btn-gold" onClick={generate} disabled={loading} style={{ width:'100%',justifyContent:'center',padding:'13px',fontSize:15,opacity:loading?.7:1 }}>
-          {loading?<><span style={{ display:'inline-block',width:16,height:16,border:'2px solid rgba(0,0,0,.3)',borderTopColor:'#000',borderRadius:'50%',animation:'spin .7s linear infinite' }}/> Crafting your plan…</>:'✿ Generate My Diet Plan'}
-        </button>
-      </div>
-      {result&&(
-        <div className="glass-card-static" style={{ padding:24 }}>
-          <div style={{ fontFamily:"'Cinzel',serif",fontSize:16,color:'#C9A84C',marginBottom:14 }}>✿ Your Personalized Plan</div>
-          <div style={{ fontSize:15,color:'rgba(240,232,255,.75)',lineHeight:1.9,whiteSpace:'pre-wrap' }}>{result}</div>
-        </div>
-      )}
     </div>
   );
 }
@@ -1865,162 +1961,232 @@ function Mindfulness() {
 }
 
 // ─── AI Advocate → Lazuli ─────────────────────────────────────
-const SYS_LAZULI = `You are Lazuli — a deeply caring, witty, warm health advocate and the user's most trusted companion on their chronic illness journey. You are named after lapis lazuli, the ancient healing stone used for 6,000 years.
+const SYS_LAZULI = d => `You are Lazuli — a warm, brilliant, empathetic chronic illness health advocate and the user's most trusted companion. You are named after lapis lazuli, the ancient healing stone used for 6,000 years to heal the spirit.
 
-Your personality:
-- You are a brilliant, supportive best friend who happens to know medicine deeply
-- Warm, real, sometimes gently funny — never clinical or cold
-- You ALWAYS acknowledge the user's feelings before giving information
-- You NEVER dismiss symptoms or say "see a doctor" without first validating their experience
-- You speak in first person: "I think...", "I want you to know...", "I'm here with you..."
-- You remember context from earlier in the conversation and reference it
-- You are honest when something is outside your knowledge, but you never leave the user without support
+Your personality: warm best friend who knows medicine deeply, sometimes gently funny, never clinical or cold. You ALWAYS acknowledge feelings before giving information. You NEVER dismiss symptoms. You speak in first person: "I think...", "I want you to know...", "I'm here with you..." You remember context and reference it. You are honest when something is outside your knowledge, but never leave the user without support. Make the user feel heard, believed, and supported — like they have a brilliant friend who truly gets it.
 
-Always start responses by acknowledging the person, not jumping straight to information. Make them feel heard first.
+Their name: ${d.profile?.name||'friend'}
+Their conditions: ${d.profile?.conditions||'Not specified'}
+Their wellness goal: ${d.profile?.goal||'Not specified'}
 
-The user's health data context will be provided. Use it to personalize everything — their name, conditions, medications, recent symptoms.
+Recent symptoms:
+${(d.symptoms||[]).slice(0,8).map(s=>`- ${s.date}: ${(s.entries||[]).map(e=>`${e.symptom}(${e.severity}/10)`).join(', ')} | Pain:${s.pain} Energy:${s.energy} Mood:${s.mood}${s.notes?' | '+s.notes:''}`).join('\n')||'None logged yet'}
 
-You are Lazuli. You are here. You believe them.`;
+Active medications:
+${(d.medications||[]).filter(m=>m.active).map(m=>`- ${m.name} ${m.dose} (${m.frequency})`).join('\n')||'None'}
+
+Recent appointments:
+${(d.appointments||[]).slice(0,5).map(a=>`- ${a.date}: ${a.provider}${a.postNotes?' — '+a.postNotes.slice(0,60):''}`).join('\n')||'None'}
+
+Be warm, validating, specific to their data. You are on their side, always. Start every response by acknowledging the person first.`;
 
 const STARTERS = [
-  'Help me prepare for my next appointment',
+  'Help me prepare for my next doctor appointment',
   'What patterns do you see in my symptoms?',
-  'How do I advocate for myself when dismissed?',
-  'Help me write a symptom summary for my doctor',
-  'My energy crashes are getting worse — what should I tell my doctor?',
-  'I have an infusion coming up. Help me prepare.',
-  'I feel exhausted and dismissed. What can I do?',
+  'How do I advocate for myself with my doctor?',
+  "I feel dismissed by my doctor. What can I do?",
   'What questions should I ask my specialist?',
+  "Help me explain my condition to someone who doesn't understand",
 ];
 
 const FREE_CHAT_LIMIT = 50;
 
+// ─── Gel Keyboard ─────────────────────────────────────────────
+const KB_ROWS = [
+  [{k:'1'},{k:'2'},{k:'3'},{k:'4'},{k:'5'},{k:'6'},{k:'7'},{k:'8'},{k:'9'},{k:'0'},{k:'⌫',w:1.8}],
+  [{k:'Q'},{k:'W'},{k:'E'},{k:'R'},{k:'T'},{k:'Y'},{k:'U'},{k:'I'},{k:'O'},{k:'P'},{k:'↵',w:2}],
+  [{k:'A'},{k:'S'},{k:'D'},{k:'F'},{k:'G'},{k:'H'},{k:'J'},{k:'K'},{k:'L'},{k:';'}],
+  [{k:'Z'},{k:'X'},{k:'C'},{k:'V'},{k:'B'},{k:'N'},{k:'M'},{k:','},{k:'.'},{k:'⇧',w:2}],
+  [{k:'ctrl',w:1.4},{k:'SPACE',w:5.5},{k:'alt',w:1.4}],
+];
+function GelKeyboard({ active }) {
+  const [litKeys, setLitKeys] = useState(new Set());
+  const allKeys = KB_ROWS.flat().map(k=>k.k).filter(Boolean);
+  const timerRef = useRef(null);
+  useEffect(() => {
+    if (!active) { setLitKeys(new Set()); clearTimeout(timerRef.current); return; }
+    const flash = () => {
+      const picks = new Set();
+      for (let i=0;i<Math.floor(Math.random()*3)+1;i++) picks.add(allKeys[Math.floor(Math.random()*allKeys.length)]);
+      setLitKeys(picks);
+      setTimeout(()=>setLitKeys(new Set()), 80+Math.random()*120);
+      timerRef.current = setTimeout(flash, 100+Math.random()*200);
+    };
+    timerRef.current = setTimeout(flash, 50);
+    return () => clearTimeout(timerRef.current);
+  }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
+  const KU = 22;
+  return (
+    <div style={{ opacity:active?1:0, transform:active?'translateY(0)':'translateY(16px)', transition:'opacity .4s ease,transform .4s ease', pointerEvents:'none', marginTop:8 }}>
+      <div style={{ background:'linear-gradient(145deg,rgba(42,92,173,.12),rgba(4,14,52,.9))', backdropFilter:'blur(20px)', border:'1px solid rgba(42,92,173,.3)', borderRadius:14, padding:'10px 12px 12px', boxShadow:'0 0 30px rgba(42,92,173,.15),0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06)', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', bottom:-10, left:'30%', width:160, height:40, background:'radial-gradient(ellipse,rgba(42,92,173,.25) 0%,transparent 70%)', filter:'blur(10px)', animation:'pulseGlow 2s ease-in-out infinite', pointerEvents:'none' }}/>
+        <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', gap:2.5, alignItems:'center' }}>
+          {KB_ROWS.map((row,ri) => (
+            <div key={ri} style={{ display:'flex', gap:2.5 }}>
+              {row.map((key,ki) => {
+                const lit = litKeys.has(key.k);
+                return (
+                  <div key={ki} style={{ width:(key.w||1)*KU-2.5, height:ri===0?18:24, background:lit?'linear-gradient(135deg,rgba(42,92,173,.9),rgba(168,196,240,.8))':'linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.02))', borderRadius:4, border:`1px solid ${lit?'rgba(42,92,173,.8)':'rgba(42,92,173,.15)'}`, boxShadow:lit?'0 0 12px rgba(42,92,173,.7),inset 0 1px 0 rgba(255,255,255,.3)':'inset 0 1px 0 rgba(255,255,255,.05),0 1px 0 rgba(0,0,0,.3)', transform:lit?'translateY(1px)':'none', transition:'all .06s ease', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <span style={{ fontSize:key.k.length>3?5:key.k.length>1?6:8, fontWeight:500, color:lit?'#fff':'rgba(168,196,240,.2)', lineHeight:1, userSelect:'none', fontFamily:"'DM Sans',sans-serif" }}>{key.k}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+      {active && <div style={{ textAlign:'center', marginTop:5, fontSize:11, color:'rgba(42,92,173,.5)', letterSpacing:1.5 }}>✦ LAZULI IS RESPONDING</div>}
+    </div>
+  );
+}
+
 function Advocate({ data, user }) {
-  const [msgs,setMsgs]           = useState([]);
-  const [input,setInput]         = useState('');
-  const [loading,setLoading]     = useState(false);
-  const [error,setError]         = useState('');
-  const [limitHit,setLimitHit]   = useState(false);
+  const [msgs,setMsgs]         = useState([]);
+  const [input,setInput]       = useState('');
+  const [loading,setLoading]   = useState(false);
+  const [error,setError]       = useState('');
+  const [limitHit,setLimitHit] = useState(false);
   const [dailyCount,setDailyCount] = useState(0);
-  const bottomRef                = useRef();
-  const { share, shareStatus }   = useShare();
+  const [aiTyping,setAiTyping] = useState(false);
+  const [shareStatus,setShareStatus] = useState('idle');
+  const bottomRef = useRef();
+  const inputRef  = useRef();
+  const {share}   = useShare();
 
-  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:'smooth'}); },[msgs]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:'smooth'}); }, [msgs,loading]);
 
-  const send = async txt => {
-    const text=(txt||input).trim();
-    if(!text||loading||limitHit) return;
+  const handleShare = async () => {
+    const text = msgs.map(m=>`${m.role==='user'?'Patient':'Lazuli'}: ${m.content}`).join('\n\n');
+    setShareStatus('sharing');
+    const ok = await share({ title:'My Lazuli AI Session', text, url: window.location.href });
+    setShareStatus(ok?'copied':'idle');
+    if (ok) setTimeout(()=>setShareStatus('idle'), 2500);
+  };
+
+  const send = async (txt) => {
+    const q = (txt||input).trim();
+    if (!q || loading || limitHit) return;
     setInput(''); setError('');
-    const newMsgs=[...msgs,{role:'user',content:text}];
-    setMsgs(newMsgs);
-    setLoading(true);
+    const newMsgs = [...msgs, {role:'user', content:q}];
+    setMsgs(newMsgs); setLoading(true); setAiTyping(false);
     try {
-      const res=await fetch('/api/chat',{
+      const res = await fetch('/api/chat', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          system: SYS_LAZULI,
+        body: JSON.stringify({
           messages: newMsgs,
+          system: SYS_LAZULI(data),
           userId: user?.uid,
-        })
+        }),
       });
-      let json;
-      try { json=await res.json(); }
-      catch { throw new Error('Unexpected server response. Check GEMINI_API_KEY in Vercel environment variables.'); }
-
-      if(res.status===429||json.limitReached){
-        setLimitHit(true);
-        setMsgs(m=>[...m,{role:'assistant',content:json.error||`You've used your ${FREE_CHAT_LIMIT} daily messages with Lazuli. Your limit resets at midnight. 💙`}]);
-        setLoading(false); return;
-      }
-      if(!res.ok||json.error) throw new Error(json.error||`HTTP ${res.status}`);
-
-      const countH=res.headers.get('X-Daily-Count');
-      if(countH) setDailyCount(parseInt(countH));
-
-      const reply=json.content?.map(b=>b.text||'').join('')||'';
-      setMsgs(m=>[...m,{role:'assistant',content:reply}]);
-    } catch(e){
-      const msg=e.message.includes('API_KEY')||e.message.includes('GEMINI')
-        ? 'AI not configured — add GEMINI_API_KEY in Vercel → Settings → Environment Variables.'
-        : `Connection error: ${e.message}`;
-      setError(msg);
-      setMsgs(m=>[...m,{role:'assistant',content:"I'm so sorry — I couldn't connect right now. 💙 "+msg}]);
+      const json = await res.json();
+      if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'Daily limit reached.'); setLoading(false); return; }
+      if (!res.ok) { setError(json.error||'Something went wrong.'); setLoading(false); return; }
+      const reply = json.content?.[0]?.text || json.text || '';
+      if (json['x-daily-count']) setDailyCount(+json['x-daily-count']);
+      setMsgs([...newMsgs, {role:'assistant', content:reply}]);
+    } catch(e) {
+      setError('Connection error — please try again.');
     }
-    setLoading(false);
+    setLoading(false); setAiTyping(false);
+    setTimeout(()=>inputRef.current?.focus(), 100);
   };
 
-  const handleShare=async()=>{
-    await share({title:`${data.profile?.name||'Patient'} — Lazuli Crest Summary`,text:buildDoctorSummary(data,msgs)});
-  };
-
-  return(
-    <div style={{ display:'flex',flexDirection:'column',height:'calc(100vh - 100px)',gap:12 }}>
-      <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:10 }}>
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:16, height:'calc(100vh - 120px)', minHeight:500 }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10, flexShrink:0 }}>
         <div>
-          <div style={{ fontFamily:"'Cinzel',serif",fontSize:26,fontWeight:700,color:'#C9A84C',marginBottom:3 }}>💙 Lazuli AI</div>
-          <div style={{ fontSize:16,color:'rgba(240,232,255,.38)' }}>Your personal health advocate — named for the ancient healing stone</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 Lazuli AI</div>
+          <div style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
-        {msgs.length>0&&(
-          <button onClick={handleShare} style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:12,fontSize:16,fontWeight:600,cursor:'pointer',border:`1.5px solid ${shareStatus==='copied'?'rgba(110,231,183,.4)':'rgba(201,168,76,.35)'}`,background:shareStatus==='copied'?'rgba(110,231,183,.1)':'rgba(201,168,76,.08)',color:shareStatus==='copied'?'#6ee7b7':'#C9A84C',fontFamily:"'DM Sans',sans-serif",transition:'all .2s',flexShrink:0 }}>
+        {msgs.length>0 && (
+          <button onClick={handleShare} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:'1.5px solid rgba(201,168,76,.35)', background:'rgba(201,168,76,.08)', color:'#C9A84C', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', flexShrink:0 }}>
             {getShareButtonLabel(shareStatus,'📋 Share with Doctor')}
           </button>
         )}
       </div>
 
-      {limitHit && (
-        <div style={{ padding:'11px 16px',background:'rgba(201,168,76,.08)',border:'1px solid rgba(201,168,76,.2)',borderRadius:12,fontSize:16,color:'rgba(201,168,76,.8)',lineHeight:1.6 }}>
-          💙 You've used your {FREE_CHAT_LIMIT} free messages with Lazuli today. Your limit resets at midnight.<br/>
-          Your full health log is still right here for you.
-        </div>
-      )}
-      {!limitHit&&dailyCount>0&&(
-        <div style={{ fontSize:16,color:'rgba(240,232,255,.2)',textAlign:'right' }}>{dailyCount}/{FREE_CHAT_LIMIT} messages used today</div>
-      )}
-      {error&&<div style={{ padding:'10px 16px',background:'rgba(255,80,80,.1)',border:'1px solid rgba(255,80,80,.25)',borderRadius:12,fontSize:16,color:'#ff8080',lineHeight:1.6 }}>⚠ {error}</div>}
+      {/* Limit / error banners */}
+      {limitHit && <div style={{ padding:'12px 16px', background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, fontSize:16, color:'rgba(201,168,76,.85)', lineHeight:1.6, flexShrink:0 }}>💙 You've used your {FREE_CHAT_LIMIT} free messages today. Limit resets at midnight. Your full health log is still here for you.</div>}
+      {!limitHit && dailyCount>0 && <div style={{ fontSize:14, color:'rgba(240,232,255,.25)', textAlign:'right', flexShrink:0 }}>{dailyCount}/{FREE_CHAT_LIMIT} messages used today</div>}
+      {error && !limitHit && <div style={{ padding:'10px 16px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.25)', borderRadius:12, fontSize:15, color:'#ff8080', lineHeight:1.6, flexShrink:0 }}>⚠ {error}</div>}
 
-      <div style={{ flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:13,padding:'4px 2px' }}>
-        {msgs.length===0&&(
-          <div style={{ textAlign:'center',padding:'18px 14px' }}>
-            <div style={{ marginBottom:20 }}>
-              <div style={{ marginBottom:13,display:'inline-block',animation:'floatUp 3s ease-in-out infinite' }}><LogoImg size={56}/></div>
-              <div style={{ fontFamily:"'Cinzel',serif",fontSize:22,color:'#C9A84C',marginBottom:5 }}>Hi{data.profile?.name?`, ${data.profile.name}`:''}! 💙</div>
-              <p style={{ fontSize:16,color:'rgba(240,232,255,.38)',lineHeight:1.8,maxWidth:420,margin:'0 auto 7px' }}>{getProactiveGreeting(data.profile?.name, data.appointments)}</p>
-              <p style={{ fontSize:16,color:'rgba(168,196,240,.3)',fontStyle:'italic',fontFamily:"'Cormorant Garamond',serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
-            </div>
-            <div className="two-col" style={{ gap:7 }}>
-              {STARTERS.map(s=>(
-                <button key={s} onClick={()=>send(s)} style={{ background:'rgba(4,16,52,.85)',border:'1px solid rgba(42,92,173,.45)',borderRadius:12,padding:'11px 13px',textAlign:'left',fontSize:16,fontWeight:500,color:'rgba(240,232,255,.82)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",lineHeight:1.4,transition:'all .16s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(42,92,173,.25)';e.currentTarget.style.color='#fff';}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(4,16,52,.85)';e.currentTarget.style.color='rgba(240,232,255,.82)';}}>
-                  💙 {s}
-                </button>
-              ))}
-            </div>
+      {/* GEL PC SHELL */}
+      <div style={{ flex:1, position:'relative', background:'rgba(4,12,38,.88)', backdropFilter:'blur(32px) saturate(1.4)', borderRadius:24, border:'1.5px solid rgba(42,92,173,.4)', boxShadow:'0 0 60px rgba(42,92,173,.12),0 20px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(168,196,240,.1)', overflow:'hidden', display:'flex', flexDirection:'column', minHeight:0 }}>
+        {/* Screen glow - mimics monitor light */}
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 0%,rgba(42,92,173,.08) 0%,transparent 60%)', pointerEvents:'none', zIndex:0 }}/>
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'30%', background:'linear-gradient(0deg,rgba(42,92,173,.04) 0%,transparent 100%)', pointerEvents:'none', zIndex:0 }}/>
+
+        {/* Top bar */}
+        <div style={{ position:'relative', zIndex:2, display:'flex', alignItems:'center', gap:10, padding:'12px 18px 10px', borderBottom:'1px solid rgba(42,92,173,.15)', background:'rgba(0,0,0,.2)', flexShrink:0 }}>
+          <div style={{ display:'flex', gap:6 }}>
+            {['#f87171','#fcd34d','#6ee7b7'].map((c,i)=>(
+              <div key={i} style={{ width:10, height:10, borderRadius:'50%', background:c, opacity:.5, boxShadow:`0 0 4px ${c}` }}/>
+            ))}
           </div>
-        )}
-        {msgs.map((m,i)=>(
-          <div key={i} style={{ display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:7 }}>
-            {m.role==='assistant'&&<div style={{ width:28,height:28,borderRadius:'50%',flexShrink:0,overflow:'hidden',boxShadow:'0 0 10px rgba(42,92,173,.5)',marginBottom:1 }}><LogoImg size={28}/></div>}
-            <div style={{ maxWidth:'74%',padding:'11px 15px',borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',background:m.role==='user'?'linear-gradient(135deg,rgba(42,92,173,.25),rgba(201,168,76,.1))':'rgba(255,255,255,.04)',color:m.role==='user'?'#F0E8FF':'rgba(240,232,255,.78)',fontSize:16,lineHeight:1.8,border:m.role==='assistant'?'1px solid rgba(42,92,173,.12)':'1px solid rgba(201,168,76,.17)',backdropFilter:'blur(8px)',whiteSpace:'pre-wrap' }}>
-              {m.content}
-            </div>
+          <div style={{ flex:1, textAlign:'center' }}>
+            <span style={{ fontFamily:"'Cinzel',serif", fontSize:13, color:'rgba(168,196,240,.4)', letterSpacing:2 }}>✦ LAZULI CREST ✦</span>
           </div>
-        ))}
-        {loading&&<div style={{ display:'flex',alignItems:'center',gap:7 }}><div style={{ width:28,height:28,borderRadius:'50%',overflow:'hidden' }}><LogoImg size={28}/></div><div style={{ padding:'11px 16px',borderRadius:'16px 16px 16px 4px',background:'rgba(255,255,255,.04)',border:'1px solid rgba(42,92,173,.12)',display:'flex',gap:5,alignItems:'center' }}>{[0,1,2].map(i=><div key={i} style={{ width:7,height:7,borderRadius:'50%',background:'#2A5CAD',animation:`bounce .9s ease-in-out ${i*.15}s infinite`,opacity:.8 }}/>)}</div></div>}
-        <div ref={bottomRef}/>
+          <div style={{ width:50 }}/>
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex:1, overflowY:'auto', padding:'18px 22px', position:'relative', zIndex:2, display:'flex', flexDirection:'column', gap:13, minHeight:0 }}>
+          {msgs.length===0 && (
+            <div style={{ flex:1, display:'flex', flexDirection:'column', justifyContent:'center' }}>
+              <div style={{ textAlign:'center', marginBottom:22 }}>
+                <div style={{ marginBottom:14, display:'inline-block', animation:'floatUp 3s ease-in-out infinite' }}><LogoImg size={54}/></div>
+                <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'#C9A84C', marginBottom:6 }}>Hi{data.profile?.name?`, ${data.profile.name}`:''}! 💙</div>
+                <p style={{ fontSize:16, color:'rgba(240,232,255,.5)', lineHeight:1.8, maxWidth:420, margin:'0 auto 8px' }}>{getProactiveGreeting(data.profile?.name, data.appointments)}</p>
+                <p style={{ fontSize:14, color:'rgba(168,196,240,.35)', fontStyle:'italic', fontFamily:"Georgia,serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
+              </div>
+              <div className="two-col" style={{ gap:8 }}>
+                {STARTERS.map(s=>(
+                  <button key={s} onClick={()=>send(s)}
+                    style={{ background:'rgba(4,16,52,.85)', border:'1px solid rgba(42,92,173,.4)', borderRadius:13, padding:'13px 14px', textAlign:'left', fontSize:15, fontWeight:500, color:'rgba(240,232,255,.75)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", lineHeight:1.5, transition:'all .16s' }}
+                    onMouseEnter={e=>{e.currentTarget.style.background='rgba(42,92,173,.2)';e.currentTarget.style.borderColor='rgba(201,168,76,.4)';e.currentTarget.style.color='#fff';}}
+                    onMouseLeave={e=>{e.currentTarget.style.background='rgba(4,16,52,.85)';e.currentTarget.style.borderColor='rgba(42,92,173,.4)';e.currentTarget.style.color='rgba(240,232,255,.75)';}}>
+                    💙 {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {msgs.map((m,i)=>(
+            <div key={i} style={{ display:'flex', justifyContent:m.role==='user'?'flex-end':'flex-start', alignItems:'flex-end', gap:8 }}>
+              {m.role==='assistant' && <div style={{ width:30, height:30, borderRadius:'50%', flexShrink:0, overflow:'hidden', boxShadow:'0 0 12px rgba(42,92,173,.5)', marginBottom:2 }}><LogoImg size={30}/></div>}
+              <div style={{ maxWidth:'75%', padding:'12px 16px', borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px', background:m.role==='user'?'linear-gradient(135deg,rgba(42,92,173,.3),rgba(201,168,76,.12))':'rgba(255,255,255,.05)', color:m.role==='user'?'#F0E8FF':'rgba(240,232,255,.85)', fontSize:17, lineHeight:1.8, border:m.role==='assistant'?'1px solid rgba(42,92,173,.18)':'1px solid rgba(201,168,76,.2)', backdropFilter:'blur(10px)', whiteSpace:'pre-wrap' }}>
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:30, height:30, borderRadius:'50%', overflow:'hidden', animation:'pulseGlow 1.5s infinite' }}><LogoImg size={30}/></div>
+              <div style={{ padding:'12px 16px', borderRadius:'18px 18px 18px 4px', background:'rgba(255,255,255,.05)', border:'1px solid rgba(42,92,173,.15)', display:'flex', gap:5, alignItems:'center' }}>
+                {[0,1,2].map(i=><div key={i} style={{ width:8, height:8, borderRadius:'50%', background:'#2A5CAD', animation:`bounce .9s ease-in-out ${i*.15}s infinite`, opacity:.8 }}/>)}
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef}/>
+        </div>
+
+        {/* Input area */}
+        <div style={{ position:'relative', zIndex:2, padding:'12px 16px 14px', borderTop:'1px solid rgba(42,92,173,.12)', background:'rgba(0,0,0,.25)', backdropFilter:'blur(12px)', flexShrink:0 }}>
+          <div style={{ display:'flex', gap:8, alignItems:'flex-end', background:'rgba(4,16,52,.8)', borderRadius:14, padding:'10px 10px 10px 16px', border:'1px solid rgba(42,92,173,.3)', boxShadow:'inset 0 1px 0 rgba(168,196,240,.06)' }}>
+            <textarea ref={inputRef} style={{ flex:1, border:'none', background:'transparent', color:'#F0E8FF', fontFamily:"'DM Sans',sans-serif", fontSize:17, lineHeight:1.55, resize:'none', outline:'none', minHeight:24, maxHeight:120, caretColor:'#C9A84C', padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
+            <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end', padding:'8px 18px', fontSize:15, opacity:loading||!input.trim()||limitHit?.35:1, flexShrink:0 }}>Send</button>
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between', marginTop:6, alignItems:'center', paddingLeft:4 }}>
+            <div style={{ fontSize:13, color:'rgba(240,232,255,.15)' }}>Enter to send · Shift+Enter new line</div>
+            {msgs.length>0 && <button onClick={handleShare} style={{ fontSize:13, color:'rgba(201,168,76,.45)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
+          </div>
+        </div>
       </div>
 
-      <div style={{ padding:'10px 0 3px',borderTop:'1px solid rgba(42,92,173,.1)',background:'rgba(0,0,0,.2)',backdropFilter:'blur(9px)' }}>
-        <div style={{ display:'flex',gap:7,alignItems:'flex-end',background:'rgba(255,255,255,.04)',borderRadius:14,padding:'8px 8px 8px 14px',border:'1px solid rgba(42,92,173,.18)' }}>
-          <textarea style={{ flex:1,border:'none',background:'transparent',color:'#F0E8FF',fontFamily:"'DM Sans',sans-serif",fontSize:16,lineHeight:1.55,resize:'none',outline:'none',minHeight:22,maxHeight:100,caretColor:'#C9A84C',padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
-          <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end',padding:'7px 14px',fontSize:16,opacity:loading||!input.trim()||limitHit?.35:1,flexShrink:0 }}>Send</button>
-        </div>
-        <div style={{ display:'flex',justifyContent:'space-between',marginTop:5,alignItems:'center',paddingLeft:4 }}>
-          <div style={{ fontSize:16,color:'rgba(240,232,255,.13)' }}>Enter to send · Shift+Enter new line</div>
-          {msgs.length>0&&<button onClick={handleShare} style={{ fontSize:16,color:'rgba(201,168,76,.45)',background:'transparent',border:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
-        </div>
-      </div>
+      {/* Gel Keyboard */}
+      <GelKeyboard active={aiTyping}/>
     </div>
   );
 }
