@@ -62,20 +62,25 @@ export default function HydrationFridge({ data, upd }) {
       <div style={{ display:'flex', gap:24, alignItems:'flex-end', marginBottom:20 }} className="two-col">
         {/* Glass pitcher SVG */}
         <div style={{ flexShrink:0, position:'relative' }}>
-          <svg width="90" height="200" viewBox="0 0 90 200" style={{ filter:'drop-shadow(0 4px 20px rgba(147,197,253,.2))' }}>
+          <svg width="90" height="200" viewBox="0 0 90 200" style={{ filter:`drop-shadow(0 4px 20px ${color}44) drop-shadow(0 0 ${pct > 50 ? '16px' : '4px'} ${color}${pct > 50 ? '66' : '22'})` }}>
             <defs>
               <clipPath id="pitcherClip">
                 <path d="M14,20 L76,20 L82,180 Q82,192 70,192 L20,192 Q8,192 8,180 Z"/>
               </clipPath>
               <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity="0.7"/>
-                <stop offset="100%" stopColor={color} stopOpacity="0.45"/>
+                <stop offset="0%" stopColor={color} stopOpacity="0.85"/>
+                <stop offset="60%" stopColor={color} stopOpacity="0.65"/>
+                <stop offset="100%" stopColor={color} stopOpacity="0.5"/>
               </linearGradient>
+              <filter id="waterGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
             </defs>
             {/* Pitcher body */}
             <path d="M14,20 L76,20 L82,180 Q82,192 70,192 L20,192 Q8,192 8,180 Z" fill="rgba(255,255,255,.06)" stroke="rgba(147,197,253,.4)" strokeWidth="1.5"/>
             {/* Water fill — animated */}
-            <rect x="8" y={192 - fillH} width="74" height={fillH} fill="url(#waterGrad)" clipPath="url(#pitcherClip)" style={{ transition:'height .8s cubic-bezier(.4,0,.2,1), y .8s cubic-bezier(.4,0,.2,1)' }}/>
+            <rect x="8" y={192 - fillH} width="74" height={fillH} fill="url(#waterGrad)" clipPath="url(#pitcherClip)" filter="url(#waterGlow)" style={{ transition:'height .8s cubic-bezier(.4,0,.2,1), y .8s cubic-bezier(.4,0,.2,1)' }}/>
             {/* Water surface ripple */}
             {pct > 5 && <path d={`M8,${192-fillH} Q26,${192-fillH-4} 45,${192-fillH} Q64,${192-fillH+4} 82,${192-fillH}`} fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" style={{ animation:'fogDrift 3s ease-in-out infinite' }}/>}
             {/* Handle */}

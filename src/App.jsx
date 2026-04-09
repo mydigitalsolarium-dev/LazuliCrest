@@ -65,23 +65,23 @@ const PHYSICIAN_TYPES = [
 
 const NAV = [
   { id:'dashboard',    icon:'🏠',  label:'Home'              },
+  { id:'updates',      icon:'✦',   label:"What's New"        },
   { id:'profile',      icon:'◈',   label:'My Profile'        },
   { id:'symptoms',     icon:'◈',   label:'Symptoms'          },
   { id:'bodymap',      icon:'👤',  label:'Body Map'          },
   { id:'brain',        icon:'🧠',  label:'The Brain'         },
+  { id:'medications',  icon:'◉',   label:'Medications'       },
+  { id:'appointments', icon:'🗓',  label:'Appointments'      },
   { id:'infusion',     icon:'💉',  label:'Infusion Hub'      },
   { id:'metabolic',    icon:'🔬',  label:'Metabolic Lab'     },
   { id:'hydration',    icon:'💧',  label:'Hydration Station' },
-  { id:'medications',  icon:'◉',   label:'Medications'       },
-  { id:'appointments', icon:'🗓',  label:'Appointments'      },
-  { id:'diary',        icon:'📖',  label:'My Diary'          },
-  { id:'mindfulness',  icon:'🌸',  label:'Mindfulness'       },
   { id:'diet',         icon:'✿',   label:'AI Nutrition'      },
+  { id:'diary',        icon:'📖',  label:'My Diary'          },
   { id:'documents',    icon:'🗂',  label:'Documents'         },
+  { id:'gym',          icon:'🏋️',  label:'Lazuli Gym'        },
+  { id:'mindfulness',  icon:'🌸',  label:'Mindfulness'       },
   { id:'advocate',     icon:'🫂',  label:'Lazuli AI'         },
   { id:'share',        icon:'🔗',  label:'Share & Privacy'   },
-  { id:'updates',     icon:'✦',   label:'What\'s New'       },
-  { id:'gym',         icon:'🏋️',  label:'Lazuli Gym'        },
 ];
 
 const DIARY_FONTS = [
@@ -199,7 +199,7 @@ export default function App() {
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
         <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen}/>
 
-        <main className="main-content">
+        <main className="main-content" style={{ contain:'layout style' }}>
           <div className="mobile-topbar">
             <button className="hamburger" onClick={()=>setSideOpen(o=>!o)}>
               <span/><span/><span/>
@@ -247,28 +247,22 @@ function LogoImg({ size=56 }) {
 
 // ─── Animated background (symbols rise bottom → top) ──────────
 const FLOAT_ITEMS = [
-  {sym:'⚕',  x:5,  size:52, delay:0,   dur:55},
-  {sym:'🧬', x:15, size:44, delay:6,   dur:62},
-  {sym:'💊', x:25, size:38, delay:14,  dur:58},
-  {sym:'🔬', x:35, size:42, delay:2,   dur:65},
-  {sym:'💉', x:48, size:46, delay:10,  dur:52},
-  {sym:'🩺', x:60, size:50, delay:18,  dur:60},
-  {sym:'❤️', x:70, size:40, delay:4,   dur:57},
-  {sym:'⚕',  x:80, size:44, delay:22,  dur:50},
-  {sym:'🧬', x:90, size:48, delay:8,   dur:63},
-  {sym:'🌸', x:12, size:36, delay:28,  dur:68},
-  {sym:'💜', x:55, size:40, delay:16,  dur:54},
-  {sym:'🦋', x:78, size:42, delay:12,  dur:56},
-  {sym:'✦',  x:42, size:32, delay:24,  dur:70},
-  {sym:'💙', x:92, size:38, delay:32,  dur:64},
-  {sym:'🩻', x:30, size:40, delay:20,  dur:59},
+  {sym:'⚕',  x:5,  size:50, delay:0,   dur:65},
+  {sym:'🧬', x:18, size:44, delay:8,   dur:70},
+  {sym:'🔬', x:33, size:46, delay:16,  dur:62},
+  {sym:'🩺', x:58, size:48, delay:4,   dur:68},
+  {sym:'❤️', x:72, size:42, delay:20,  dur:60},
+  {sym:'⚕',  x:85, size:52, delay:12,  dur:72},
+  {sym:'🧬', x:92, size:40, delay:28,  dur:64},
+  {sym:'🔬', x:45, size:38, delay:36,  dur:66},
+  {sym:'🩺', x:8,  size:36, delay:44,  dur:58},
 ];
 
 const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
   text: q,
-  x: 3 + (i * 17) % 75,
-  delay: i * 4.5,
-  dur: 28 + (i % 4) * 5,
+  x: 2 + (i * 19) % 72,
+  delay: i * 8,
+  dur: 45 + (i % 5) * 8,
 }));
 
 function AnimatedBackground() {
@@ -419,10 +413,10 @@ function RotatingQuoteBanner() {
   const q = ROTATING_QUOTES[idx];
   return (
     <div style={{ marginBottom:18, padding:'10px 18px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.18)', borderRadius:12, display:'flex', gap:10, alignItems:'center', transition:'opacity .6s', opacity:fade?1:0, minHeight:44 }}>
-      <span style={{ fontSize:14, flexShrink:0 }}>✦</span>
+      <span style={{ fontSize:16, flexShrink:0 }}>✦</span>
       <div style={{ flex:1 }}>
         <span style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:15, color:'rgba(201,168,76,.85)', lineHeight:1.5 }}>{q.quote}</span>
-        <span style={{ fontSize:13, color:'rgba(240,232,255,.25)', marginLeft:8 }}>— {q.author}</span>
+        <span style={{ fontSize:16, color:'rgba(240,232,255,.25)', marginLeft:8 }}>— {q.author}</span>
       </div>
     </div>
   );
@@ -432,9 +426,9 @@ function RotatingQuoteBanner() {
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  html{font-size:17px}
-  body{font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
-  button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:15px}
+  html{font-size:18px}
+  body{font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:17px}
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}
   ::-webkit-scrollbar-track{background:transparent}
@@ -451,7 +445,7 @@ const GLOBAL_CSS = `
   @keyframes inkDrop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
   @keyframes slideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
   @keyframes auroraFloat{0%{transform:translate(0,0) scale(1);opacity:.8}25%{transform:translate(20px,-14px) scale(1.08);opacity:1}50%{transform:translate(5px,10px) scale(1.04);opacity:.85}75%{transform:translate(-10px,5px) scale(0.96);opacity:.95}100%{transform:translate(-12px,20px) scale(1.02);opacity:.9}}
-  @keyframes riseUp{0%{transform:translateY(0) rotate(0deg);opacity:0}8%{opacity:.65}88%{opacity:.65}100%{transform:translateY(-105vh) rotate(20deg);opacity:0}}
+  @keyframes riseUp{0%{transform:translateY(0) rotate(0deg);opacity:0}6%{opacity:.7}70%{opacity:.6}92%{opacity:.15}100%{transform:translateY(-108vh) rotate(8deg);opacity:0}}
   @keyframes breatheIn{0%{transform:scale(.75);opacity:.5}100%{transform:scale(1.18);opacity:1}}
   @keyframes breatheOut{0%{transform:scale(1.18);opacity:1}100%{transform:scale(.75);opacity:.5}}
   @keyframes breatheHold{0%,100%{transform:scale(1.18)}}
@@ -484,14 +478,14 @@ const GLOBAL_CSS = `
     border:1px solid rgba(42,92,173,.35);
     border-radius:20px;
     box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(168,196,240,.08);
-    transition:border-color .22s
+    transition:border-color .22s;will-change:auto;
   }
 
   .matriarch-quote{font-family:'Cormorant Garamond',serif;font-style:italic;color:#C9A84C;line-height:1.8;font-size:18px;text-shadow:0 0 10px rgba(201,168,76,.25)}
   .matriarch-tag{text-transform:uppercase;letter-spacing:.45em;font-size:13px;color:rgba(255,255,255,.4);margin-bottom:6px;display:block}
 
   /* ── Buttons ─────────────────────────────────────────────── */
-  .btn{border:none;border-radius:12px;padding:13px 26px;font-weight:600;font-size:15px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;letter-spacing:.15px}
+  .btn{border:none;border-radius:12px;padding:13px 26px;font-weight:600;font-size:16px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;letter-spacing:.15px}
   .btn-gold{background:linear-gradient(135deg,#C9A84C,#E8C96B);color:#000;font-weight:700;box-shadow:0 4px 20px rgba(201,168,76,.4),inset 0 1px 0 rgba(255,255,255,.25)}
   .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.55)}
   .btn-gold:active{transform:translateY(0)}
@@ -505,22 +499,22 @@ const GLOBAL_CSS = `
   .btn-lapis:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(42,92,173,.6)}
 
   /* ── Form fields ─────────────────────────────────────────── */
-  .field{background:rgba(255,255,255,.055);border:1.5px solid rgba(42,92,173,.4);border-radius:12px;padding:13px 16px;font-size:15px;color:#F0E8FF;width:100%;outline:none;transition:all .18s;caret-color:#C9A84C}
+  .field{background:rgba(255,255,255,.055);border:1.5px solid rgba(42,92,173,.4);border-radius:12px;padding:13px 16px;font-size:17px;color:#F0E8FF;width:100%;outline:none;transition:all .18s;caret-color:#C9A84C}
   .field:focus{border-color:#C9A84C;background:rgba(201,168,76,.055);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
   .field::placeholder{color:rgba(240,232,255,.32)}
   select.field option{background:#080316;color:#F0E8FF}
-  label{font-size:13px;font-weight:600;color:#C9A84C;display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:.9px}
+  label{font-size:15px;font-weight:600;color:#C9A84C;display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:.9px}
   input[type=range]{accent-color:#C9A84C;cursor:pointer;width:100%}
   input[type=checkbox]{accent-color:#2A5CAD;width:18px;height:18px;cursor:pointer}
   .pill{display:inline-flex;align-items:center;gap:6px;background:rgba(42,92,173,.2);border:1.5px solid rgba(42,92,173,.45);color:#A8C4F0;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
   /* ── Sidebar — z-index fix for mobile ────────────────────── */
-  .sidebar{width:272px;background:rgba(4,1,16,.98);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(42,92,173,.22);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7);transition:transform .3s cubic-bezier(.22,1,.36,1)}
-  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.62);font-size:14px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative}
+  .sidebar{width:272px;background:rgba(4,1,16,.98);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(42,92,173,.22);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.62);font-size:15px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative}
   .nav-item:hover{background:rgba(42,92,173,.14);color:rgba(240,232,255,.9);border-color:rgba(42,92,173,.28)}
   .nav-item.active{background:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));color:#C9A84C;border-color:rgba(201,168,76,.3);font-weight:600}
 
-  .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0}
+  .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;contain:layout style}
   .page-inner{flex:1;padding:28px 36px;padding-bottom:48px}
   .mobile-topbar{display:none;align-items:center;gap:12px;padding:14px 18px;background:rgba(4,1,16,.97);backdrop-filter:blur(20px);border-bottom:1.5px solid rgba(42,92,173,.2);position:sticky;top:0;z-index:90;flex-shrink:0}
   .hamburger{background:transparent;border:none;cursor:pointer;padding:5px;display:flex;flex-direction:column;gap:5px;flex-shrink:0}
@@ -581,7 +575,7 @@ function Splash() {
       <div style={{ textAlign:'center' }}>
         <div style={{ marginBottom:18, animation:'floatUp 2.5s ease-in-out infinite' }}><LogoImg size={80}/></div>
         <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#fff', letterSpacing:3, marginBottom:4 }}>LAZULI LABS</div>
-        <div style={{ fontSize:13, color:'#C9A84C', letterSpacing:4, textTransform:'uppercase', marginBottom:24 }}>The Gold Standard in Health Advocacy</div>
+        <div style={{ fontSize:16, color:'#C9A84C', letterSpacing:4, textTransform:'uppercase', marginBottom:24 }}>The Gold Standard in Health Advocacy</div>
         <div style={{ width:64, height:2, background:'linear-gradient(90deg,#2A5CAD,#C9A84C)', margin:'0 auto', borderRadius:2 }}/>
       </div>
     </div>
@@ -652,8 +646,8 @@ function AuthScreen() {
         <div style={{ textAlign:'center', marginBottom:36 }}>
           <div style={{ marginBottom:16, animation:'floatUp 3s ease-in-out infinite' }}><LogoImg size={78}/></div>
           <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:26, fontWeight:700, color:'#fff', letterSpacing:3, marginBottom:5 }}>LAZULI LABS</div>
-          <div style={{ fontSize:13, color:'#C9A84C', letterSpacing:3.5, textTransform:'uppercase', marginBottom:6 }}>The Gold Standard in Health Advocacy</div>
-          <div style={{ fontSize:14, color:'rgba(168,196,240,.52)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{getDailyMessage()}</div>
+          <div style={{ fontSize:16, color:'#C9A84C', letterSpacing:3.5, textTransform:'uppercase', marginBottom:6 }}>The Gold Standard in Health Advocacy</div>
+          <div style={{ fontSize:16, color:'rgba(168,196,240,.52)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{getDailyMessage()}</div>
         </div>
 
         <div style={{ position:'relative' }}>
@@ -664,13 +658,13 @@ function AuthScreen() {
         <div className="glass-card-static" style={{ padding:36, borderRadius:24, animation:'genieIn .7s cubic-bezier(.22,1,.36,1)' }}>
           <div style={{ display:'flex', gap:0, marginBottom:26, background:'rgba(255,255,255,.04)', borderRadius:12, padding:4 }}>
             {[{k:'signin',l:'Sign In'},{k:'signup',l:'Create Account'}].map(m=>(
-              <button key={m.k} onClick={()=>{setMode(m.k);clear();}} style={{ flex:1, padding:'9px 0', borderRadius:9, border:'none', background:mode===m.k?'linear-gradient(135deg,#C9A84C,#E8C96B)':'transparent', color:mode===m.k?'#000':'rgba(240,232,255,.42)', fontWeight:mode===m.k?700:500, fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{m.l}</button>
+              <button key={m.k} onClick={()=>{setMode(m.k);clear();}} style={{ flex:1, padding:'9px 0', borderRadius:9, border:'none', background:mode===m.k?'linear-gradient(135deg,#C9A84C,#E8C96B)':'transparent', color:mode===m.k?'#000':'rgba(240,232,255,.42)', fontWeight:mode===m.k?700:500, fontSize:16, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{m.l}</button>
             ))}
           </div>
 
           {/* Care account info banner */}
           {mode==='signin' && (
-            <div style={{ marginBottom:18, padding:'10px 14px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:11, fontSize:13, color:'rgba(168,196,240,.7)', lineHeight:1.6 }}>
+            <div style={{ marginBottom:18, padding:'10px 14px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:11, fontSize:16, color:'rgba(168,196,240,.7)', lineHeight:1.6 }}>
               💙 Lazuli patient accounts: sign in with the email and password set up for you by your care advocate.
             </div>
           )}
@@ -683,8 +677,8 @@ function AuthScreen() {
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:6 }}>
                   {[{v:'self',l:'Myself',d:'I have a chronic illness'},{v:'caree',l:'Someone I care for',d:'I manage their health'}].map(o=>(
                     <button key={o.v} onClick={()=>setAccountType(o.v)} style={{ padding:'11px 13px', borderRadius:12, border:`1.5px solid ${accountType===o.v?'#C9A84C':'rgba(42,92,173,.25)'}`, background:accountType===o.v?'rgba(201,168,76,.08)':'rgba(255,255,255,.03)', color:accountType===o.v?'#C9A84C':'rgba(240,232,255,.4)', cursor:'pointer', textAlign:'left', fontFamily:"'DM Sans',sans-serif" }}>
-                      <div style={{ fontSize:13, fontWeight:600, marginBottom:2 }}>{o.l}</div>
-                      <div style={{ fontSize:13, opacity:.7 }}>{o.d}</div>
+                      <div style={{ fontSize:16, fontWeight:600, marginBottom:2 }}>{o.l}</div>
+                      <div style={{ fontSize:16, opacity:.7 }}>{o.d}</div>
                     </button>
                   ))}
                 </div>
@@ -696,17 +690,17 @@ function AuthScreen() {
             {mode==='signup' && <div><label>Confirm Password</label><input className="auth-input" type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="Re-enter your password" onKeyDown={hk}/></div>}
           </div>
 
-          {error && <div style={{ marginTop:14, padding:'11px 14px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.22)', borderRadius:11, fontSize:13, color:'#ff8080' }}>⚠ {error}</div>}
-          {msg   && <div style={{ marginTop:14, padding:'11px 14px', background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.22)', borderRadius:11, fontSize:13, color:'#6ee7b7' }}>✓ {msg}</div>}
+          {error && <div style={{ marginTop:14, padding:'11px 14px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.22)', borderRadius:11, fontSize:16, color:'#ff8080' }}>⚠ {error}</div>}
+          {msg   && <div style={{ marginTop:14, padding:'11px 14px', background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.22)', borderRadius:11, fontSize:16, color:'#6ee7b7' }}>✓ {msg}</div>}
 
           <button className="btn btn-gold" onClick={mode==='signin'?handleSignin:mode==='signup'?handleSignup:handleReset} disabled={loading} style={{ width:'100%', marginTop:20, padding:'14px', fontSize:15, justifyContent:'center', opacity:loading?.7:1 }}>
             {loading ? <span style={{ display:'inline-block', width:17, height:17, border:'2px solid rgba(0,0,0,.3)', borderTopColor:'#000', borderRadius:'50%', animation:'spin .7s linear infinite' }}/> : mode==='signin' ? 'Sign In' : mode==='signup' ? 'Create My Account' : 'Send Reset Email'}
           </button>
-          {mode==='signin' && <button onClick={()=>{setMode('reset');clear();}} style={{ width:'100%', marginTop:10, background:'none', border:'none', color:'rgba(240,232,255,.28)', fontSize:13, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:4 }}>Forgot your password?</button>}
-          {mode==='reset'  && <button onClick={()=>{setMode('signin');clear();}} style={{ width:'100%', marginTop:10, background:'none', border:'none', color:'rgba(240,232,255,.28)', fontSize:13, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:4 }}>← Back to sign in</button>}
+          {mode==='signin' && <button onClick={()=>{setMode('reset');clear();}} style={{ width:'100%', marginTop:10, background:'none', border:'none', color:'rgba(240,232,255,.28)', fontSize:16, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:4 }}>Forgot your password?</button>}
+          {mode==='reset'  && <button onClick={()=>{setMode('signin');clear();}} style={{ width:'100%', marginTop:10, background:'none', border:'none', color:'rgba(240,232,255,.28)', fontSize:16, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:4 }}>← Back to sign in</button>}
         </div>
         </div>
-        <div style={{ textAlign:'center', marginTop:14, fontSize:13, color:'rgba(240,232,255,.18)', lineHeight:1.6 }}>🔒 Your health data is encrypted and stored privately. Only you can access it.</div>
+        <div style={{ textAlign:'center', marginTop:14, fontSize:16, color:'rgba(240,232,255,.18)', lineHeight:1.6 }}>🔒 Your health data is encrypted and stored privately. Only you can access it.</div>
       </div>
     </div>
   );
@@ -772,18 +766,23 @@ const SIDEBAR_QUOTES = [
 
 function DailyQuoteSidebar() {
   const [idx, setIdx] = useState(0);
-  const [fade, setFade] = useState(true);
+  const [textVisible, setTextVisible] = useState(true);
   useEffect(() => {
     const t = setInterval(() => {
-      setFade(false);
-      setTimeout(() => { setIdx(i => (i+1) % SIDEBAR_QUOTES.length); setFade(true); }, 500);
-    }, 10000);
+      setTextVisible(false);
+      setTimeout(() => {
+        setIdx(i => (i+1) % SIDEBAR_QUOTES.length);
+        setTextVisible(true);
+      }, 700);
+    }, 12000);
     return () => clearInterval(t);
   }, []);
   return (
-    <div style={{ background:'rgba(4,14,52,.75)', backdropFilter:'blur(16px)', borderRadius:14, padding:'16px 15px', border:'1px solid rgba(42,92,173,.3)', flex:1, display:'flex', flexDirection:'column', justifyContent:'center', transition:'opacity .5s', opacity:fade?1:0, minHeight:120 }}>
-      <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.8)', marginBottom:8, letterSpacing:1.8, textTransform:'uppercase' }}>💜 Today</div>
-      <div style={{ fontSize:15, color:'rgba(240,232,255,.88)', lineHeight:1.75, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{SIDEBAR_QUOTES[idx]}</div>
+    <div style={{ background:'rgba(4,14,52,.78)', backdropFilter:'blur(16px)', borderRadius:14, padding:'16px 15px', border:'1px solid rgba(42,92,173,.28)', flex:1, display:'flex', flexDirection:'column', justifyContent:'center', minHeight:120 }}>
+      <div style={{ fontSize:11, fontWeight:700, color:'rgba(201,168,76,.8)', marginBottom:8, letterSpacing:1.8, textTransform:'uppercase' }}>💜 Today</div>
+      <div style={{ fontSize:15, color:'rgba(240,232,255,.88)', lineHeight:1.75, fontFamily:"'Georgia',serif", transition:'opacity .7s ease, transform .7s ease', opacity:textVisible?1:0, transform:textVisible?'translateY(0)':'translateY(6px)' }}>
+        {SIDEBAR_QUOTES[idx]}
+      </div>
     </div>
   );
 }
@@ -806,7 +805,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
           <LogoImg size={38}/>
           <div style={{ flex:1 }}>
             <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:700, color:'#C9A84C', letterSpacing:1, lineHeight:1, textShadow:'0 0 20px rgba(201,168,76,.4)' }}>Lazuli <span style={{ fontStyle:'italic' }}>Crest</span></div>
-            <div style={{ fontSize:13, fontWeight:600, color:'rgba(168,196,240,.5)', letterSpacing:3, textTransform:'uppercase', marginTop:2 }}>Health Advocacy</div>
+            <div style={{ fontSize:16, fontWeight:600, color:'rgba(168,196,240,.5)', letterSpacing:3, textTransform:'uppercase', marginTop:2 }}>Health Advocacy</div>
           </div>
           {saving && <div style={{ marginLeft:'auto', width:6, height:6, borderRadius:'50%', background:'#C9A84C', animation:'pulseGlow 1s infinite' }}/>}
         </div>
@@ -816,17 +815,17 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
               {(displayName||'?')[0].toUpperCase()}
             </div>
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontWeight:600, fontSize:13, color:'#F0E8FF', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{displayName}</div>
+              <div style={{ fontWeight:600, fontSize:16, color:'#F0E8FF', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{displayName}</div>
               {isCare && <div style={{ fontSize:9, color:'rgba(201,168,76,.6)', fontWeight:600, letterSpacing:1 }}>CARE MODE</div>}
-              {!isCare && <div style={{ fontSize:13, color:'rgba(168,196,240,.45)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</div>}
+              {!isCare && <div style={{ fontSize:16, color:'rgba(168,196,240,.45)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</div>}
             </div>
           </div>
-          {data.profile?.conditions && <div style={{ marginTop:7, fontSize:13, color:'rgba(168,196,240,.5)', fontWeight:500 }}>{data.profile.conditions.split(',')[0].trim()}{data.profile.conditions.includes(',')?' + more':''}</div>}
+          {data.profile?.conditions && <div style={{ marginTop:7, fontSize:16, color:'rgba(168,196,240,.5)', fontWeight:500 }}>{data.profile.conditions.split(',')[0].trim()}{data.profile.conditions.includes(',')?' + more':''}</div>}
         </div>
         {/* Lazuli lapis fact */}
         <div style={{ background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:11, padding:'9px 12px', marginBottom:8 }}>
           <div style={{ fontSize:9, fontWeight:700, color:'rgba(201,168,76,.55)', letterSpacing:2, textTransform:'uppercase', marginBottom:4 }}>✦ Lazuli History</div>
-          <div style={{ fontSize:14, color:'rgba(168,196,240,.75)', lineHeight:1.6, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", transition:'opacity .5s' }}>{LAZULI_FACTS[factIdx]}</div>
+          <div style={{ fontSize:16, color:'rgba(168,196,240,.75)', lineHeight:1.6, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", transition:'opacity .5s' }}>{LAZULI_FACTS[factIdx]}</div>
         </div>
       </div>
       <nav style={{ padding:'4px 8px', overflowY:'auto' }}>
@@ -835,7 +834,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
           return (
             <button key={n.id} onClick={()=>setTab(n.id)} className={`nav-item${active?' active':''}`} style={{ marginBottom:1 }}>
               {active && <div style={{ position:'absolute', left:0, top:'18%', bottom:'18%', width:3, background:'linear-gradient(180deg,#2A5CAD,#C9A84C)', borderRadius:'0 3px 3px 0' }}/>}
-              <span style={{ fontSize:13, width:20, textAlign:'center', lineHeight:1 }}>{n.icon}</span>
+              <span style={{ fontSize:16, width:20, textAlign:'center', lineHeight:1 }}>{n.icon}</span>
               <span style={{ flex:1, fontSize:13 }}>{n.label}</span>
               {active && <span style={{ width:4, height:4, borderRadius:'50%', background:'#C9A84C', boxShadow:'0 0 6px #C9A84C' }}/>}
             </button>
@@ -844,7 +843,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen }) {
       </nav>
       <div style={{ padding:'10px 12px 14px', borderTop:'1px solid rgba(42,92,173,.15)', display:'flex', flexDirection:'column', gap:8, flex:1 }}>
         <DailyQuoteSidebar/>
-        <button onClick={()=>signOut(auth)} className="btn btn-subtle" style={{ width:'100%', justifyContent:'center', fontSize:13, padding:'9px' }}>Sign out</button>
+        <button onClick={()=>signOut(auth)} className="btn btn-subtle" style={{ width:'100%', justifyContent:'center', fontSize:16, padding:'9px' }}>Sign out</button>
       </div>
     </aside>
   );
@@ -859,7 +858,7 @@ function PH({ emoji, title, sub, children }) {
           <span style={{ fontSize:22 }}>{emoji}</span>
           <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:700, color:'#C9A84C', letterSpacing:.5, lineHeight:1.1, textShadow:'0 0 20px rgba(201,168,76,.25)' }}>{title}</span>
         </div>
-        {sub && <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', marginLeft:32 }}>{sub}</div>}
+        {sub && <div style={{ fontSize:16, color:'rgba(240,232,255,.45)', marginLeft:32 }}>{sub}</div>}
       </div>
       {children && <div style={{ flexShrink:0 }}>{children}</div>}
     </div>
@@ -868,8 +867,8 @@ function PH({ emoji, title, sub, children }) {
 function SH({ title, emoji, onAction, actionLabel }) {
   return (
     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:13 }}>
-      <div style={{ fontWeight:600, fontSize:14, color:'#F0E8FF' }}>{emoji} {title}</div>
-      {onAction && <button onClick={onAction} style={{ border:'none', background:'transparent', color:'rgba(201,168,76,.58)', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{actionLabel} →</button>}
+      <div style={{ fontWeight:600, fontSize:16, color:'#F0E8FF' }}>{emoji} {title}</div>
+      {onAction && <button onClick={onAction} style={{ border:'none', background:'transparent', color:'rgba(201,168,76,.58)', fontWeight:600, fontSize:16, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{actionLabel} →</button>}
     </div>
   );
 }
@@ -877,9 +876,9 @@ function Nil({ icon, msg, cta, fn, sub }) {
   return (
     <div style={{ textAlign:'center', padding:'32px 16px' }}>
       <div style={{ fontSize:32, marginBottom:10, opacity:.4 }}>{icon}</div>
-      <div style={{ fontSize:14, color:'rgba(240,232,255,.3)', marginBottom:sub?4:cta?14:0 }}>{msg}</div>
-      {sub && <div style={{ fontSize:13, color:'rgba(168,196,240,.35)', marginBottom:14 }}>{sub}</div>}
-      {cta && fn && <button className="btn btn-gold" onClick={fn} style={{ fontSize:13, padding:'8px 18px' }}>{cta}</button>}
+      <div style={{ fontSize:16, color:'rgba(240,232,255,.3)', marginBottom:sub?4:cta?14:0 }}>{msg}</div>
+      {sub && <div style={{ fontSize:16, color:'rgba(168,196,240,.35)', marginBottom:14 }}>{sub}</div>}
+      {cta && fn && <button className="btn btn-gold" onClick={fn} style={{ fontSize:16, padding:'8px 18px' }}>{cta}</button>}
     </div>
   );
 }
@@ -890,8 +889,8 @@ function SevDot({ v }) {
 function NoteBlock({ title, text, color }) {
   return (
     <div style={{ marginBottom:14, padding:'13px 16px', background:'rgba(255,255,255,.03)', borderRadius:12, borderLeft:`3px solid ${color}44` }}>
-      <div style={{ fontSize:13, fontWeight:700, color, textTransform:'uppercase', letterSpacing:1, marginBottom:5 }}>{title}</div>
-      <div style={{ fontSize:14, color:'rgba(240,232,255,.58)', lineHeight:1.75, whiteSpace:'pre-wrap' }}>{text}</div>
+      <div style={{ fontSize:16, fontWeight:700, color, textTransform:'uppercase', letterSpacing:1, marginBottom:5 }}>{title}</div>
+      <div style={{ fontSize:16, color:'rgba(240,232,255,.58)', lineHeight:1.75, whiteSpace:'pre-wrap' }}>{text}</div>
     </div>
   );
 }
@@ -921,7 +920,7 @@ function Dashboard({ data, setTab, upd, user }) {
     <div>
       {/* Header */}
       <div style={{ marginBottom:28 }}>
-        <div style={{ fontSize:13, fontWeight:600, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase', marginBottom:5 }}>{greet()}</div>
+        <div style={{ fontSize:16, fontWeight:600, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase', marginBottom:5 }}>{greet()}</div>
         <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:34, fontWeight:700, color:'#C9A84C', marginBottom:3, lineHeight:1, textShadow:'0 0 24px rgba(201,168,76,.3)' }}>{displayName}</div>
         <div style={{ color:'rgba(240,232,255,.3)', fontSize:15, marginBottom:18 }}>{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
 
@@ -929,11 +928,11 @@ function Dashboard({ data, setTab, upd, user }) {
         <div style={{ padding:'18px 22px', background:'linear-gradient(135deg,rgba(42,92,173,.14),rgba(201,168,76,.06))', border:'1px solid rgba(201,168,76,.2)', borderRadius:16, display:'flex', gap:14, alignItems:'flex-start', marginBottom:14 }}>
           <div style={{ fontSize:26, flexShrink:0, animation:'heartbeat 3s ease-in-out infinite' }}>💙</div>
           <div style={{ flex:1 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.65)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:5 }}>Lazuli says</div>
+            <div style={{ fontSize:16, fontWeight:700, color:'rgba(201,168,76,.65)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:5 }}>Lazuli says</div>
             <div style={{ fontSize:16, color:'rgba(240,232,255,.82)', lineHeight:1.75, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{proactive}</div>
           </div>
         </div>
-        {data.profile?.goal && <div style={{ marginTop:8, fontSize:13, color:'rgba(201,168,76,.65)', fontWeight:500, background:'rgba(201,168,76,.07)', border:'1px solid rgba(201,168,76,.14)', display:'inline-block', padding:'5px 14px', borderRadius:20 }}>✦ {data.profile.goal}</div>}
+        {data.profile?.goal && <div style={{ marginTop:8, fontSize:16, color:'rgba(201,168,76,.65)', fontWeight:500, background:'rgba(201,168,76,.07)', border:'1px solid rgba(201,168,76,.14)', display:'inline-block', padding:'5px 14px', borderRadius:20 }}>✦ {data.profile.goal}</div>}
       </div>
 
       {/* Stat cards */}
@@ -948,7 +947,7 @@ function Dashboard({ data, setTab, upd, user }) {
             <div style={{ position:'absolute', top:0, right:0, width:70, height:70, borderRadius:'50%', background:`radial-gradient(circle,${s.glow} 0%,transparent 70%)`, filter:'blur(9px)' }}/>
             <div style={{ fontFamily:'serif', fontSize:20, color:s.color, marginBottom:8, opacity:.85 }}>{s.icon}</div>
             <div style={{ fontSize:34, fontWeight:700, color:s.color, lineHeight:1, marginBottom:4, fontFamily:"'Cinzel',serif" }}>{s.val}</div>
-            <div style={{ fontSize:13, color:'rgba(240,232,255,.38)' }}>{s.label}</div>
+            <div style={{ fontSize:16, color:'rgba(240,232,255,.38)' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -963,7 +962,7 @@ function Dashboard({ data, setTab, upd, user }) {
         <div className="glass-card-static" style={{ padding:18, marginBottom:18 }}>
           <SH title="Today's Medications" emoji="◉" onAction={()=>setTab('medications')} actionLabel="All"/>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:9 }}>
-            <div style={{ fontSize:13, color:'rgba(240,232,255,.38)' }}>{totalTaken} of {activeMeds.length} taken</div>
+            <div style={{ fontSize:16, color:'rgba(240,232,255,.38)' }}>{totalTaken} of {activeMeds.length} taken</div>
             <div style={{ fontSize:15, fontWeight:700, color:'#C9A84C', fontFamily:"'Cinzel',serif" }}>{medPct}%</div>
           </div>
           <div style={{ background:'rgba(255,255,255,.06)', borderRadius:5, height:5, overflow:'hidden', marginBottom:13 }}>
@@ -973,10 +972,10 @@ function Dashboard({ data, setTab, upd, user }) {
             const taken=(m.takenDates||[]).includes(today);
             return (
               <div key={m.id} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                <button onClick={()=>toggleTaken(m.id)} style={{ width:24,height:24,borderRadius:'50%',border:`2px solid ${taken?'#6ee7b7':'rgba(42,92,173,.4)'}`,background:taken?'linear-gradient(135deg,#6ee7b7,#34d399)':'transparent',color:'#000',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',cursor:isCare?'not-allowed':'pointer',fontWeight:900 }}>{taken?'✓':''}</button>
+                <button onClick={()=>toggleTaken(m.id)} style={{ width:24,height:24,borderRadius:'50%',border:`2px solid ${taken?'#6ee7b7':'rgba(42,92,173,.4)'}`,background:taken?'linear-gradient(135deg,#6ee7b7,#34d399)':'transparent',color:'#000',fontSize:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',cursor:isCare?'not-allowed':'pointer',fontWeight:900 }}>{taken?'✓':''}</button>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:13, fontWeight:500, color:taken?'rgba(240,232,255,.28)':'#F0E8FF', textDecoration:taken?'line-through':'none' }}>{m.name}</div>
-                  <div style={{ fontSize:13, color:'rgba(240,232,255,.28)' }}>{m.dose} · {m.frequency}</div>
+                  <div style={{ fontSize:16, fontWeight:500, color:taken?'rgba(240,232,255,.28)':'#F0E8FF', textDecoration:taken?'line-through':'none' }}>{m.name}</div>
+                  <div style={{ fontSize:16, color:'rgba(240,232,255,.28)' }}>{m.dose} · {m.frequency}</div>
                 </div>
               </div>
             );
@@ -988,7 +987,7 @@ function Dashboard({ data, setTab, upd, user }) {
         <div className="glass-card-static" style={{ padding:18 }}>
           <SH title="Today's Symptoms" emoji="◈" onAction={()=>setTab('symptoms')} actionLabel="Log"/>
           {todaySym.length===0
-            ? <div style={{ fontSize:13, color:'rgba(240,232,255,.22)', fontStyle:'italic' }}>No entries today yet.</div>
+            ? <div style={{ fontSize:16, color:'rgba(240,232,255,.22)', fontStyle:'italic' }}>No entries today yet.</div>
             : todaySym.slice(0,1).map(s=>(
               <div key={s.id}>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginBottom:8 }}>{s.entries?.slice(0,3).map((e,i)=><span key={i} className="pill">{e.symptom}</span>)}</div>
@@ -1007,7 +1006,7 @@ function Dashboard({ data, setTab, upd, user }) {
         <div className="glass-card-static" style={{ padding:18 }}>
           <SH title="Upcoming" emoji="◷" onAction={()=>setTab('appointments')} actionLabel="All"/>
           {upcoming.length===0
-            ? <div style={{ fontSize:13, color:'rgba(240,232,255,.22)', fontStyle:'italic' }}>No upcoming appointments.</div>
+            ? <div style={{ fontSize:16, color:'rgba(240,232,255,.22)', fontStyle:'italic' }}>No upcoming appointments.</div>
             : upcoming.map(a=>(
               <div key={a.id} style={{ display:'flex', gap:9, alignItems:'center', marginBottom:9 }}>
                 <div style={{ background:'rgba(42,92,173,.12)', borderRadius:9, padding:'3px 7px', textAlign:'center', minWidth:36, flexShrink:0, border:'1px solid rgba(42,92,173,.22)' }}>
@@ -1015,8 +1014,8 @@ function Dashboard({ data, setTab, upd, user }) {
                   <div style={{ fontSize:15, fontWeight:700, color:'#A8C4F0', fontFamily:"'Cinzel',serif", lineHeight:1 }}>{new Date(a.date+'T12:00:00').getDate()}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize:13, fontWeight:500, color:'#F0E8FF' }}>{a.provider}</div>
-                  <div style={{ fontSize:13, color:'rgba(240,232,255,.28)' }}>{a.type||'Appointment'}</div>
+                  <div style={{ fontSize:16, fontWeight:500, color:'#F0E8FF' }}>{a.provider}</div>
+                  <div style={{ fontSize:16, color:'rgba(240,232,255,.28)' }}>{a.type||'Appointment'}</div>
                 </div>
               </div>
             ))
@@ -1104,7 +1103,7 @@ function Symptoms({ data, upd }) {
                     <button onClick={()=>rmSym(e.symptom)} style={{ border:'none', background:'transparent', color:'rgba(240,232,255,.3)', cursor:'pointer', fontSize:16 }}>×</button>
                   </div>
                   <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <span style={{ fontSize:13, color:'rgba(240,232,255,.38)', minWidth:58 }}>Severity</span>
+                    <span style={{ fontSize:16, color:'rgba(240,232,255,.38)', minWidth:58 }}>Severity</span>
                     <input type="range" min={1} max={10} value={e.severity} onChange={ev=>setSev(e.symptom,+ev.target.value)} style={{ flex:1 }}/>
                     <span style={{ fontWeight:700, color:'#A8C4F0', minWidth:22, textAlign:'right', fontSize:17, fontFamily:"'Cinzel',serif" }}>{e.severity}</span>
                   </div>
@@ -1118,7 +1117,7 @@ function Symptoms({ data, upd }) {
             <label>Active Illness / Infection (optional)</label>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:6 }}>
               {ILLNESS_TYPES.map(ill=>(
-                <button key={ill} onClick={()=>toggleIllness(ill)} style={{ padding:'5px 12px', borderRadius:20, fontSize:13, border:`1px solid ${(form.illnesses||[]).includes(ill)?'#f87171':'rgba(42,92,173,.25)'}`, background:(form.illnesses||[]).includes(ill)?'rgba(248,113,113,.12)':'rgba(255,255,255,.03)', color:(form.illnesses||[]).includes(ill)?'#f87171':'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .14s' }}>{ill}</button>
+                <button key={ill} onClick={()=>toggleIllness(ill)} style={{ padding:'5px 12px', borderRadius:20, fontSize:16, border:`1px solid ${(form.illnesses||[]).includes(ill)?'#f87171':'rgba(42,92,173,.25)'}`, background:(form.illnesses||[]).includes(ill)?'rgba(248,113,113,.12)':'rgba(255,255,255,.03)', color:(form.illnesses||[]).includes(ill)?'#f87171':'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .14s' }}>{ill}</button>
               ))}
             </div>
           </div>
@@ -1143,10 +1142,10 @@ function Symptoms({ data, upd }) {
               {(form.photos||[]).map(p=>(
                 <div key={p.id} style={{ position:'relative' }}>
                   <img src={p.data} alt={p.name} style={{ width:64,height:64,objectFit:'cover',borderRadius:10,border:'1px solid rgba(42,92,173,.3)',cursor:'pointer' }} onClick={()=>setViewPhoto(p.data)}/>
-                  <button onClick={()=>removePhoto(p.id)} style={{ position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#f87171',border:'none',color:'#fff',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900 }}>×</button>
+                  <button onClick={()=>removePhoto(p.id)} style={{ position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#f87171',border:'none',color:'#fff',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900 }}>×</button>
                 </div>
               ))}
-              <button className="btn btn-ghost" style={{ fontSize:13,padding:'8px 14px' }} onClick={()=>photoRef.current?.click()}>📷 Add Photo</button>
+              <button className="btn btn-ghost" style={{ fontSize:16,padding:'8px 14px' }} onClick={()=>photoRef.current?.click()}>📷 Add Photo</button>
               <input ref={photoRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={e=>[...e.target.files].forEach(addPhoto)}/>
             </div>
           </div>
@@ -1161,7 +1160,7 @@ function Symptoms({ data, upd }) {
       {data.symptoms.length>0 && (
         <div style={{ display:'flex', gap:7, marginBottom:14, flexWrap:'wrap' }}>
           {[{v:'all',l:'All time'},{v:'today',l:'Today'},{v:'week',l:'Last 7 days'}].map(f=>(
-            <button key={f.v} onClick={()=>setFilter(f.v)} style={{ padding:'5px 14px', borderRadius:20, fontSize:13, border:`1px solid ${filter===f.v?'#C9A84C':'rgba(42,92,173,.25)'}`, background:filter===f.v?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)', color:filter===f.v?'#C9A84C':'rgba(240,232,255,.42)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{f.l}</button>
+            <button key={f.v} onClick={()=>setFilter(f.v)} style={{ padding:'5px 14px', borderRadius:20, fontSize:16, border:`1px solid ${filter===f.v?'#C9A84C':'rgba(42,92,173,.25)'}`, background:filter===f.v?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)', color:filter===f.v?'#C9A84C':'rgba(240,232,255,.42)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{f.l}</button>
           ))}
         </div>
       )}
@@ -1172,18 +1171,18 @@ function Symptoms({ data, upd }) {
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:11, flexWrap:'wrap', gap:7 }}>
               <div>
                 <div style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:600, fontSize:15, color:'#C9A84C', marginBottom:5 }}>
-                  {fmtDate(s.date)}{s.date===todayStr()&&<span style={{ fontSize:13, background:'rgba(201,168,76,.12)', color:'#C9A84C', padding:'2px 8px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>Today</span>}
+                  {fmtDate(s.date)}{s.date===todayStr()&&<span style={{ fontSize:16, background:'rgba(201,168,76,.12)', color:'#C9A84C', padding:'2px 8px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>Today</span>}
                 </div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>{s.entries?.map((e,i)=><span key={i} className="pill">{e.symptom} <SevDot v={e.severity}/></span>)}</div>
-                {(s.illnesses||[]).length>0 && <div style={{ marginTop:5, display:'flex', gap:4, flexWrap:'wrap' }}>{(s.illnesses||[]).map(ill=><span key={ill} style={{ fontSize:13,background:'rgba(248,113,113,.1)',color:'#f87171',padding:'2px 9px',borderRadius:20,border:'1px solid rgba(248,113,113,.25)' }}>{ill}</span>)}</div>}
+                {(s.illnesses||[]).length>0 && <div style={{ marginTop:5, display:'flex', gap:4, flexWrap:'wrap' }}>{(s.illnesses||[]).map(ill=><span key={ill} style={{ fontSize:16,background:'rgba(248,113,113,.1)',color:'#f87171',padding:'2px 9px',borderRadius:20,border:'1px solid rgba(248,113,113,.25)' }}>{ill}</span>)}</div>}
               </div>
-              <button className="btn btn-danger" style={{ fontSize:13, padding:'3px 9px' }} onClick={()=>del(s.id)}>Delete</button>
+              <button className="btn btn-danger" style={{ fontSize:16, padding:'3px 9px' }} onClick={()=>del(s.id)}>Delete</button>
             </div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:(s.photos||[]).length>0?10:0 }}>
               {[{l:'Pain',v:s.pain,c:'#f87171'},{l:'Energy',v:s.energy,c:'#6ee7b7'},{l:'Mood',v:s.mood,c:'#93c5fd'}].map(m=>(
                 <div key={m.l} style={{ background:'rgba(255,255,255,.03)', borderRadius:10, padding:'7px 11px', textAlign:'center', border:'1px solid rgba(255,255,255,.04)' }}>
                   <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, fontWeight:700, color:m.c }}>{m.v}<span style={{ fontSize:9, color:'rgba(240,232,255,.18)' }}>/10</span></div>
-                  <div style={{ fontSize:13, color:m.c, opacity:.75, fontWeight:600 }}>{m.l}</div>
+                  <div style={{ fontSize:16, color:m.c, opacity:.75, fontWeight:600 }}>{m.l}</div>
                 </div>
               ))}
             </div>
@@ -1194,7 +1193,7 @@ function Symptoms({ data, upd }) {
                 ))}
               </div>
             )}
-            {s.notes && <div style={{ marginTop:9, fontSize:13, color:'rgba(240,232,255,.42)', background:'rgba(255,255,255,.02)', borderRadius:9, padding:'7px 12px', lineHeight:1.6, borderLeft:'2px solid rgba(42,92,173,.35)' }}>{s.notes}</div>}
+            {s.notes && <div style={{ marginTop:9, fontSize:16, color:'rgba(240,232,255,.42)', background:'rgba(255,255,255,.02)', borderRadius:9, padding:'7px 12px', lineHeight:1.6, borderLeft:'2px solid rgba(42,92,173,.35)' }}>{s.notes}</div>}
           </div>
         ))}
       </div>
@@ -1240,7 +1239,7 @@ function Medications({ data, upd }) {
           <div style={{ marginBottom:13 }}><label>Notes</label><textarea className="field" rows={2} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} style={{ resize:'vertical' }}/></div>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:17 }}>
             <input type="checkbox" id="mact" checked={form.active} onChange={e=>setForm(f=>({...f,active:e.target.checked}))}/>
-            <label htmlFor="mact" style={{ margin:0, textTransform:'none', fontSize:14, fontWeight:500, color:'rgba(240,232,255,.7)', letterSpacing:0 }}>Currently active</label>
+            <label htmlFor="mact" style={{ margin:0, textTransform:'none', fontSize:16, fontWeight:500, color:'rgba(240,232,255,.7)', letterSpacing:0 }}>Currently active</label>
           </div>
           <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
             <button className="btn btn-ghost" onClick={()=>setOpen(false)}>Cancel</button>
@@ -1249,31 +1248,31 @@ function Medications({ data, upd }) {
         </div>
       )}
       {data.medications.length===0&&!open && <Nil icon="◉" msg="No medications yet." cta="Add your first" fn={()=>setOpen(true)}/>}
-      {active.length>0 && <><div style={{ fontSize:13,fontWeight:700,color:'rgba(201,168,76,.4)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:10 }}>Active</div>
+      {active.length>0 && <><div style={{ fontSize:16,fontWeight:700,color:'rgba(201,168,76,.4)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:10 }}>Active</div>
         <div style={{ display:'flex',flexDirection:'column',gap:8,marginBottom:22 }}>
           {active.map(m=>{const taken=(m.takenDates||[]).includes(todayStr());return(
             <div key={m.id} className="glass-card" style={{ padding:14,display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',border:`1px solid ${taken?'rgba(110,231,183,.16)':'rgba(42,92,173,.15)'}` }}>
-              <button onClick={()=>toggleTaken(m.id)} style={{ width:30,height:30,borderRadius:'50%',border:`2px solid ${taken?'#6ee7b7':'rgba(42,92,173,.35)'}`,background:taken?'linear-gradient(135deg,#6ee7b7,#34d399)':'transparent',color:'#000',fontSize:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontWeight:900 }}>{taken?'✓':''}</button>
+              <button onClick={()=>toggleTaken(m.id)} style={{ width:30,height:30,borderRadius:'50%',border:`2px solid ${taken?'#6ee7b7':'rgba(42,92,173,.35)'}`,background:taken?'linear-gradient(135deg,#6ee7b7,#34d399)':'transparent',color:'#000',fontSize:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontWeight:900 }}>{taken?'✓':''}</button>
               <div style={{ flex:1,minWidth:100 }}>
-                <div style={{ fontWeight:600,fontSize:14,color:taken?'rgba(240,232,255,.28)':'#F0E8FF',textDecoration:taken?'line-through':'none' }}>{m.name}</div>
-                <div style={{ fontSize:13,color:'rgba(240,232,255,.3)' }}>{m.dose} · {m.frequency}{m.time?` · ${m.time}`:''}</div>
+                <div style={{ fontWeight:600,fontSize:16,color:taken?'rgba(240,232,255,.28)':'#F0E8FF',textDecoration:taken?'line-through':'none' }}>{m.name}</div>
+                <div style={{ fontSize:16,color:'rgba(240,232,255,.3)' }}>{m.dose} · {m.frequency}{m.time?` · ${m.time}`:''}</div>
               </div>
-              {taken&&<span style={{ fontSize:13,background:'rgba(110,231,183,.1)',color:'#6ee7b7',padding:'2px 9px',borderRadius:20,fontWeight:600 }}>Taken ✓</span>}
+              {taken&&<span style={{ fontSize:16,background:'rgba(110,231,183,.1)',color:'#6ee7b7',padding:'2px 9px',borderRadius:20,fontWeight:600 }}>Taken ✓</span>}
               <div style={{ display:'flex',gap:6 }}>
-                <button className="btn btn-ghost" style={{ fontSize:13,padding:'4px 10px' }} onClick={()=>edit(m)}>Edit</button>
-                <button className="btn btn-danger" style={{ fontSize:13,padding:'4px 10px' }} onClick={()=>del(m.id)}>Remove</button>
+                <button className="btn btn-ghost" style={{ fontSize:16,padding:'4px 10px' }} onClick={()=>edit(m)}>Edit</button>
+                <button className="btn btn-danger" style={{ fontSize:16,padding:'4px 10px' }} onClick={()=>del(m.id)}>Remove</button>
               </div>
             </div>
           );})}
         </div>
       </>}
-      {inactive.length>0 && <><div style={{ fontSize:13,fontWeight:700,color:'rgba(42,92,173,.4)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:9 }}>Inactive</div>
+      {inactive.length>0 && <><div style={{ fontSize:16,fontWeight:700,color:'rgba(42,92,173,.4)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:9 }}>Inactive</div>
         <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
           {inactive.map(m=>(
             <div key={m.id} className="glass-card-static" style={{ padding:13,display:'flex',alignItems:'center',gap:10,opacity:.55 }}>
-              <div style={{ flex:1 }}><div style={{ fontWeight:600,fontSize:13,color:'#F0E8FF' }}>{m.name} — {m.dose}</div></div>
-              <button className="btn btn-ghost" style={{ fontSize:13,padding:'3px 9px' }} onClick={()=>edit(m)}>Edit</button>
-              <button className="btn btn-danger" style={{ fontSize:13,padding:'3px 9px' }} onClick={()=>del(m.id)}>Remove</button>
+              <div style={{ flex:1 }}><div style={{ fontWeight:600,fontSize:16,color:'#F0E8FF' }}>{m.name} — {m.dose}</div></div>
+              <button className="btn btn-ghost" style={{ fontSize:16,padding:'3px 9px' }} onClick={()=>edit(m)}>Edit</button>
+              <button className="btn btn-danger" style={{ fontSize:16,padding:'3px 9px' }} onClick={()=>del(m.id)}>Remove</button>
             </div>
           ))}
         </div>
@@ -1316,17 +1315,17 @@ function Appointments({ data, upd }) {
     const isPast = a.date < today;
     return (
       <div className="slide-in">
-        <button onClick={()=>setView(null)} style={{ border:'none',background:'transparent',color:'rgba(201,168,76,.6)',fontWeight:600,fontSize:13,cursor:'pointer',marginBottom:16,fontFamily:"'DM Sans',sans-serif" }}>← Back</button>
+        <button onClick={()=>setView(null)} style={{ border:'none',background:'transparent',color:'rgba(201,168,76,.6)',fontWeight:600,fontSize:16,cursor:'pointer',marginBottom:16,fontFamily:"'DM Sans',sans-serif" }}>← Back</button>
         <div className="glass-card-static" style={{ padding:26 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:18, flexWrap:'wrap', gap:9 }}>
             <div>
               <div style={{ fontFamily:"'Cinzel',serif",fontWeight:600,fontSize:21,color:'#C9A84C' }}>{a.provider}</div>
-              {a.physicianType && <div style={{ fontSize:13,color:'rgba(168,196,240,.6)',marginTop:3 }}>{a.physicianType==='Custom…'?a.customPhysician:a.physicianType}</div>}
-              <div style={{ fontSize:13,color:'rgba(240,232,255,.32)',marginTop:4 }}>{fmtDate(a.date)}{a.time?' · '+a.time:''} · {a.type||'Appointment'}</div>
-              {isPast && <span style={{ marginTop:6,display:'inline-block',fontSize:13,background:'rgba(42,92,173,.12)',color:'#A8C4F0',padding:'2px 9px',borderRadius:20,fontWeight:600 }}>Past appointment</span>}
+              {a.physicianType && <div style={{ fontSize:16,color:'rgba(168,196,240,.6)',marginTop:3 }}>{a.physicianType==='Custom…'?a.customPhysician:a.physicianType}</div>}
+              <div style={{ fontSize:16,color:'rgba(240,232,255,.32)',marginTop:4 }}>{fmtDate(a.date)}{a.time?' · '+a.time:''} · {a.type||'Appointment'}</div>
+              {isPast && <span style={{ marginTop:6,display:'inline-block',fontSize:16,background:'rgba(42,92,173,.12)',color:'#A8C4F0',padding:'2px 9px',borderRadius:20,fontWeight:600 }}>Past appointment</span>}
             </div>
             <div style={{ display:'flex',gap:7,flexWrap:'wrap' }}>
-              <button className="btn btn-lapis" style={{ fontSize:13,padding:'6px 12px' }} onClick={()=>share(a)}>📤 Share</button>
+              <button className="btn btn-lapis" style={{ fontSize:16,padding:'6px 12px' }} onClick={()=>share(a)}>📤 Share</button>
               <button className="btn btn-ghost" style={{ fontSize:11 }} onClick={()=>edit(a)}>Edit</button>
               <button className="btn btn-danger" style={{ fontSize:11 }} onClick={()=>del(a.id)}>Delete</button>
             </div>
@@ -1371,7 +1370,7 @@ function Appointments({ data, upd }) {
             </div>
             <div style={{ display:'flex',alignItems:'center',gap:8,paddingTop:24 }}>
               <input type="checkbox" id="isinf" checked={form.isInfusion} onChange={e=>setForm(f=>({...f,isInfusion:e.target.checked}))}/>
-              <label htmlFor="isinf" style={{ margin:0,textTransform:'none',fontSize:13,letterSpacing:0 }}>💉 This is an infusion</label>
+              <label htmlFor="isinf" style={{ margin:0,textTransform:'none',fontSize:16,letterSpacing:0 }}>💉 This is an infusion</label>
             </div>
           </div>
           <div style={{ marginBottom:13 }}><label>Pre-appointment notes</label><textarea className="field" rows={2} value={form.preNotes} onChange={e=>setForm(f=>({...f,preNotes:e.target.value}))} placeholder="Questions to ask, how you're feeling beforehand…" style={{ resize:'vertical' }}/></div>
@@ -1385,7 +1384,7 @@ function Appointments({ data, upd }) {
       )}
       {nonInfusion.length===0&&!open&&<Nil icon="◷" msg="No appointments yet." cta="Add first" fn={()=>setOpen(true)}/>}
       {upcoming.length>0&&<>
-        <div style={{ fontSize:13,fontWeight:700,color:'rgba(201,168,76,.4)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:10 }}>Upcoming</div>
+        <div style={{ fontSize:16,fontWeight:700,color:'rgba(201,168,76,.4)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:10 }}>Upcoming</div>
         <div style={{ display:'flex',flexDirection:'column',gap:8,marginBottom:22 }}>
           {upcoming.map(a=>(
             <div key={a.id} className="glass-card" style={{ padding:14,display:'flex',alignItems:'center',gap:12,cursor:'pointer',flexWrap:'wrap' }} onClick={()=>setView(a.id)}>
@@ -1394,18 +1393,18 @@ function Appointments({ data, upd }) {
                 <div style={{ fontSize:18,fontWeight:700,color:'#A8C4F0',fontFamily:"'Cinzel',serif",lineHeight:1 }}>{new Date(a.date+'T12:00:00').getDate()}</div>
               </div>
               <div style={{ flex:1 }}>
-                <div style={{ fontWeight:600,fontSize:14,color:'#F0E8FF',marginBottom:1 }}>{a.provider}</div>
-                <div style={{ fontSize:13,color:'rgba(240,232,255,.32)' }}>{a.type||'Appointment'}{a.time?' · '+a.time:''}</div>
-                {a.physicianType && <div style={{ fontSize:13,color:'rgba(168,196,240,.45)' }}>{a.physicianType==='Custom…'?a.customPhysician:a.physicianType}</div>}
+                <div style={{ fontWeight:600,fontSize:16,color:'#F0E8FF',marginBottom:1 }}>{a.provider}</div>
+                <div style={{ fontSize:16,color:'rgba(240,232,255,.32)' }}>{a.type||'Appointment'}{a.time?' · '+a.time:''}</div>
+                {a.physicianType && <div style={{ fontSize:16,color:'rgba(168,196,240,.45)' }}>{a.physicianType==='Custom…'?a.customPhysician:a.physicianType}</div>}
               </div>
-              {(a.preNotes||a.postNotes)&&<span style={{ fontSize:13,background:'rgba(42,92,173,.12)',color:'#A8C4F0',padding:'2px 8px',borderRadius:20,fontWeight:600 }}>Has notes</span>}
+              {(a.preNotes||a.postNotes)&&<span style={{ fontSize:16,background:'rgba(42,92,173,.12)',color:'#A8C4F0',padding:'2px 8px',borderRadius:20,fontWeight:600 }}>Has notes</span>}
               <span style={{ fontSize:16,color:'rgba(240,232,255,.2)' }}>›</span>
             </div>
           ))}
         </div>
       </>}
       {past.length>0&&<>
-        <button onClick={()=>setShowPast(p=>!p)} style={{ fontSize:13,fontWeight:700,color:'rgba(42,92,173,.5)',textTransform:'uppercase',letterSpacing:1.5,margin:'0 0 10px',background:'transparent',border:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif',display:'flex',gap:6,alignItems:'center'" }}>
+        <button onClick={()=>setShowPast(p=>!p)} style={{ fontSize:16,fontWeight:700,color:'rgba(42,92,173,.5)',textTransform:'uppercase',letterSpacing:1.5,margin:'0 0 10px',background:'transparent',border:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif',display:'flex',gap:6,alignItems:'center'" }}>
           {showPast?'▾':'▸'} Past Appointments ({past.length})
         </button>
         {showPast && (
@@ -1417,8 +1416,8 @@ function Appointments({ data, upd }) {
                   <div style={{ fontSize:18,fontWeight:700,color:'#A8C4F0',fontFamily:"'Cinzel',serif",lineHeight:1 }}>{new Date(a.date+'T12:00:00').getDate()}</div>
                 </div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:600,fontSize:13,color:'#F0E8FF' }}>{a.provider}</div>
-                  <div style={{ fontSize:13,color:'rgba(240,232,255,.3)' }}>{a.type||'Appointment'}</div>
+                  <div style={{ fontWeight:600,fontSize:16,color:'#F0E8FF' }}>{a.provider}</div>
+                  <div style={{ fontSize:16,color:'rgba(240,232,255,.3)' }}>{a.type||'Appointment'}</div>
                 </div>
                 <span style={{ fontSize:16,color:'rgba(240,232,255,.2)' }}>›</span>
               </div>
@@ -1465,7 +1464,7 @@ function Diary({ data, upd }) {
     if(!e){setView(null);return null;}
     return(
       <div className="slide-in">
-        <button onClick={()=>setView(null)} style={{ border:'none',background:'transparent',color:'rgba(201,168,76,.6)',fontWeight:600,fontSize:13,cursor:'pointer',marginBottom:16,fontFamily:"'DM Sans',sans-serif" }}>← Back to diary</button>
+        <button onClick={()=>setView(null)} style={{ border:'none',background:'transparent',color:'rgba(201,168,76,.6)',fontWeight:600,fontSize:16,cursor:'pointer',marginBottom:16,fontFamily:"'DM Sans',sans-serif" }}>← Back to diary</button>
         <div className="diary-book diary-lines">
           {/* Spine dots */}
           <div style={{ position:'absolute',left:0,top:0,bottom:0,width:72,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',gap:18,zIndex:2,pointerEvents:'none' }}>
@@ -1474,9 +1473,9 @@ function Diary({ data, upd }) {
           <div style={{ padding:'24px 28px 18px 88px', borderBottom:'1px solid rgba(42,92,173,.1)' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:9 }}>
               <div>
-                <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:13,color:'rgba(201,168,76,.5)',letterSpacing:2,textTransform:'uppercase',marginBottom:4 }}>{fmtDate(e.date)}</div>
+                <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:16,color:'rgba(201,168,76,.5)',letterSpacing:2,textTransform:'uppercase',marginBottom:4 }}>{fmtDate(e.date)}</div>
                 <div style={{ fontFamily:e.font||DIARY_FONTS[0].value,fontSize:(e.fontSize||18)+4,color:'#C9A84C',lineHeight:1.2 }}>{e.title}</div>
-                {e.mood&&<div style={{ marginTop:6,fontSize:14,color:'rgba(168,196,240,.65)' }}>{e.mood}</div>}
+                {e.mood&&<div style={{ marginTop:6,fontSize:16,color:'rgba(168,196,240,.65)' }}>{e.mood}</div>}
               </div>
               <div style={{ display:'flex',gap:7 }}>
                 <button className="btn btn-ghost" style={{ fontSize:12 }} onClick={()=>openEdit(e)}>Edit</button>
@@ -1518,7 +1517,7 @@ function Diary({ data, upd }) {
               </select>
             </div>
             <div><label style={{ marginBottom:4 }}>Date</label>
-              <input type="date" className="field" value={date} onChange={e=>setDate(e.target.value)} style={{ padding:'6px 11px',fontSize:13,width:'auto' }}/>
+              <input type="date" className="field" value={date} onChange={e=>setDate(e.target.value)} style={{ padding:'6px 11px',fontSize:16,width:'auto' }}/>
             </div>
           </div>
           <div style={{ padding:'14px 18px 0 88px' }}>
@@ -1539,9 +1538,9 @@ function Diary({ data, upd }) {
           <div key={e.id} className="diary-entry-card" onClick={()=>setView(e.id)} style={{ position:'relative', paddingLeft:22, borderLeft:'3px solid rgba(42,92,173,.3)' }}>
             <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6,flexWrap:'wrap',gap:7 }}>
               <div>
-                <div style={{ fontSize:13,color:'rgba(201,168,76,.5)',fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',marginBottom:3 }}>{fmtDate(e.date)}</div>
+                <div style={{ fontSize:16,color:'rgba(201,168,76,.5)',fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',marginBottom:3 }}>{fmtDate(e.date)}</div>
                 <div style={{ fontFamily:e.font||DIARY_FONTS[0].value,fontSize:(e.fontSize||18)+2,color:'#C9A84C',lineHeight:1.2 }}>{e.title}</div>
-                {e.mood&&<div style={{ fontSize:13,color:'rgba(168,196,240,.55)',marginTop:4 }}>{e.mood}</div>}
+                {e.mood&&<div style={{ fontSize:16,color:'rgba(168,196,240,.55)',marginTop:4 }}>{e.mood}</div>}
               </div>
               <span style={{ fontSize:18,color:'rgba(240,232,255,.2)' }}>›</span>
             </div>
@@ -1551,9 +1550,9 @@ function Diary({ data, upd }) {
       </div>
       {maxPage>0 && (
         <div style={{ display:'flex',justifyContent:'center',gap:9,marginTop:18 }}>
-          <button className="btn btn-ghost" style={{ fontSize:13,padding:'6px 14px' }} onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0}>← Prev</button>
-          <span style={{ fontSize:13,color:'rgba(240,232,255,.28)',alignSelf:'center' }}>Page {page+1} of {maxPage+1}</span>
-          <button className="btn btn-ghost" style={{ fontSize:13,padding:'6px 14px' }} onClick={()=>setPage(p=>Math.min(maxPage,p+1))} disabled={page===maxPage}>Next →</button>
+          <button className="btn btn-ghost" style={{ fontSize:16,padding:'6px 14px' }} onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0}>← Prev</button>
+          <span style={{ fontSize:16,color:'rgba(240,232,255,.28)',alignSelf:'center' }}>Page {page+1} of {maxPage+1}</span>
+          <button className="btn btn-ghost" style={{ fontSize:16,padding:'6px 14px' }} onClick={()=>setPage(p=>Math.min(maxPage,p+1))} disabled={page===maxPage}>Next →</button>
         </div>
       )}
     </div>
@@ -1597,7 +1596,7 @@ function AIDiet({ data, upd }) {
       <div className="glass-card-static" style={{ padding:22,marginBottom:20 }}>
         <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14 }}>
           <div style={{ fontFamily:"'Cinzel',serif",fontSize:16,color:'#C9A84C' }}>📋 Daily Food Log</div>
-          <button className="btn btn-ghost" style={{ fontSize:13,padding:'6px 13px' }} onClick={()=>setLogOpen(o=>!o)}>{logOpen?'Close':'+ Add entry'}</button>
+          <button className="btn btn-ghost" style={{ fontSize:16,padding:'6px 13px' }} onClick={()=>setLogOpen(o=>!o)}>{logOpen?'Close':'+ Add entry'}</button>
         </div>
         {logOpen&&(
           <div className="two-col" style={{ marginBottom:14 }}>
@@ -1605,22 +1604,22 @@ function AIDiet({ data, upd }) {
             <div><label>Meal</label><select className="field" value={meal} onChange={e=>setMeal(e.target.value)}>{['Breakfast','Lunch','Dinner','Snack','Drink'].map(x=><option key={x}>{x}</option>)}</select></div>
             <div style={{ gridColumn:'1/-1' }}><label>What did you eat/drink?</label><input className="field" value={food} onChange={e=>setFood(e.target.value)} placeholder="e.g. Oatmeal with berries and chia seeds" onKeyDown={e=>e.key==='Enter'&&addLog()}/></div>
             <div style={{ gridColumn:'1/-1' }}><label>Notes</label><input className="field" value={logNote} onChange={e=>setLogNote(e.target.value)} placeholder="e.g. Felt nauseous afterward…"/></div>
-            <div style={{ gridColumn:'1/-1',display:'flex',justifyContent:'flex-end' }}><button className="btn btn-gold" onClick={addLog} style={{ fontSize:13,padding:'8px 20px' }}>Add</button></div>
+            <div style={{ gridColumn:'1/-1',display:'flex',justifyContent:'flex-end' }}><button className="btn btn-gold" onClick={addLog} style={{ fontSize:16,padding:'8px 20px' }}>Add</button></div>
           </div>
         )}
         {todayLogs.length>0&&(
           <div>
-            <div style={{ fontSize:13,fontWeight:700,color:'rgba(201,168,76,.5)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:9 }}>Today</div>
+            <div style={{ fontSize:16,fontWeight:700,color:'rgba(201,168,76,.5)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:9 }}>Today</div>
             {todayLogs.map(l=>(
               <div key={l.id} style={{ display:'flex',alignItems:'center',gap:10,padding:'8px 12px',background:'rgba(255,255,255,.03)',borderRadius:10,border:'1px solid rgba(42,92,173,.1)',marginBottom:6 }}>
-                <span style={{ fontSize:13,fontWeight:700,color:mealColors[l.meal]||'#C9A84C',minWidth:60,textTransform:'uppercase',letterSpacing:.8 }}>{l.meal}</span>
-                <div style={{ flex:1 }}><div style={{ fontSize:14,color:'#F0E8FF' }}>{l.food}</div>{l.note&&<div style={{ fontSize:13,color:'rgba(240,232,255,.35)',marginTop:1 }}>{l.note}</div>}</div>
+                <span style={{ fontSize:16,fontWeight:700,color:mealColors[l.meal]||'#C9A84C',minWidth:60,textTransform:'uppercase',letterSpacing:.8 }}>{l.meal}</span>
+                <div style={{ flex:1 }}><div style={{ fontSize:16,color:'#F0E8FF' }}>{l.food}</div>{l.note&&<div style={{ fontSize:16,color:'rgba(240,232,255,.35)',marginTop:1 }}>{l.note}</div>}</div>
                 <button onClick={()=>delLog(l.id)} style={{ border:'none',background:'transparent',color:'rgba(240,232,255,.25)',cursor:'pointer',fontSize:15 }}>×</button>
               </div>
             ))}
           </div>
         )}
-        {dietLogs.length===0&&!logOpen&&<div style={{ fontSize:13,color:'rgba(240,232,255,.25)',fontStyle:'italic',textAlign:'center',padding:'14px 0' }}>No food logged yet</div>}
+        {dietLogs.length===0&&!logOpen&&<div style={{ fontSize:16,color:'rgba(240,232,255,.25)',fontStyle:'italic',textAlign:'center',padding:'14px 0' }}>No food logged yet</div>}
       </div>
       <div className="glass-card-static" style={{ padding:22,marginBottom:20 }}>
         <div style={{ fontFamily:"'Cinzel',serif",fontSize:16,color:'#C9A84C',marginBottom:16 }}>✿ Generate a Personalized Diet Plan</div>
@@ -1632,7 +1631,7 @@ function AIDiet({ data, upd }) {
           <label>Primary Goal</label>
           <div style={{ display:'flex',flexWrap:'wrap',gap:7,marginTop:6 }}>
             {DIET_GOALS.map(g=>(
-              <button key={g} onClick={()=>setGoal(g)} style={{ padding:'6px 13px',borderRadius:20,fontSize:13,border:`1px solid ${goal===g?'#C9A84C':'rgba(42,92,173,.25)'}`,background:goal===g?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)',color:goal===g?'#C9A84C':'rgba(240,232,255,.42)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>{g}</button>
+              <button key={g} onClick={()=>setGoal(g)} style={{ padding:'6px 13px',borderRadius:20,fontSize:16,border:`1px solid ${goal===g?'#C9A84C':'rgba(42,92,173,.25)'}`,background:goal===g?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)',color:goal===g?'#C9A84C':'rgba(240,232,255,.42)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>{g}</button>
             ))}
           </div>
         </div>
@@ -1700,7 +1699,7 @@ function Documents({ data, upd }) {
         <div onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);[...e.dataTransfer.files].forEach(process);}} style={{ border:`2px dashed ${drag?'#C9A84C':'rgba(42,92,173,.28)'}`,borderRadius:14,padding:'26px 18px',textAlign:'center',marginBottom:16,transition:'all .2s',background:drag?'rgba(201,168,76,.04)':'transparent',cursor:'pointer' }} onClick={()=>fileRef.current?.click()}>
           <div style={{ fontSize:28,marginBottom:8,opacity:.45 }}>📎</div>
           <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:17,color:'#C9A84C',marginBottom:3 }}>Drag & drop files here</div>
-          <div style={{ fontSize:13,color:'rgba(240,232,255,.28)',marginBottom:13 }}>PDF, PNG, JPG, HEIC supported</div>
+          <div style={{ fontSize:16,color:'rgba(240,232,255,.28)',marginBottom:13 }}>PDF, PNG, JPG, HEIC supported</div>
           <button className="btn btn-gold" onClick={e=>{e.stopPropagation();fileRef.current?.click();}} style={{ fontSize:13 }}>Browse files</button>
           <input ref={fileRef} type="file" multiple accept={ACCEPTED} style={{ display:'none' }} onChange={e=>[...e.target.files].forEach(process)}/>
         </div>
@@ -1715,14 +1714,14 @@ function Documents({ data, upd }) {
           <div key={d.id} className="glass-card" style={{ padding:15,display:'flex',gap:13,alignItems:'flex-start',flexWrap:'wrap' }}>
             <div style={{ fontSize:24,flexShrink:0,opacity:.7 }}>{/\.pdf$/i.test(d.name)?'📄':/\.(jpg|jpeg|png|heic|heif)$/i.test(d.name)?'🖼️':'📎'}</div>
             <div style={{ flex:1,minWidth:110 }}>
-              <div style={{ fontWeight:600,fontSize:13,color:'#F0E8FF' }}>{d.name}</div>
-              <div style={{ fontSize:13,color:'rgba(240,232,255,.28)',marginTop:2 }}>{d.type||'Document'} · {fmtDate(d.uploadDate)}{d.size?' · '+d.size:''}</div>
-              {d.notes&&<div style={{ fontSize:13,color:'rgba(240,232,255,.38)',marginTop:3 }}>{d.notes}</div>}
+              <div style={{ fontWeight:600,fontSize:16,color:'#F0E8FF' }}>{d.name}</div>
+              <div style={{ fontSize:16,color:'rgba(240,232,255,.28)',marginTop:2 }}>{d.type||'Document'} · {fmtDate(d.uploadDate)}{d.size?' · '+d.size:''}</div>
+              {d.notes&&<div style={{ fontSize:16,color:'rgba(240,232,255,.38)',marginTop:3 }}>{d.notes}</div>}
             </div>
             <div style={{ display:'flex',gap:6,flexShrink:0 }}>
-              <button className="btn btn-lapis" style={{ fontSize:13,padding:'5px 11px' }} onClick={()=>openDoc(d)}>👁 View</button>
-              <button className="btn btn-ghost" style={{ fontSize:13,padding:'5px 11px' }} onClick={()=>downloadDoc(d)}>⬇</button>
-              <button className="btn btn-danger" style={{ fontSize:13,padding:'5px 11px' }} onClick={()=>del(d.id)}>✕</button>
+              <button className="btn btn-lapis" style={{ fontSize:16,padding:'5px 11px' }} onClick={()=>openDoc(d)}>👁 View</button>
+              <button className="btn btn-ghost" style={{ fontSize:16,padding:'5px 11px' }} onClick={()=>downloadDoc(d)}>⬇</button>
+              <button className="btn btn-danger" style={{ fontSize:16,padding:'5px 11px' }} onClick={()=>del(d.id)}>✕</button>
             </div>
           </div>
         ))}
@@ -1827,9 +1826,9 @@ function Mindfulness() {
           >
             {active ? '⏸ Pause' : '▶ Begin Breathing'}
           </button>
-          <div style={{ fontSize:13, color:'rgba(240,232,255,.28)', textAlign:'center', maxWidth:300, lineHeight:1.7 }}>
+          <div style={{ fontSize:16, color:'rgba(240,232,255,.28)', textAlign:'center', maxWidth:300, lineHeight:1.7 }}>
             Box breathing: 4 counts in · 4 hold · 6 out · 2 rest<br/>
-            <span style={{ fontSize:13, color:'rgba(240,232,255,.18)' }}>Shown to calm the nervous system in minutes.</span>
+            <span style={{ fontSize:16, color:'rgba(240,232,255,.18)' }}>Shown to calm the nervous system in minutes.</span>
           </div>
         </div>
 
@@ -1846,12 +1845,12 @@ function Mindfulness() {
         {/* Affirmation quote */}
         <div style={{ maxWidth:480, textAlign:'center', padding:'22px 28px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:18, transition:'opacity .6s', opacity:quoteFade?1:0 }}>
           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:21, fontStyle:'italic', color:'rgba(240,232,255,.85)', lineHeight:1.7, marginBottom:10 }}>"{q.text}"</div>
-          <div style={{ fontSize:13, color:'rgba(201,168,76,.45)', letterSpacing:2, textTransform:'uppercase' }}>— {q.attr}</div>
+          <div style={{ fontSize:16, color:'rgba(201,168,76,.45)', letterSpacing:2, textTransform:'uppercase' }}>— {q.attr}</div>
         </div>
 
         {/* All affirmations list */}
         <div style={{ width:'100%', maxWidth:560 }}>
-          <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.4)', textTransform:'uppercase', letterSpacing:2, marginBottom:12, textAlign:'center' }}>Daily Affirmations</div>
+          <div style={{ fontSize:16, fontWeight:700, color:'rgba(201,168,76,.4)', textTransform:'uppercase', letterSpacing:2, marginBottom:12, textAlign:'center' }}>Daily Affirmations</div>
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {MINDFUL_QUOTES.map((q,i) => (
               <div key={i} style={{ padding:'13px 18px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.12)', borderRadius:13, fontFamily:"'Cormorant Garamond',serif", fontSize:16, fontStyle:'italic', color:'rgba(240,232,255,.6)', lineHeight:1.65 }}>
@@ -1960,25 +1959,25 @@ function Advocate({ data, user }) {
       <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:10 }}>
         <div>
           <div style={{ fontFamily:"'Cinzel',serif",fontSize:26,fontWeight:700,color:'#C9A84C',marginBottom:3 }}>💙 Lazuli AI</div>
-          <div style={{ fontSize:13,color:'rgba(240,232,255,.38)' }}>Your personal health advocate — named for the ancient healing stone</div>
+          <div style={{ fontSize:16,color:'rgba(240,232,255,.38)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
         {msgs.length>0&&(
-          <button onClick={handleShare} style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:12,fontSize:13,fontWeight:600,cursor:'pointer',border:`1.5px solid ${shareStatus==='copied'?'rgba(110,231,183,.4)':'rgba(201,168,76,.35)'}`,background:shareStatus==='copied'?'rgba(110,231,183,.1)':'rgba(201,168,76,.08)',color:shareStatus==='copied'?'#6ee7b7':'#C9A84C',fontFamily:"'DM Sans',sans-serif",transition:'all .2s',flexShrink:0 }}>
+          <button onClick={handleShare} style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 16px',borderRadius:12,fontSize:16,fontWeight:600,cursor:'pointer',border:`1.5px solid ${shareStatus==='copied'?'rgba(110,231,183,.4)':'rgba(201,168,76,.35)'}`,background:shareStatus==='copied'?'rgba(110,231,183,.1)':'rgba(201,168,76,.08)',color:shareStatus==='copied'?'#6ee7b7':'#C9A84C',fontFamily:"'DM Sans',sans-serif",transition:'all .2s',flexShrink:0 }}>
             {getShareButtonLabel(shareStatus,'📋 Share with Doctor')}
           </button>
         )}
       </div>
 
       {limitHit && (
-        <div style={{ padding:'11px 16px',background:'rgba(201,168,76,.08)',border:'1px solid rgba(201,168,76,.2)',borderRadius:12,fontSize:14,color:'rgba(201,168,76,.8)',lineHeight:1.6 }}>
+        <div style={{ padding:'11px 16px',background:'rgba(201,168,76,.08)',border:'1px solid rgba(201,168,76,.2)',borderRadius:12,fontSize:16,color:'rgba(201,168,76,.8)',lineHeight:1.6 }}>
           💙 You've used your {FREE_CHAT_LIMIT} free messages with Lazuli today. Your limit resets at midnight.<br/>
           Your full health log is still right here for you.
         </div>
       )}
       {!limitHit&&dailyCount>0&&(
-        <div style={{ fontSize:13,color:'rgba(240,232,255,.2)',textAlign:'right' }}>{dailyCount}/{FREE_CHAT_LIMIT} messages used today</div>
+        <div style={{ fontSize:16,color:'rgba(240,232,255,.2)',textAlign:'right' }}>{dailyCount}/{FREE_CHAT_LIMIT} messages used today</div>
       )}
-      {error&&<div style={{ padding:'10px 16px',background:'rgba(255,80,80,.1)',border:'1px solid rgba(255,80,80,.25)',borderRadius:12,fontSize:13,color:'#ff8080',lineHeight:1.6 }}>⚠ {error}</div>}
+      {error&&<div style={{ padding:'10px 16px',background:'rgba(255,80,80,.1)',border:'1px solid rgba(255,80,80,.25)',borderRadius:12,fontSize:16,color:'#ff8080',lineHeight:1.6 }}>⚠ {error}</div>}
 
       <div style={{ flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:13,padding:'4px 2px' }}>
         {msgs.length===0&&(
@@ -1986,12 +1985,12 @@ function Advocate({ data, user }) {
             <div style={{ marginBottom:20 }}>
               <div style={{ marginBottom:13,display:'inline-block',animation:'floatUp 3s ease-in-out infinite' }}><LogoImg size={56}/></div>
               <div style={{ fontFamily:"'Cinzel',serif",fontSize:22,color:'#C9A84C',marginBottom:5 }}>Hi{data.profile?.name?`, ${data.profile.name}`:''}! 💙</div>
-              <p style={{ fontSize:14,color:'rgba(240,232,255,.38)',lineHeight:1.8,maxWidth:420,margin:'0 auto 7px' }}>{getProactiveGreeting(data.profile?.name, data.appointments)}</p>
-              <p style={{ fontSize:14,color:'rgba(168,196,240,.3)',fontStyle:'italic',fontFamily:"'Cormorant Garamond',serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
+              <p style={{ fontSize:16,color:'rgba(240,232,255,.38)',lineHeight:1.8,maxWidth:420,margin:'0 auto 7px' }}>{getProactiveGreeting(data.profile?.name, data.appointments)}</p>
+              <p style={{ fontSize:16,color:'rgba(168,196,240,.3)',fontStyle:'italic',fontFamily:"'Cormorant Garamond',serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
             </div>
             <div className="two-col" style={{ gap:7 }}>
               {STARTERS.map(s=>(
-                <button key={s} onClick={()=>send(s)} style={{ background:'rgba(4,16,52,.85)',border:'1px solid rgba(42,92,173,.45)',borderRadius:12,padding:'11px 13px',textAlign:'left',fontSize:13,fontWeight:500,color:'rgba(240,232,255,.82)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",lineHeight:1.4,transition:'all .16s' }}
+                <button key={s} onClick={()=>send(s)} style={{ background:'rgba(4,16,52,.85)',border:'1px solid rgba(42,92,173,.45)',borderRadius:12,padding:'11px 13px',textAlign:'left',fontSize:16,fontWeight:500,color:'rgba(240,232,255,.82)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",lineHeight:1.4,transition:'all .16s' }}
                   onMouseEnter={e=>{e.currentTarget.style.background='rgba(42,92,173,.25)';e.currentTarget.style.color='#fff';}}
                   onMouseLeave={e=>{e.currentTarget.style.background='rgba(4,16,52,.85)';e.currentTarget.style.color='rgba(240,232,255,.82)';}}>
                   💙 {s}
@@ -2003,7 +2002,7 @@ function Advocate({ data, user }) {
         {msgs.map((m,i)=>(
           <div key={i} style={{ display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:7 }}>
             {m.role==='assistant'&&<div style={{ width:28,height:28,borderRadius:'50%',flexShrink:0,overflow:'hidden',boxShadow:'0 0 10px rgba(42,92,173,.5)',marginBottom:1 }}><LogoImg size={28}/></div>}
-            <div style={{ maxWidth:'74%',padding:'11px 15px',borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',background:m.role==='user'?'linear-gradient(135deg,rgba(42,92,173,.25),rgba(201,168,76,.1))':'rgba(255,255,255,.04)',color:m.role==='user'?'#F0E8FF':'rgba(240,232,255,.78)',fontSize:14,lineHeight:1.8,border:m.role==='assistant'?'1px solid rgba(42,92,173,.12)':'1px solid rgba(201,168,76,.17)',backdropFilter:'blur(8px)',whiteSpace:'pre-wrap' }}>
+            <div style={{ maxWidth:'74%',padding:'11px 15px',borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',background:m.role==='user'?'linear-gradient(135deg,rgba(42,92,173,.25),rgba(201,168,76,.1))':'rgba(255,255,255,.04)',color:m.role==='user'?'#F0E8FF':'rgba(240,232,255,.78)',fontSize:16,lineHeight:1.8,border:m.role==='assistant'?'1px solid rgba(42,92,173,.12)':'1px solid rgba(201,168,76,.17)',backdropFilter:'blur(8px)',whiteSpace:'pre-wrap' }}>
               {m.content}
             </div>
           </div>
@@ -2014,12 +2013,12 @@ function Advocate({ data, user }) {
 
       <div style={{ padding:'10px 0 3px',borderTop:'1px solid rgba(42,92,173,.1)',background:'rgba(0,0,0,.2)',backdropFilter:'blur(9px)' }}>
         <div style={{ display:'flex',gap:7,alignItems:'flex-end',background:'rgba(255,255,255,.04)',borderRadius:14,padding:'8px 8px 8px 14px',border:'1px solid rgba(42,92,173,.18)' }}>
-          <textarea style={{ flex:1,border:'none',background:'transparent',color:'#F0E8FF',fontFamily:"'DM Sans',sans-serif",fontSize:14,lineHeight:1.55,resize:'none',outline:'none',minHeight:22,maxHeight:100,caretColor:'#C9A84C',padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
-          <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end',padding:'7px 14px',fontSize:13,opacity:loading||!input.trim()||limitHit?.35:1,flexShrink:0 }}>Send</button>
+          <textarea style={{ flex:1,border:'none',background:'transparent',color:'#F0E8FF',fontFamily:"'DM Sans',sans-serif",fontSize:16,lineHeight:1.55,resize:'none',outline:'none',minHeight:22,maxHeight:100,caretColor:'#C9A84C',padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
+          <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end',padding:'7px 14px',fontSize:16,opacity:loading||!input.trim()||limitHit?.35:1,flexShrink:0 }}>Send</button>
         </div>
         <div style={{ display:'flex',justifyContent:'space-between',marginTop:5,alignItems:'center',paddingLeft:4 }}>
-          <div style={{ fontSize:13,color:'rgba(240,232,255,.13)' }}>Enter to send · Shift+Enter new line</div>
-          {msgs.length>0&&<button onClick={handleShare} style={{ fontSize:13,color:'rgba(201,168,76,.45)',background:'transparent',border:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
+          <div style={{ fontSize:16,color:'rgba(240,232,255,.13)' }}>Enter to send · Shift+Enter new line</div>
+          {msgs.length>0&&<button onClick={handleShare} style={{ fontSize:16,color:'rgba(201,168,76,.45)',background:'transparent',border:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
         </div>
       </div>
     </div>
@@ -2052,13 +2051,13 @@ function Updates() {
           <div style={{ fontSize:56, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}>💎</div>
         </div>
         <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:6, textShadow:'0 0 30px rgba(201,168,76,.4)', letterSpacing:2 }}>Lazuli Crest</div>
-        <div style={{ fontFamily:"'Cinzel',serif", fontSize:14, color:'rgba(168,196,240,.7)', letterSpacing:4, textTransform:'uppercase', marginBottom:18 }}>The Gold Standard in Health Advocacy</div>
+        <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'rgba(168,196,240,.7)', letterSpacing:4, textTransform:'uppercase', marginBottom:18 }}>The Gold Standard in Health Advocacy</div>
         <div style={{ maxWidth:540, margin:'0 auto', fontSize:16, color:'rgba(240,232,255,.65)', lineHeight:1.8, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>
           Lazuli Crest is always evolving — every update is built around real patient needs. New features, refinements, and tools are added constantly to better support your health journey.
         </div>
         <div style={{ marginTop:22, display:'flex', flexWrap:'wrap', justifyContent:'center', gap:10 }}>
-          <div style={{ padding:'8px 20px', borderRadius:20, background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.3)', fontSize:14, color:'#6ee7b7', fontWeight:600 }}>✓ Live Features</div>
-          <div style={{ padding:'8px 20px', borderRadius:20, background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', fontSize:14, color:'#C9A84C', fontWeight:600, animation:'pulseGlow 3s ease-in-out infinite' }}>🚀 Coming Soon</div>
+          <div style={{ padding:'8px 20px', borderRadius:20, background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.3)', fontSize:16, color:'#6ee7b7', fontWeight:600 }}>✓ Live Features</div>
+          <div style={{ padding:'8px 20px', borderRadius:20, background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', fontSize:16, color:'#C9A84C', fontWeight:600, animation:'pulseGlow 3s ease-in-out infinite' }}>🚀 Coming Soon</div>
         </div>
       </div>
 
@@ -2070,24 +2069,24 @@ function Updates() {
           <div style={{ fontFamily:"'Cinzel',serif", fontSize:18, color:'#C9A84C', marginBottom:6, fontWeight:700 }}>Google Play Store — Coming Soon</div>
           <div style={{ fontSize:15, color:'rgba(240,232,255,.7)', lineHeight:1.7 }}>The full Lazuli Crest native Android app is in development. Take your complete health vault with you — offline access, push reminders, and the same luxury experience on every device.</div>
         </div>
-        <div style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', color:'#000', fontWeight:700, fontSize:14, cursor:'default', boxShadow:'0 4px 20px rgba(201,168,76,.4)' }}>Notify Me</div>
+        <div style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', color:'#000', fontWeight:700, fontSize:16, cursor:'default', boxShadow:'0 4px 20px rgba(201,168,76,.4)' }}>Notify Me</div>
       </div>
 
       {/* Features grid */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
         {features.map((f,i)=>(
-          <div key={i} className="glass-card-static" style={{ padding:22, position:'relative', overflow:'hidden', animation:`fadeUp .4s ${i*.05}s both` }}>
+          <div key={i} className="glass-card-static" style={{ padding:22, position:'relative', overflow:'hidden', animation:`fadeUp .5s ${i*.06}s both`, transition:'transform .2s ease, box-shadow .2s ease', cursor:'default' }} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 16px 48px rgba(0,0,0,.6),0 0 24px rgba(42,92,173,.2)';}} onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='';}}>
             <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:`radial-gradient(circle,${f.status==='live'?'rgba(110,231,183,.08)':'rgba(201,168,76,.08)'} 0%,transparent 70%)` }}/>
             <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
               <div style={{ fontSize:28, filter:'drop-shadow(0 0 8px rgba(42,92,173,.4))', flexShrink:0 }}>{f.icon}</div>
               <div style={{ flex:1 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", fontSize:15, color:'#C9A84C', fontWeight:600, flex:1 }}>{f.title}</div>
-                  <span style={{ fontSize:13, fontWeight:700, padding:'2px 9px', borderRadius:20, background:f.status==='live'?'rgba(110,231,183,.15)':'rgba(201,168,76,.12)', color:f.status==='live'?'#6ee7b7':'#C9A84C', border:`1px solid ${f.status==='live'?'rgba(110,231,183,.3)':'rgba(201,168,76,.3)'}`, whiteSpace:'nowrap' }}>
+                  <span style={{ fontSize:16, fontWeight:700, padding:'2px 9px', borderRadius:20, background:f.status==='live'?'rgba(110,231,183,.15)':'rgba(201,168,76,.12)', color:f.status==='live'?'#6ee7b7':'#C9A84C', border:`1px solid ${f.status==='live'?'rgba(110,231,183,.3)':'rgba(201,168,76,.3)'}`, whiteSpace:'nowrap' }}>
                     {f.status==='live'?'● LIVE':'◈ SOON'}
                   </span>
                 </div>
-                <div style={{ fontSize:14, color:'rgba(240,232,255,.6)', lineHeight:1.7 }}>{f.desc}</div>
+                <div style={{ fontSize:16, color:'rgba(240,232,255,.6)', lineHeight:1.7 }}>{f.desc}</div>
               </div>
             </div>
           </div>
@@ -2099,7 +2098,7 @@ function Updates() {
         <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:18, color:'rgba(201,168,76,.6)', lineHeight:1.9, maxWidth:480, margin:'0 auto' }}>
           "In alchemy, lapis lazuli was called the philosopher's stone of healing — rare, precious, and transformative. We built Lazuli Crest on that same principle."
         </div>
-        <div style={{ fontSize:13, color:'rgba(240,232,255,.2)', marginTop:8, letterSpacing:2 }}>— THE LAZULI CREST TEAM</div>
+        <div style={{ fontSize:16, color:'rgba(240,232,255,.2)', marginTop:8, letterSpacing:2 }}>— THE LAZULI CREST TEAM</div>
       </div>
     </div>
   );
@@ -2154,7 +2153,7 @@ function LazuliGym({ data }) {
         <div style={{ marginBottom:20, padding:'18px 22px', background:'rgba(42,92,173,.1)', border:'1px solid rgba(42,92,173,.3)', borderRadius:16, display:'flex', gap:14, alignItems:'flex-start' }}>
           <div style={{ fontSize:24, flexShrink:0, animation:'heartbeat 3s ease-in-out infinite' }}>💙</div>
           <div>
-            <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:6 }}>Lazuli — Personal Trainer</div>
+            <div style={{ fontSize:16, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:6 }}>Lazuli — Personal Trainer</div>
             <div style={{ fontSize:15, color:'rgba(240,232,255,.8)', lineHeight:1.75, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>{aiSuggestion}</div>
           </div>
         </div>
@@ -2164,7 +2163,7 @@ function LazuliGym({ data }) {
         <label>What are your goals today? (select all that apply)</label>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:10 }}>
           {GYM_GOALS.map(g=>(
-            <button key={g} onClick={()=>toggleGoal(g)} style={{ padding:'7px 15px', borderRadius:20, fontSize:14, border:`1.5px solid ${selectedGoals.includes(g)?'#C9A84C':'rgba(42,92,173,.35)'}`, background:selectedGoals.includes(g)?'rgba(201,168,76,.12)':'rgba(4,16,52,.8)', color:selectedGoals.includes(g)?'#C9A84C':'rgba(240,232,255,.7)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s' }}>
+            <button key={g} onClick={()=>toggleGoal(g)} style={{ padding:'7px 15px', borderRadius:20, fontSize:16, border:`1.5px solid ${selectedGoals.includes(g)?'#C9A84C':'rgba(42,92,173,.35)'}`, background:selectedGoals.includes(g)?'rgba(201,168,76,.12)':'rgba(4,16,52,.8)', color:selectedGoals.includes(g)?'#C9A84C':'rgba(240,232,255,.7)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s' }}>
               {selectedGoals.includes(g)?'✓ ':''}{g}
             </button>
           ))}
@@ -2178,21 +2177,21 @@ function LazuliGym({ data }) {
               <div style={{ fontSize:36, marginBottom:8 }}>{activeEx.icon}</div>
               <div style={{ fontFamily:"'Cinzel',serif", fontSize:22, color:'#C9A84C', marginBottom:4 }}>{activeEx.title}</div>
               <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-                <span style={{ fontSize:13, color:'rgba(168,196,240,.7)', background:'rgba(42,92,173,.15)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(42,92,173,.3)' }}>{activeEx.duration}</span>
-                <span style={{ fontSize:13, color:'rgba(201,168,76,.7)', background:'rgba(201,168,76,.08)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(201,168,76,.2)' }}>{activeEx.intensity}</span>
+                <span style={{ fontSize:16, color:'rgba(168,196,240,.7)', background:'rgba(42,92,173,.15)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(42,92,173,.3)' }}>{activeEx.duration}</span>
+                <span style={{ fontSize:16, color:'rgba(201,168,76,.7)', background:'rgba(201,168,76,.08)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(201,168,76,.2)' }}>{activeEx.intensity}</span>
               </div>
             </div>
             <button className="btn btn-ghost" onClick={()=>{setActiveEx(null);setStep(0);}}>← Back</button>
           </div>
           <div style={{ marginBottom:20, padding:'14px 18px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:12 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.65)', marginBottom:4, textTransform:'uppercase', letterSpacing:1 }}>Benefit</div>
+            <div style={{ fontSize:16, fontWeight:700, color:'rgba(201,168,76,.65)', marginBottom:4, textTransform:'uppercase', letterSpacing:1 }}>Benefit</div>
             <div style={{ fontSize:15, color:'rgba(240,232,255,.7)', lineHeight:1.7 }}>{activeEx.benefit}</div>
           </div>
           <div style={{ marginBottom:20 }}>
             <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'#C9A84C', marginBottom:14 }}>Step-by-Step Guide</div>
             {activeEx.steps.map((s,i)=>(
               <div key={i} onClick={()=>setStep(i)} style={{ display:'flex', alignItems:'flex-start', gap:14, marginBottom:12, padding:'12px 16px', borderRadius:12, background:step===i?'rgba(42,92,173,.2)':'rgba(255,255,255,.03)', border:`1px solid ${step===i?'rgba(42,92,173,.5)':'rgba(42,92,173,.1)'}`, cursor:'pointer', transition:'all .18s' }}>
-                <div style={{ width:26, height:26, borderRadius:'50%', background:step===i?'linear-gradient(135deg,#2A5CAD,#C9A84C)':'rgba(42,92,173,.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:'#fff', flexShrink:0 }}>{i+1}</div>
+                <div style={{ width:26, height:26, borderRadius:'50%', background:step===i?'linear-gradient(135deg,#2A5CAD,#C9A84C)':'rgba(42,92,173,.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, color:'#fff', flexShrink:0 }}>{i+1}</div>
                 <div style={{ fontSize:15, color:step===i?'#F0E8FF':'rgba(240,232,255,.65)', lineHeight:1.6, flex:1 }}>{s}</div>
               </div>
             ))}
@@ -2209,11 +2208,11 @@ function LazuliGym({ data }) {
             <div key={ex.id} className="glass-card" style={{ padding:22, cursor:'pointer', animation:`fadeUp .3s ${i*.04}s both` }} onClick={()=>{setActiveEx(ex);setStep(0);}}>
               <div style={{ fontSize:32, marginBottom:12, filter:'drop-shadow(0 0 8px rgba(42,92,173,.5))' }}>{ex.icon}</div>
               <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'#C9A84C', marginBottom:6 }}>{ex.title}</div>
-              <div style={{ fontSize:13, color:'rgba(168,196,240,.6)', marginBottom:10 }}>{ex.category} · {ex.duration}</div>
-              <div style={{ fontSize:14, color:'rgba(240,232,255,.55)', lineHeight:1.6, marginBottom:14 }}>{ex.benefit}</div>
+              <div style={{ fontSize:16, color:'rgba(168,196,240,.6)', marginBottom:10 }}>{ex.category} · {ex.duration}</div>
+              <div style={{ fontSize:16, color:'rgba(240,232,255,.55)', lineHeight:1.6, marginBottom:14 }}>{ex.benefit}</div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span style={{ fontSize:13, color:'rgba(201,168,76,.65)', background:'rgba(201,168,76,.08)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(201,168,76,.15)' }}>{ex.intensity}</span>
-                <span style={{ fontSize:13, color:'rgba(42,92,173,.8)', fontWeight:600 }}>Start →</span>
+                <span style={{ fontSize:16, color:'rgba(201,168,76,.65)', background:'rgba(201,168,76,.08)', padding:'3px 10px', borderRadius:20, border:'1px solid rgba(201,168,76,.15)' }}>{ex.intensity}</span>
+                <span style={{ fontSize:16, color:'rgba(42,92,173,.8)', fontWeight:600 }}>Start →</span>
               </div>
             </div>
           ))}
@@ -2265,13 +2264,13 @@ function Profile({ data, upd, user }) {
           <div className="two-col">
             {[{v:'self',l:'Myself',d:'I have a chronic illness'},{v:'caree',l:'Someone I care for',d:'I help manage their health'}].map(o=>(
               <button key={o.v} onClick={()=>setAccountType(o.v)} style={{ padding:'13px 15px', borderRadius:14, border:`1.5px solid ${accountType===o.v?'#C9A84C':'rgba(42,92,173,.22)'}`, background:accountType===o.v?'rgba(201,168,76,.08)':'rgba(255,255,255,.03)', color:accountType===o.v?'#C9A84C':'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", textAlign:'left', transition:'all .15s' }}>
-                <div style={{ fontSize:14, fontWeight:600, marginBottom:3 }}>{o.l}</div>
-                <div style={{ fontSize:13, opacity:.7 }}>{o.d}</div>
+                <div style={{ fontSize:16, fontWeight:600, marginBottom:3 }}>{o.l}</div>
+                <div style={{ fontSize:16, opacity:.7 }}>{o.d}</div>
               </button>
             ))}
           </div>
           {accountType==='caree' && (
-            <div style={{ marginTop:14, padding:'12px 16px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:12, fontSize:13, color:'rgba(168,196,240,.65)', lineHeight:1.7 }}>
+            <div style={{ marginTop:14, padding:'12px 16px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:12, fontSize:16, color:'rgba(168,196,240,.65)', lineHeight:1.7 }}>
               💙 <strong style={{ color:'#A8C4F0' }}>Patient Access:</strong> Share your account email and password with the person you're caring for so they can sign in to their own account. They'll see their health data in patient view.
             </div>
           )}
@@ -2287,7 +2286,7 @@ function Profile({ data, upd, user }) {
               <input className="field" value={goal} onChange={e=>setGoal(e.target.value)} placeholder="e.g. Be better understood by my doctors"/>
             </div>
           </div>
-          <div style={{ marginTop:11, padding:'9px 13px', background:'rgba(42,92,173,.06)', borderRadius:11, fontSize:13, color:'rgba(240,232,255,.3)' }}>
+          <div style={{ marginTop:11, padding:'9px 13px', background:'rgba(42,92,173,.06)', borderRadius:11, fontSize:16, color:'rgba(240,232,255,.3)' }}>
             📧 Account email: <span style={{ color:'rgba(240,232,255,.55)' }}>{user?.email}</span>
             <span style={{ marginLeft:12, color:'rgba(240,232,255,.2)' }}>· Use "Forgot password" on sign-in to reset</span>
           </div>
@@ -2295,21 +2294,21 @@ function Profile({ data, upd, user }) {
 
         <div className="glass-card-static" style={{ padding:24 }}>
           <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'#C9A84C', marginBottom:7 }}>Diagnoses & Conditions</div>
-          <div style={{ fontSize:13, color:'rgba(240,232,255,.35)', marginBottom:15, lineHeight:1.65 }}>
+          <div style={{ fontSize:16, color:'rgba(240,232,255,.35)', marginBottom:15, lineHeight:1.65 }}>
             Add, edit, or remove your diagnoses at any time. Lazuli uses these to personalize every response.
           </div>
           {conds.length>0 && (
             <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:17 }}>
               {conds.map(c=>(
                 <div key={c} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(42,92,173,.15)', border:'1px solid rgba(42,92,173,.32)', borderRadius:20, padding:'5px 13px' }}>
-                  <span style={{ fontSize:13, color:'#A8C4F0', fontWeight:500 }}>{c}</span>
-                  <button onClick={()=>rem(c)} style={{ border:'none', background:'transparent', color:'rgba(168,196,240,.5)', cursor:'pointer', fontSize:14, lineHeight:1, padding:'0 0 0 2px' }}>×</button>
+                  <span style={{ fontSize:16, color:'#A8C4F0', fontWeight:500 }}>{c}</span>
+                  <button onClick={()=>rem(c)} style={{ border:'none', background:'transparent', color:'rgba(168,196,240,.5)', cursor:'pointer', fontSize:16, lineHeight:1, padding:'0 0 0 2px' }}>×</button>
                 </div>
               ))}
             </div>
           )}
           {conds.length===0 && (
-            <div style={{ padding:'12px 14px', background:'rgba(42,92,173,.06)', borderRadius:11, fontSize:13, color:'rgba(240,232,255,.3)', marginBottom:15, fontStyle:'italic' }}>
+            <div style={{ padding:'12px 14px', background:'rgba(42,92,173,.06)', borderRadius:11, fontSize:16, color:'rgba(240,232,255,.3)', marginBottom:15, fontStyle:'italic' }}>
               No conditions added yet. Use the options below to add yours.
             </div>
           )}
@@ -2317,7 +2316,7 @@ function Profile({ data, upd, user }) {
             <label>Common Conditions (click to add)</label>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:7, maxHeight:190, overflowY:'auto' }}>
               {COMMON_CONDITIONS.filter(c=>!conds.includes(c)).map(c=>(
-                <button key={c} onClick={()=>add(c)} style={{ padding:'4px 11px', borderRadius:20, fontSize:13, border:'1px solid rgba(42,92,173,.22)', background:'rgba(255,255,255,.03)', color:'rgba(240,232,255,.45)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .14s' }}
+                <button key={c} onClick={()=>add(c)} style={{ padding:'4px 11px', borderRadius:20, fontSize:16, border:'1px solid rgba(42,92,173,.22)', background:'rgba(255,255,255,.03)', color:'rgba(240,232,255,.45)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .14s' }}
                   onMouseEnter={e=>{e.currentTarget.style.borderColor='#C9A84C';e.currentTarget.style.color='#C9A84C';}}
                   onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(42,92,173,.22)';e.currentTarget.style.color='rgba(240,232,255,.45)';}}>
                   + {c}
@@ -2334,7 +2333,7 @@ function Profile({ data, upd, user }) {
           </div>
         </div>
 
-        {saved && <div style={{ padding:'12px 16px', background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.22)', borderRadius:12, fontSize:14, color:'#6ee7b7' }}>✓ Profile saved successfully!</div>}
+        {saved && <div style={{ padding:'12px 16px', background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.22)', borderRadius:12, fontSize:16, color:'#6ee7b7' }}>✓ Profile saved successfully!</div>}
         <button className="btn btn-gold" onClick={save} style={{ justifyContent:'center', padding:'14px', fontSize:15, width:'100%' }}>Save Profile</button>
       </div>
     </div>
@@ -2416,7 +2415,7 @@ function SharePrivacy({ data, upd, user }) {
             <span style={{ fontSize:28 }}>🔗</span>
             <div>
               <div style={{ fontFamily:"'Cinzel',serif",fontSize:18,color:'#C9A84C' }}>Generate Secure Share Link</div>
-              <div style={{ fontSize:13,color:'rgba(240,232,255,.3)' }}>Read-only · PIN-protected · Expires 7 days · Diary never included</div>
+              <div style={{ fontSize:16,color:'rgba(240,232,255,.3)' }}>Read-only · PIN-protected · Expires 7 days · Diary never included</div>
             </div>
           </div>
 
@@ -2425,7 +2424,7 @@ function SharePrivacy({ data, upd, user }) {
             <label style={{ marginBottom:10 }}>Choose what to include</label>
             <div style={{ display:'flex',flexWrap:'wrap',gap:7,marginTop:8 }}>
               {sectionOptions.map(s=>(
-                <button key={s.k} onClick={()=>toggleSection(s.k)} style={{ padding:'6px 13px',borderRadius:20,fontSize:13,border:`1.5px solid ${sections[s.k]?'#C9A84C':'rgba(42,92,173,.25)'}`,background:sections[s.k]?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)',color:sections[s.k]?'#C9A84C':'rgba(240,232,255,.38)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",display:'flex',alignItems:'center',gap:5,transition:'all .15s' }}>
+                <button key={s.k} onClick={()=>toggleSection(s.k)} style={{ padding:'6px 13px',borderRadius:20,fontSize:16,border:`1.5px solid ${sections[s.k]?'#C9A84C':'rgba(42,92,173,.25)'}`,background:sections[s.k]?'rgba(201,168,76,.1)':'rgba(255,255,255,.03)',color:sections[s.k]?'#C9A84C':'rgba(240,232,255,.38)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",display:'flex',alignItems:'center',gap:5,transition:'all .15s' }}>
                   {sections[s.k]?'✓ ':'+ '}{s.icon} {s.l}
                 </button>
               ))}
@@ -2434,17 +2433,17 @@ function SharePrivacy({ data, upd, user }) {
 
           {sections.diary && data.diary?.length > 0 && (
             <div style={{ marginTop:12, padding:'14px 16px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.18)', borderRadius:12 }}>
-              <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.7)', marginBottom:10, textTransform:'uppercase', letterSpacing:1 }}>Select diary entries to share</div>
+              <div style={{ fontSize:16, fontWeight:700, color:'rgba(201,168,76,.7)', marginBottom:10, textTransform:'uppercase', letterSpacing:1 }}>Select diary entries to share</div>
               <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:200, overflowY:'auto' }}>
                 {(data.diary||[]).map(entry=>{
                   const sel = selectedDiaryIds.includes(entry.id);
                   return (
                     <button key={entry.id} onClick={()=>setSelectedDiaryIds(prev=>sel?prev.filter(x=>x!==entry.id):[...prev,entry.id])}
                       style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:10, border:`1px solid ${sel?'rgba(201,168,76,.4)':'rgba(42,92,173,.2)'}`, background:sel?'rgba(201,168,76,.08)':'rgba(255,255,255,.02)', cursor:'pointer', textAlign:'left', fontFamily:"'DM Sans',sans-serif" }}>
-                      <div style={{ width:18, height:18, borderRadius:4, border:`2px solid ${sel?'#C9A84C':'rgba(42,92,173,.4)'}`, background:sel?'rgba(201,168,76,.2)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:'#C9A84C', flexShrink:0 }}>{sel?'✓':''}</div>
+                      <div style={{ width:18, height:18, borderRadius:4, border:`2px solid ${sel?'#C9A84C':'rgba(42,92,173,.4)'}`, background:sel?'rgba(201,168,76,.2)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'#C9A84C', flexShrink:0 }}>{sel?'✓':''}</div>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:13, color:'rgba(240,232,255,.8)', fontWeight:500 }}>{entry.date}</div>
-                        <div style={{ fontSize:13, color:'rgba(240,232,255,.35)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:280 }}>{entry.text?.slice(0,60)||'No text'}…</div>
+                        <div style={{ fontSize:16, color:'rgba(240,232,255,.8)', fontWeight:500 }}>{entry.date}</div>
+                        <div style={{ fontSize:16, color:'rgba(240,232,255,.35)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:280 }}>{entry.text?.slice(0,60)||'No text'}…</div>
                       </div>
                     </button>
                   );
@@ -2461,12 +2460,12 @@ function SharePrivacy({ data, upd, user }) {
           </div>
           {shareLink&&(
             <div style={{ background:'rgba(110,231,183,.06)',border:'1px solid rgba(110,231,183,.14)',borderRadius:12,padding:'15px 17px',animation:'popIn .25s ease' }}>
-              <div style={{ fontSize:13,color:'#6ee7b7',fontWeight:600,marginBottom:8 }}>✓ Share link generated!</div>
+              <div style={{ fontSize:16,color:'#6ee7b7',fontWeight:600,marginBottom:8 }}>✓ Share link generated!</div>
               <div style={{ display:'flex',gap:7,marginBottom:11 }}>
                 <input readOnly value={shareLink} className="field" style={{ fontSize:11 }}/>
-                <button className="btn btn-ghost" style={{ fontSize:13,flexShrink:0 }} onClick={copyLink}>{copied?'✓ Copied!':'Copy'}</button>
+                <button className="btn btn-ghost" style={{ fontSize:16,flexShrink:0 }} onClick={copyLink}>{copied?'✓ Copied!':'Copy'}</button>
               </div>
-              <div style={{ fontSize:13,color:'rgba(240,232,255,.38)',padding:'8px 12px',background:'rgba(255,255,255,.03)',borderRadius:9,borderLeft:'3px solid rgba(201,168,76,.3)' }}>
+              <div style={{ fontSize:16,color:'rgba(240,232,255,.38)',padding:'8px 12px',background:'rgba(255,255,255,.03)',borderRadius:9,borderLeft:'3px solid rgba(201,168,76,.3)' }}>
                 PIN: <strong style={{ color:'#C9A84C',letterSpacing:2 }}>{sharePin}</strong> — share this <em>separately</em>
               </div>
             </div>
@@ -2485,7 +2484,7 @@ function SharePrivacy({ data, upd, user }) {
               <div style={{ fontSize:22,flexShrink:0 }}>{s.icon}</div>
               <div>
                 <div style={{ fontFamily:"'Cinzel',serif",fontWeight:600,fontSize:15,color:s.color,marginBottom:7 }}>{s.title}</div>
-                <div style={{ fontSize:14,color:'rgba(240,232,255,.48)',lineHeight:1.75 }}>{s.text}</div>
+                <div style={{ fontSize:16,color:'rgba(240,232,255,.48)',lineHeight:1.75 }}>{s.text}</div>
               </div>
             </div>
           </div>
