@@ -109,7 +109,7 @@ const NAV_GROUPS = [
   },
 ];
 // Flat nav for backward compat
-const NAV = NAV_GROUPS.flatMap(g => g.items);
+const NAV = NAV_GROUPS.flatMap(g => g.items); // eslint-disable-line no-unused-vars
 
 const DIARY_FONTS = [
   { label:'Dancing Script',    value:"'Dancing Script',cursive",      size:20 },
@@ -2979,7 +2979,7 @@ function Advocate({ data, user }) {
   const [voiceSpeaking, setVoiceSpeaking]     = useState(false);
   const bottomRef = useRef();
   const inputRef  = useRef();
-  const synthRef  = useRef(null);
+  const synthRef  = useRef(null); // eslint-disable-line no-unused-vars
   const {share}   = useShare();
 
   useEffect(() => { bottomRef.current?.scrollIntoView({behavior:'smooth'}); }, [msgs,loading]);
