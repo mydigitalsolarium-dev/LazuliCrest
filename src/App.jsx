@@ -810,7 +810,7 @@ function AuthScreen() {
         ...BLANK_DATA,
         profile: { name:name.trim(), conditions:'', goal:'', accountType, careeName:careeName.trim() }
       });
-      fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'user_signup', email, name:name.trim() }) }).catch(()=>{});
+      fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'user_signup', email, name:name.trim(), userId:cred.user.uid }) }).catch(()=>{});
     } catch(e) {
       setError(e.code==='auth/email-already-in-use' ? 'An account with this email already exists.' : 'Sign up failed.');
     }
@@ -3641,7 +3641,7 @@ function Advocate({ data, user }) {
   const [loading,setLoading]   = useState(false);
   const [error,setError]       = useState('');
   const [limitHit,setLimitHit] = useState(false);
-  const [dailyCount,setDailyCount] = useState(0);
+  const [creditsLeft,setCreditsLeft] = useState(null);
   const [aiTyping,setAiTyping] = useState(false);
   const [shareStatus,setShareStatus] = useState('idle');
   const [voiceCallActive, setVoiceCallActive] = useState(false);
@@ -3697,10 +3697,10 @@ function Advocate({ data, user }) {
         }),
       });
       const json = await res.json();
-      if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'Daily limit reached.'); setLoading(false); return; }
+      if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'No credits remaining.'); setLoading(false); return; }
       if (!res.ok) { setError(json.error||'Something went wrong.'); setLoading(false); return; }
       const reply = json.content?.[0]?.text || json.text || '';
-      if (json['x-daily-count']) setDailyCount(+json['x-daily-count']);
+      const cl = res.headers?.get?.('X-Credits-Left'); if (cl !== null && cl !== undefined) setCreditsLeft(+cl);
       setMsgs([...newMsgs, {role:'assistant', content:reply}]);
       // Speak response if voice call active
       if (voiceCallActive) {
@@ -3734,8 +3734,8 @@ function Advocate({ data, user }) {
       </div>
 
       {/* Limit / error banners */}
-      {limitHit && <div style={{ padding:'12px 16px', background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, fontSize:16, color:'rgba(201,168,76,.85)', lineHeight:1.6, flexShrink:0 }}>💙 You've used your {FREE_CHAT_LIMIT} free messages today. Limit resets at midnight. Your full health log is still here for you.</div>}
-      {!limitHit && dailyCount>0 && <div style={{ fontSize:14, color:'rgba(240,232,255,.25)', textAlign:'right', flexShrink:0 }}>{dailyCount}/{FREE_CHAT_LIMIT} messages used today</div>}
+      {limitHit && <div style={{ padding:'12px 16px', background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, fontSize:16, color:'rgba(201,168,76,.85)', lineHeight:1.6, flexShrink:0 }}>💙 You've used all your Lazuli AI credits. You'll receive {FREE_CHAT_LIMIT} new credits at midnight. Your full health log is still here for you.</div>}
+      {!limitHit && creditsLeft !== null && <div style={{ fontSize:14, color:'rgba(240,232,255,.25)', textAlign:'right', flexShrink:0 }}>💜 {creditsLeft} AI credits remaining</div>}
       {error && !limitHit && <div style={{ padding:'10px 16px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.25)', borderRadius:12, fontSize:15, color:'#ff8080', lineHeight:1.6, flexShrink:0 }}>⚠ {error}</div>}
 
       {/* GEL PC SHELL */}
