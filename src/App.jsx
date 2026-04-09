@@ -2252,15 +2252,15 @@ const MINDFUL_QUOTES = [
 ];
 
 const SOUNDSCAPES = [
-  { id:'rain',      label:'Gentle Rain',       icon:'🌧', desc:'Soft rainfall — grounding and calming',           color:'#93c5fd' },
-  { id:'ocean',     label:'Ocean Waves',        icon:'🌊', desc:'Rhythmic tides — nervous system reset',           color:'#60a5fa' },
-  { id:'forest',    label:'Forest & Birds',     icon:'🌿', desc:'Morning birdsong — awakening and alive',          color:'#6ee7b7' },
-  { id:'whitenoise',label:'White Noise',        icon:'〰', desc:'Steady masking noise — focus and sleep',          color:'#a78bfa' },
-  { id:'binaural40',label:'Gamma Binaural 40Hz',icon:'⚡', desc:'Focus & clarity — 40Hz gamma waves (headphones)', color:'#C9A84C' },
-  { id:'binaural10',label:'Alpha Binaural 10Hz',icon:'🧠', desc:'Calm focus — 10Hz alpha waves (headphones)',      color:'#7B2FBE' },
-  { id:'binaural4', label:'Theta Binaural 4Hz', icon:'💤', desc:'Deep rest — 4Hz theta waves (headphones)',        color:'#5B1F8E' },
-  { id:'tibetan',   label:'Tibetan Bowl 432Hz', icon:'🔔', desc:'Ancient healing frequency — grounding',           color:'#f59e0b' },
-  { id:'heartbeat', label:'Calm Heartbeat',     icon:'💓', desc:'Steady rhythm — anxiety relief',                  color:'#f87171' },
+  { id:'rain',      label:'Gentle Rain',       icon:'🌧', file:'/sounds/rain.mp3',        color:'#93c5fd', desc:'Soft rainfall on leaves' },
+  { id:'ocean',     label:'Ocean Waves',        icon:'🌊', file:'/sounds/ocean.mp3',       color:'#60a5fa', desc:'Rhythmic tides — nervous system reset' },
+  { id:'forest',    label:'Forest & Birds',     icon:'🌿', file:'/sounds/forest.mp3',      color:'#6ee7b7', desc:'Morning birdsong — awakening and alive' },
+  { id:'whitenoise',label:'White Noise / Fan',  icon:'〰', file:'/sounds/white-noise.mp3', color:'#a78bfa', desc:'Steady masking — focus and sleep' },
+  { id:'binaural40',label:'Gamma 40Hz Focus',   icon:'⚡', file:null,                      color:'#C9A84C', desc:'40Hz binaural (use headphones)' },
+  { id:'binaural10',label:'Alpha 10Hz Calm',    icon:'🧠', file:null,                      color:'#7B2FBE', desc:'10Hz alpha waves (headphones)' },
+  { id:'binaural4', label:'Theta 4Hz Rest',     icon:'💤', file:null,                      color:'#5B1F8E', desc:'4Hz deep rest (headphones)' },
+  { id:'tibetan',   label:'Tibetan Bowl 432Hz', icon:'🔔', file:null,                      color:'#f59e0b', desc:'Ancient healing frequency' },
+  { id:'heartbeat', label:'Calm Heartbeat',     icon:'💓', file:null,                      color:'#f87171', desc:'Steady rhythm — anxiety relief' },
 ];
 
 // ─── Glass Arched Room Door ────────────────────────────────────
@@ -2377,6 +2377,265 @@ function RoomDoor({ tool, onEnter, index }) {
   );
 }
 
+// ─── Zen Garden Canvas ─────────────────────────────────────────
+function ZenGardenCanvas() {
+  const canvasRef = useRef(null);
+  const [activeTool, setActiveTool] = useState('rake');
+  const [accessories, setAccessories] = useState([
+    { id:1, type:'stone',    x:120, y:140, label:'Smooth Stone', emoji:'🪨' },
+    { id:2, type:'pebble',   x:360, y:180, label:'Dark Pebble',  emoji:'⬤'  },
+    { id:3, type:'succulent',x:250, y:80,  label:'Succulent',    emoji:'🌵' },
+  ]);
+  const [dragging, setDragging]   = useState(null);
+  const [dragOffset, setDragOffset] = useState({x:0,y:0});
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const isDrawing = useRef(false);
+  const lastPos   = useRef(null);
+  const audioCtxRef = useRef(null);
+  const rakeNodeRef = useRef(null);
+
+  // Draw the full canvas scene
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // Sand base
+    const sandGrad = ctx.createLinearGradient(0,0,0,H);
+    sandGrad.addColorStop(0,   '#c8a96e');
+    sandGrad.addColorStop(0.4, '#b8944e');
+    sandGrad.addColorStop(1,   '#a07838');
+    ctx.fillStyle = sandGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Sand texture — subtle noise dots
+    ctx.save();
+    for(let i=0;i<1200;i++){
+      const x=Math.random()*W, y=Math.random()*H;
+      const a=Math.random()*.08+.03;
+      ctx.fillStyle=`rgba(${Math.random()>.5?'255,230,180':'100,60,20'},${a})`;
+      ctx.fillRect(x,y,1,1);
+    }
+    ctx.restore();
+
+    // Border frame
+    ctx.strokeStyle='rgba(201,168,76,.5)';
+    ctx.lineWidth=2;
+    ctx.strokeRect(2,2,W-4,H-4);
+
+    // Accessories
+    accessories.forEach(acc=>{
+      ctx.save();
+      ctx.font=`${acc.type==='stone'?32:acc.type==='pebble'?22:28}px serif`;
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      // Shadow
+      ctx.shadowColor='rgba(0,0,0,.4)';
+      ctx.shadowBlur=8;
+      ctx.shadowOffsetX=3;
+      ctx.shadowOffsetY=4;
+      if(acc.type==='pebble'){
+        ctx.fillStyle='#2a1a0a';
+        ctx.beginPath();
+        ctx.ellipse(acc.x,acc.y,14,10,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='#4a3020';
+        ctx.beginPath();
+        ctx.ellipse(acc.x-3,acc.y-3,6,5,0,0,Math.PI*2);
+        ctx.fill();
+      } else {
+        ctx.fillText(acc.emoji,acc.x,acc.y);
+      }
+      ctx.restore();
+    });
+  }, [accessories]);
+
+  // Rake drawing
+  const rakeAt = useCallback((ctx, x, y, prevX, prevY) => {
+    const TINES = 5;
+    const SPACING = 6;
+    const dx = x - (prevX??x), dy = y - (prevY??y);
+    const len = Math.sqrt(dx*dx+dy*dy) || 1;
+    const nx = -dy/len, ny = dx/len; // perpendicular
+
+    for(let t=0;t<TINES;t++){
+      const offset=(t-(TINES-1)/2)*SPACING;
+      const ox=nx*offset, oy=ny*offset;
+      if(prevX!=null){
+        // Peak line (light sand)
+        ctx.beginPath();
+        ctx.moveTo(prevX+ox-nx*1.5, prevY+oy-ny*1.5);
+        ctx.lineTo(x+ox-nx*1.5,    y+oy-ny*1.5);
+        ctx.strokeStyle='rgba(220,185,100,.9)';
+        ctx.lineWidth=2.5;
+        ctx.lineCap='round';
+        ctx.stroke();
+        // Groove (dark shadow)
+        ctx.beginPath();
+        ctx.moveTo(prevX+ox+nx*1, prevY+oy+ny*1);
+        ctx.lineTo(x+ox+nx*1,    y+oy+ny*1);
+        ctx.strokeStyle='rgba(80,45,10,.55)';
+        ctx.lineWidth=1.2;
+        ctx.stroke();
+      }
+    }
+  }, []);
+
+  const smoothAt = useCallback((ctx, x, y, prevX, prevY) => {
+    if(prevX==null) return;
+    const R=18;
+    // Sample sand color and blend
+    ctx.save();
+    const sandGrad=ctx.createLinearGradient(0,0,0,ctx.canvas.height);
+    sandGrad.addColorStop(0,'#c8a96e');sandGrad.addColorStop(1,'#a07838');
+    ctx.fillStyle=sandGrad;
+    ctx.globalAlpha=0.35;
+    ctx.beginPath();
+    ctx.arc(x,y,R,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }, []);
+
+  useEffect(() => { draw(); }, [draw]);
+
+  const getPos = (e, canvas) => {
+    const r=canvas.getBoundingClientRect();
+    const touch=e.touches?.[0]||e.changedTouches?.[0];
+    const cx=touch?touch.clientX:e.clientX;
+    const cy=touch?touch.clientY:e.clientY;
+    return { x:(cx-r.left)*(canvas.width/r.width), y:(cy-r.top)*(canvas.height/r.height) };
+  };
+
+  const playRakeSound = () => {
+    if(!soundEnabled) return;
+    try{
+      if(!audioCtxRef.current) audioCtxRef.current=new(window.AudioContext||window.webkitAudioContext)();
+      const ctx=audioCtxRef.current;
+      if(ctx.state==='suspended') ctx.resume();
+      const buf=ctx.createBuffer(1,ctx.sampleRate*.15,ctx.sampleRate);
+      const d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*.12;
+      const src=ctx.createBufferSource();
+      const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2400;f.Q.value=0.8;
+      const g=ctx.createGain();g.gain.setValueAtTime(.25,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.15);
+      src.buffer=buf;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
+    }catch(e){}
+  };
+
+  const onStart = (e) => {
+    e.preventDefault();
+    const canvas=canvasRef.current;
+    const {x,y}=getPos(e,canvas);
+    // Check if clicking an accessory
+    const hit=accessories.find(a=>Math.hypot(a.x-x,a.y-y)<28);
+    if(hit){
+      setDragging(hit.id);
+      setDragOffset({x:x-hit.x,y:y-hit.y});
+      return;
+    }
+    if(activeTool==='rake'||activeTool==='smooth'){
+      isDrawing.current=true;
+      lastPos.current={x,y};
+    }
+  };
+
+  const onMove = (e) => {
+    e.preventDefault();
+    const canvas=canvasRef.current;
+    const {x,y}=getPos(e,canvas);
+    if(dragging){
+      setAccessories(prev=>prev.map(a=>a.id===dragging?{...a,x:x-dragOffset.x,y:y-dragOffset.y}:a));
+      return;
+    }
+    if(!isDrawing.current) return;
+    const ctx=canvas.getContext('2d');
+    const prev=lastPos.current;
+    if(activeTool==='rake'){ rakeAt(ctx,x,y,prev?.x,prev?.y); playRakeSound(); }
+    else if(activeTool==='smooth'){ smoothAt(ctx,x,y,prev?.x,prev?.y); }
+    // Redraw accessories on top
+    accessories.forEach(acc=>{
+      ctx.save();
+      ctx.font=`${acc.type==='stone'?32:acc.type==='pebble'?22:28}px serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=8; ctx.shadowOffsetX=3; ctx.shadowOffsetY=4;
+      if(acc.type==='pebble'){
+        ctx.fillStyle='#2a1a0a'; ctx.beginPath(); ctx.ellipse(acc.x,acc.y,14,10,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#4a3020'; ctx.beginPath(); ctx.ellipse(acc.x-3,acc.y-3,6,5,0,0,Math.PI*2); ctx.fill();
+      } else { ctx.fillText(acc.emoji,acc.x,acc.y); }
+      ctx.restore();
+    });
+    lastPos.current={x,y};
+  };
+
+  const onEnd = () => {
+    isDrawing.current=false;
+    lastPos.current=null;
+    setDragging(null);
+  };
+
+  const clearGarden = () => {
+    const canvas=canvasRef.current;
+    if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    setAccessories([
+      {id:1,type:'stone',x:120,y:140,label:'Smooth Stone',emoji:'🪨'},
+      {id:2,type:'pebble',x:360,y:180,label:'Dark Pebble',emoji:'⬤'},
+      {id:3,type:'succulent',x:250,y:80,label:'Succulent',emoji:'🌵'},
+    ]);
+    draw();
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.7)', textAlign:'center' }}>
+        Rake the sand. Breathe. Find stillness.
+      </div>
+
+      {/* Toolbar */}
+      <div style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center' }}>
+        {[
+          { id:'rake',   label:'🖊 Rake',    desc:'3-tine rake pattern' },
+          { id:'smooth', label:'✋ Smooth',  desc:'Blend & erase marks' },
+        ].map(t=>(
+          <button key={t.id} onClick={()=>setActiveTool(t.id)} title={t.desc}
+            style={{ padding:'8px 20px', borderRadius:20, border:`1.5px solid ${activeTool===t.id?'rgba(201,168,76,.6)':'rgba(42,92,173,.25)'}`, background:activeTool===t.id?'rgba(201,168,76,.12)':'rgba(42,92,173,.07)', color:activeTool===t.id?'#C9A84C':'rgba(240,232,255,.55)', fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", fontWeight:activeTool===t.id?700:400 }}>
+            {t.label}
+          </button>
+        ))}
+        <button onClick={()=>setSoundEnabled(s=>!s)}
+          style={{ padding:'8px 16px', borderRadius:20, border:'1px solid rgba(42,92,173,.2)', background:'rgba(42,92,173,.06)', color:'rgba(240,232,255,.5)', fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+          {soundEnabled?'🔊 Sand sounds':'🔇 Sound off'}
+        </button>
+        <button onClick={clearGarden} className="btn btn-ghost" style={{ fontSize:14 }}>Reset Garden</button>
+      </div>
+
+      {/* Accessories info */}
+      <div style={{ fontSize:14, color:'rgba(240,232,255,.35)', fontFamily:"'DM Sans',sans-serif", fontStyle:'italic' }}>
+        Drag 🪨 🌵 stones & succulents anywhere in the garden
+      </div>
+
+      {/* Canvas */}
+      <div style={{ borderRadius:16, overflow:'hidden', border:'2px solid rgba(201,168,76,.3)', boxShadow:'0 12px 50px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,220,100,.15)', width:'100%', maxWidth:580, cursor:activeTool==='rake'?`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='20' font-size='18'%3E🖊%3C/text%3E%3C/svg%3E") 4 20, crosshair`:activeTool==='smooth'?'grab':'crosshair' }}>
+        <canvas
+          ref={canvasRef}
+          width={580}
+          height={320}
+          onMouseDown={onStart}
+          onMouseMove={onMove}
+          onMouseUp={onEnd}
+          onMouseLeave={onEnd}
+          onTouchStart={onStart}
+          onTouchMove={onMove}
+          onTouchEnd={onEnd}
+          style={{ display:'block', width:'100%', height:'auto', touchAction:'none' }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function Mindfulness() {
   const TOOLS = [
     { id:'breathing',  icon:'🫁', label:'Box Breathing'    },
@@ -2422,8 +2681,11 @@ function Mindfulness() {
 
   // Soundscape
   const [playingSound, setPlayingSound] = useState(null);
+  const [soundVolumes, setSoundVolumes] = useState({});
   const soundNodesRef = useRef(null);
   const soundCtxRef   = useRef(null);
+  const audioElsRef   = useRef({});
+  const fadeTimersRef = useRef({});
 
   // Fountain wishes
   const [wishText, setWishText]   = useState('');
@@ -2434,6 +2696,11 @@ function Mindfulness() {
   const [imageryScene, setImageryScene]               = useState(null);
   const [imageryStep, setImageryStep]                 = useState(0);
   const [imageryVoicePlaying, setImageryVoicePlaying] = useState(false);
+  const [imageryAutoPlay, setImageryAutoPlay]         = useState(false);
+  const [imageryVoiceIdx, setImageryVoiceIdx]         = useState(0);
+  const [imageryRate, setImageryRate]                 = useState(0.72);
+  const [availableVoices, setAvailableVoices]         = useState([]);
+  const imageryAutoRef = useRef(null);
 
   const timerRef = useRef(null);
 
@@ -2456,6 +2723,17 @@ function Mindfulness() {
   }, [active, phaseIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    const loadVoices = () => {
+      const v = window.speechSynthesis?.getVoices() || [];
+      const english = v.filter(x=>x.lang.startsWith('en'));
+      setAvailableVoices(english.length ? english : v);
+    };
+    loadVoices();
+    window.speechSynthesis?.addEventListener('voiceschanged', loadVoices);
+    return () => window.speechSynthesis?.removeEventListener('voiceschanged', loadVoices);
+  }, []);
+
+  useEffect(() => {
     const t = setInterval(() => {
       setQuoteFade(false);
       setTimeout(() => { setQuoteIdx(i=>(i+1)%MINDFUL_QUOTES.length); setQuoteFade(true); }, 600);
@@ -2465,6 +2743,13 @@ function Mindfulness() {
 
   useEffect(()=>{
     return ()=>{ try{ soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});soundCtxRef.current?.close();}catch(e){} };
+  },[]);
+
+  useEffect(()=>{
+    return ()=>{
+      Object.values(audioElsRef.current).forEach(el=>{ try{el.pause();el.src='';}catch(e){} });
+      clearInterval(Object.values(fadeTimersRef.current||{}));
+    };
   },[]);
 
   const phase = PHASES[phaseIdx];
@@ -2521,94 +2806,127 @@ function Mindfulness() {
   };
 
   const toggleSound = (id) => {
-    // Stop current
-    try { soundNodesRef.current?.forEach(n=>{ try{n.stop?.();n.disconnect?.();}catch(e){} }); } catch(e){}
-    soundNodesRef.current = [];
-    if (playingSound === id || !id) { setPlayingSound(null); return; }
+    if (!id) {
+      // Stop all
+      Object.entries(audioElsRef.current).forEach(([k,el])=>{ fadeOut(el,()=>{ el.pause(); el.currentTime=0; }); });
+      try { soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}}); soundNodesRef.current=[]; soundCtxRef.current?.close(); soundCtxRef.current=null; } catch(e){}
+      setPlayingSound(null); return;
+    }
+
+    if (playingSound === id) {
+      const el=audioElsRef.current[id];
+      if(el){ fadeOut(el,()=>{ el.pause(); el.currentTime=0; }); }
+      else { try{ soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});soundNodesRef.current=[];} catch(e){} }
+      setPlayingSound(null); return;
+    }
+
+    // Stop previous
+    if(playingSound){
+      const prev=audioElsRef.current[playingSound];
+      if(prev){ fadeOut(prev,()=>{ prev.pause(); prev.currentTime=0; }); }
+      try{ soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});soundNodesRef.current=[]; } catch(e){}
+    }
 
     setPlayingSound(id);
-    try {
-      if (!soundCtxRef.current || soundCtxRef.current.state === 'closed') {
-        soundCtxRef.current = new (window.AudioContext||window.webkitAudioContext)();
+    const sc = SOUNDSCAPES.find(s=>s.id===id);
+
+    if (sc?.file) {
+      // Use HTML audio element for real files
+      let el = audioElsRef.current[id];
+      if (!el) {
+        el = new Audio(sc.file);
+        el.loop = true;
+        el.volume = 0;
+        audioElsRef.current[id] = el;
       }
-      const ctx = soundCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-      const nodes = [];
+      el.volume = 0;
+      el.play().then(()=>fadeIn(el, soundVolumes[id]??0.7)).catch(()=>{});
+    } else {
+      // Web Audio fallback for binaural/generated sounds
+      playGeneratedSound(id);
+    }
+  };
 
-      const mkNoise = (color='white') => {
-        const buf = ctx.createBuffer(1, ctx.sampleRate*4, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-        for(let i=0;i<d.length;i++){
-          const w=Math.random()*2-1;
-          if(color==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.96900*b2+w*.1538520;b3=.86650*b3+w*.3104856;b4=.55000*b4+w*.5329522;b5=-.7616*b5-w*.0168980;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*0.11;b6=w*.115926;}
-          else d[i]=w;
-        }
-        const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;return src;
-      };
+  const fadeIn = (el, targetVol=0.7) => {
+    clearInterval(fadeTimersRef.current[el.src]);
+    el.volume=0;
+    let v=0;
+    const t=setInterval(()=>{
+      v=Math.min(targetVol,v+0.04);
+      el.volume=v;
+      if(v>=targetVol) clearInterval(t);
+    },80);
+    fadeTimersRef.current[el.src]=t;
+  };
 
-      if (id==='whitenoise') {
-        const src=mkNoise();const g=ctx.createGain();g.gain.value=0.18;src.connect(g);g.connect(ctx.destination);src.start();nodes.push(src);
-      } else if (id==='rain') {
-        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=900;f.Q.value=0.6;const g=ctx.createGain();g.gain.value=0.35;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
-        const src2=mkNoise('pink');const f2=ctx.createBiquadFilter();f2.type='highpass';f2.frequency.value=3000;const g2=ctx.createGain();g2.gain.value=0.08;src2.connect(f2);f2.connect(g2);g2.connect(ctx.destination);src2.start();
-        nodes.push(src,src2);
-      } else if (id==='ocean') {
-        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=500;const g=ctx.createGain();g.gain.value=0.5;
-        const lfo=ctx.createOscillator();lfo.frequency.value=0.15;const lfoG=ctx.createGain();lfoG.gain.value=0.3;lfo.connect(lfoG);lfoG.connect(g.gain);lfo.start();
-        src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src,lfo);
-      } else if (id==='forest') {
-        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2200;f.Q.value=0.4;const g=ctx.createGain();g.gain.value=0.2;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src);
-      } else if (id==='tibetan') {
+  const fadeOut = (el, onDone) => {
+    clearInterval(fadeTimersRef.current[el.src]);
+    let v=el.volume;
+    const t=setInterval(()=>{
+      v=Math.max(0,v-0.05);
+      el.volume=v;
+      if(v<=0){ clearInterval(t); onDone?.(); }
+    },60);
+    fadeTimersRef.current[el.src]=t;
+  };
+
+  const playGeneratedSound = (id) => {
+    try {
+      if(!soundCtxRef.current||soundCtxRef.current.state==='closed') soundCtxRef.current=new(window.AudioContext||window.webkitAudioContext)();
+      const ctx=soundCtxRef.current;
+      if(ctx.state==='suspended') ctx.resume();
+      const nodes=[];
+      if(id==='tibetan'){
         [432,864,1296].forEach((freq,i)=>{
-          const o=ctx.createOscillator();const g=ctx.createGain();
+          const o=ctx.createOscillator(),g=ctx.createGain();
           o.type='sine';o.frequency.value=freq;
           g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(0.08/(i+1),ctx.currentTime+2);
           o.connect(g);g.connect(ctx.destination);o.start();nodes.push(o);
         });
-      } else if (id==='heartbeat') {
-        const playBeat = () => {
-          [0,0.15].forEach(offset=>{
-            const o=ctx.createOscillator();const g=ctx.createGain();
-            o.type='sine';o.frequency.value=80+offset*20;
-            g.gain.setValueAtTime(0,ctx.currentTime+offset);g.gain.linearRampToValueAtTime(0.35,ctx.currentTime+offset+0.04);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+offset+0.25);
-            o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+offset);o.stop(ctx.currentTime+offset+0.3);
-          });
-        };
-        playBeat();
-        const interval=setInterval(playBeat,900);nodes.push({stop:()=>clearInterval(interval)});
-      } else if (id.startsWith('binaural')) {
-        const beatHz = id==='binaural40'?40:id==='binaural10'?10:4;
-        const base=200;
+      } else if(id==='heartbeat'){
+        const play=()=>{ [0,.15].forEach(off=>{ const o=ctx.createOscillator(),g=ctx.createGain(); o.type='sine';o.frequency.value=80+off*20; g.gain.setValueAtTime(0,ctx.currentTime+off);g.gain.linearRampToValueAtTime(.35,ctx.currentTime+off+.04);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+off+.25); o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+off);o.stop(ctx.currentTime+off+.3); }); };
+        play(); const iv=setInterval(play,900); nodes.push({stop:()=>clearInterval(iv)});
+      } else if(id.startsWith('binaural')){
+        const beat=id==='binaural40'?40:id==='binaural10'?10:4,base=200;
         const merger=ctx.createChannelMerger(2);merger.connect(ctx.destination);
-        const oL=ctx.createOscillator(),oR=ctx.createOscillator();
-        const gL=ctx.createGain(),gR=ctx.createGain();
-        oL.frequency.value=base;oR.frequency.value=base+beatHz;
-        gL.gain.value=0.18;gR.gain.value=0.18;
+        const oL=ctx.createOscillator(),oR=ctx.createOscillator(),gL=ctx.createGain(),gR=ctx.createGain();
+        oL.frequency.value=base;oR.frequency.value=base+beat;gL.gain.value=.18;gR.gain.value=.18;
         oL.connect(gL);oR.connect(gR);gL.connect(merger,0,0);gR.connect(merger,0,1);
         oL.start();oR.start();nodes.push(oL,oR);
       }
       soundNodesRef.current=nodes;
-    } catch(e){ console.warn('Audio error:',e); }
+    } catch(e){console.warn('Audio error:',e);}
   };
 
-  const speakImagery = (text) => {
-    if (!window.speechSynthesis) return;
+  const speakImagery = (text, onDone) => {
+    if (!window.speechSynthesis) { onDone?.(); return; }
     window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    const brit = voices.find(v=>v.lang==='en-GB'&&v.name.toLowerCase().includes('female'))
-      || voices.find(v=>v.lang==='en-GB')
-      || voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))
-      || voices[0];
-    if (brit) utt.voice = brit;
-    utt.rate = 0.82;
-    utt.pitch = 1.05;
-    utt.volume = 0.9;
-    utt.onstart = () => setImageryVoicePlaying(true);
-    utt.onend = () => setImageryVoicePlaying(false);
-    utt.onerror = () => setImageryVoicePlaying(false);
-    window.speechSynthesis.speak(utt);
+    // Split text into natural pause segments at sentence boundaries
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    let idx = 0;
+    const speakNext = () => {
+      if (idx >= sentences.length) { setImageryVoicePlaying(false); onDone?.(); return; }
+      const utt = new SpeechSynthesisUtterance(sentences[idx].trim());
+      // Pick voice
+      const voices = window.speechSynthesis.getVoices();
+      const chosen = availableVoices[imageryVoiceIdx] ||
+        voices.find(v=>v.lang==='en-GB') ||
+        voices.find(v=>v.lang.startsWith('en')&&(v.name.toLowerCase().includes('female')||v.name.toLowerCase().includes('samantha'))) ||
+        voices[0];
+      if (chosen) utt.voice = chosen;
+      utt.rate = imageryRate;
+      utt.pitch = 1.02;
+      utt.volume = 0.92;
+      if (idx === 0) utt.onstart = () => setImageryVoicePlaying(true);
+      utt.onend = () => {
+        idx++;
+        // Natural pause between sentences: 800ms-1400ms
+        setTimeout(speakNext, 900 + Math.random()*500);
+      };
+      utt.onerror = () => { setImageryVoicePlaying(false); onDone?.(); };
+      window.speechSynthesis.speak(utt);
+    };
+    speakNext();
   };
 
   const stopImageryVoice = () => {
@@ -2709,121 +3027,172 @@ function Mindfulness() {
 
       {/* ── Guided Imagery ── */}
       {tool==='imagery' && (
-  <div style={{ maxWidth:580, margin:'0 auto', display:'flex', flexDirection:'column', gap:16 }}>
-    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.9)', textAlign:'center' }}>Where would you like to go?</div>
+        <div style={{ maxWidth:600, margin:'0 auto', display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.9)', textAlign:'center' }}>Where would you like to go?</div>
 
-    {/* Scene selector */}
-    {!imageryScene && (
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginTop:8 }}>
-        {[
-          { id:'ocean',   label:'Ocean Shore',    emoji:'🌊', bg:'rgba(37,99,235,.15)', border:'rgba(37,99,235,.35)' },
-          { id:'mountain',label:'Mountain Peaks',  emoji:'🏔', bg:'rgba(100,116,139,.15)',border:'rgba(100,116,139,.35)'},
-          { id:'forest',  label:'Forest Path',     emoji:'🌲', bg:'rgba(22,163,74,.12)',  border:'rgba(22,163,74,.3)' },
-          { id:'cabin',   label:'Cozy Cabin',      emoji:'🏡', bg:'rgba(180,83,9,.12)',   border:'rgba(180,83,9,.3)'  },
-          { id:'garden',  label:'Healing Garden',  emoji:'🌸', bg:'rgba(236,72,153,.1)',  border:'rgba(236,72,153,.3)'},
-          { id:'stars',   label:'Night Stars',     emoji:'✨', bg:'rgba(109,40,217,.12)', border:'rgba(109,40,217,.3)'},
-        ].map(s=>(
-          <button key={s.id} onClick={()=>{ setImageryScene(s.id); setImageryStep(0); }} style={{ padding:'22px 16px', borderRadius:18, border:`1.5px solid ${s.border}`, background:s.bg, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:10, transition:'all .2s', fontFamily:"'DM Sans',sans-serif" }}>
-            <div style={{ fontSize:40 }}>{s.emoji}</div>
-            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.85)', fontWeight:600 }}>{s.label}</div>
-          </button>
-        ))}
-      </div>
-    )}
-
-    {imageryScene && (() => {
-      const SCENES = {
-        ocean: [
-          "Close your eyes and take a slow, deep breath. You are standing at the edge of a warm, sun-kissed beach. The sky above you is a soft rose and gold — it's the golden hour.",
-          "Feel the cool, silky sand beneath your bare feet. Each grain is smooth and cool. The earth holds you completely. Your body is fully supported.",
-          "Hear the waves rolling in. Each one brings a whisper: you are safe. As the water retreats, it carries away whatever tension your body has been holding.",
-          "A warm, salty breeze moves across your face and neck. The sound of the ocean fills your mind, pushing all thoughts to the edges until they disappear completely.",
-          "You are here. Whole. Safe. The horizon stretches endlessly before you — and in this moment, you have everything you need.",
-        ],
-        mountain: [
-          "You are standing on a mountain path, surrounded by towering pines. The air is crisp and clean — cold enough to feel alive in your lungs.",
-          "Look up. The sky above the peaks is the deepest, most impossible blue you've ever seen. A few clouds drift slowly, unhurried. Like you can be right now.",
-          "Feel the solid rock beneath your boots. These mountains have stood for millions of years. Their stillness is available to you. Breathe it in.",
-          "A hawk circles lazily overhead. You watch it ride the thermals — effortless, unhurried. For a moment, you see yourself from above. Small, and somehow perfectly placed.",
-          "The mountain asks nothing of you. You belong here, among these ancient stones. You are as worthy of this peace as anything that has ever lived.",
-        ],
-        forest: [
-          "You're walking a soft forest path. Moss carpets the ground on either side. Each step is quiet — absorbed by the earth beneath you.",
-          "Sunlight filters through the canopy above in long, golden shafts. Dust motes float in the light like tiny stars. The world moves slowly here.",
-          "The forest hums — insects, a distant woodpecker, wind moving through the high branches. You are held inside a living sound, vast and gentle.",
-          "Stop. Place your hand on the bark of a great oak. Feel its texture. It has stood here longer than you've been alive. Breathe in its steadiness.",
-          "The forest does not worry. It simply grows, and rests, and grows again. You are allowed to simply be, right now, exactly as you are.",
-        ],
-        cabin: [
-          "Imagine a small cabin at the edge of a snow-dusted wood. Inside, a fire crackles in the hearth — amber light dancing on the walls. You are warm and completely safe.",
-          "You are wrapped in the softest blanket. A cup of something warm is in your hands. Outside, snowflakes drift silently. In here, time has stopped.",
-          "The fire speaks in pops and hisses — a private language. Your body sinks deeper into the chair. Your shoulders drop. Your jaw unclenches.",
-          "There is nowhere to be. No one expects anything. This moment belongs entirely to you. The cabin holds you like an embrace that asks for nothing in return.",
-          "Breathe out slowly. The fire breathes with you. You are safe, warm, held. Whatever you've been carrying — you can set it down right here.",
-        ],
-        garden: [
-          "You step through a gate into a healing garden — fragrant with lavender and jasmine, warm with afternoon light.",
-          "Butterflies move between blossoms. A fountain murmurs nearby. Bees hum their ancient, contented song. Everything here tends toward healing.",
-          "You sit on a bench beneath a wisteria arch. The blossoms hang like purple clouds above you. A petal drifts down and lands on your arm.",
-          "This garden was made for you. Every flower is a message: you deserve beauty. Every stone path says: you are allowed to walk slowly.",
-          "In this garden, your body remembers how to rest. Your nervous system unwinds like a vine finding sunlight. You are blooming, in your own time.",
-        ],
-        stars: [
-          "You are lying on warm grass on a clear summer night. Above you, the Milky Way arcs across the sky like a river of light — impossibly vast and impossibly beautiful.",
-          "You watch a star shift slightly and realize you are seeing a satellite — someone's creation, orbiting this small, precious world. You are on that world. How remarkable.",
-          "The silence up here is different. It has depth. The stars don't rush. They simply burn, steady and ancient, and in doing so, they light everything.",
-          "Feel how small you are. Let this feel like relief, not smallness. Your worries are tiny against this sky — and you are part of something enormous and alive.",
-          "One by one, release each worry into the stars. Watch them float upward and dissolve into light. You are lighter now. You are made of stardust, returned to itself.",
-        ],
-      };
-      const steps = SCENES[imageryScene] || SCENES.ocean;
-      const currentStep = steps[imageryStep] || steps[0];
-      const sceneMeta = { ocean:{emoji:'🌊',label:'Ocean Shore'}, mountain:{emoji:'🏔',label:'Mountain Peaks'}, forest:{emoji:'🌲',label:'Forest Path'}, cabin:{emoji:'🏡',label:'Cozy Cabin'}, garden:{emoji:'🌸',label:'Healing Garden'}, stars:{emoji:'✨',label:'Night Stars'} }[imageryScene];
-
-      return (
-        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <button onClick={()=>{ setImageryScene(null); stopImageryVoice(); }} style={{ fontSize:15, color:'rgba(201,168,76,.6)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>← Choose different scene</button>
-            <div style={{ fontSize:20 }}>{sceneMeta.emoji} {sceneMeta.label}</div>
-          </div>
-
-          {/* Step dots */}
-          <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
-            {steps.map((_,i)=>(
-              <div key={i} onClick={()=>setImageryStep(i)} style={{ width:i===imageryStep?24:8, height:8, borderRadius:4, background:i===imageryStep?'#C9A84C':i<imageryStep?'rgba(201,168,76,.4)':'rgba(42,92,173,.3)', transition:'all .3s', cursor:'pointer' }}/>
-            ))}
-          </div>
-
-          {/* Narration card */}
-          <div style={{ padding:'28px 32px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:20, fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.88)', lineHeight:1.9, fontStyle:'italic', textAlign:'center', minHeight:180, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
-            {imageryVoicePlaying && <div style={{ position:'absolute', top:14, right:16, display:'flex', gap:3, alignItems:'flex-end', height:16 }}>
-              {[1,2,3,2,1].map((h,i)=><div key={i} style={{ width:3, background:'rgba(201,168,76,.6)', borderRadius:2, height:`${h*4}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}
-            </div>}
-            "{currentStep}"
-          </div>
-
-          {/* Controls */}
-          <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
-            <button className="btn btn-lapis" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>speakImagery(currentStep)}>
-              {imageryVoicePlaying ? '🔊 Speaking...' : "🎙 Hear Lazuli's Voice"}
-            </button>
-            {imageryVoicePlaying && (
-              <button className="btn btn-ghost" style={{ fontSize:16 }} onClick={stopImageryVoice}>■ Stop</button>
-            )}
-            {imageryStep < steps.length-1 && (
-              <button className="btn btn-gold" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>{ stopImageryVoice(); setImageryStep(s=>s+1); }}>Next →</button>
-            )}
-          </div>
-          {imageryStep === steps.length-1 && (
-            <div style={{ textAlign:'center', fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', marginTop:8 }}>
-              💜 Take your time returning. You can come back here anytime.
+          {!imageryScene && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginTop:8 }}>
+              {[
+                { id:'ocean',   label:'Ocean Shore',   emoji:'🌊', bg:'rgba(37,99,235,.15)',   border:'rgba(37,99,235,.35)'  },
+                { id:'mountain',label:'Mountain Peaks', emoji:'🏔', bg:'rgba(100,116,139,.15)', border:'rgba(100,116,139,.35)'},
+                { id:'forest',  label:'Forest Path',   emoji:'🌲', bg:'rgba(22,163,74,.12)',   border:'rgba(22,163,74,.3)'  },
+                { id:'cabin',   label:'Cozy Cabin',    emoji:'🏡', bg:'rgba(180,83,9,.12)',    border:'rgba(180,83,9,.3)'   },
+                { id:'garden',  label:'Healing Garden', emoji:'🌸', bg:'rgba(236,72,153,.1)',   border:'rgba(236,72,153,.3)' },
+                { id:'stars',   label:'Night Stars',   emoji:'✨', bg:'rgba(109,40,217,.12)',  border:'rgba(109,40,217,.3)' },
+              ].map(s=>(
+                <button key={s.id} onClick={()=>{ setImageryScene(s.id); setImageryStep(0); setImageryVoicePlaying(false); }}
+                  style={{ padding:'22px 16px', borderRadius:18, border:`1.5px solid ${s.border}`, background:s.bg, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:10, transition:'all .2s', fontFamily:"'DM Sans',sans-serif" }}
+                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px) scale(1.02)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
+                  <div style={{ fontSize:38 }}>{s.emoji}</div>
+                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.85)', fontWeight:600 }}>{s.label}</div>
+                </button>
+              ))}
             </div>
           )}
+
+          {imageryScene && (() => {
+            const SCENES = {
+              ocean: [
+                "Close your eyes... and take a slow, deep breath. You are standing at the edge of a warm, sun-kissed beach. The sky above is a soft rose and gold. It's the golden hour.",
+                "Feel the cool, silky sand beneath your bare feet. Each grain is smooth. The earth holds you completely. Your body is fully supported here.",
+                "Hear the waves rolling in... Each one brings a quiet whisper — you are safe. As the water retreats, it carries away whatever tension your body has been holding.",
+                "A warm, salty breeze moves across your face. The sound of the ocean fills your mind... pushing all thoughts to the edges... until they gently... dissolve.",
+                "You are here. Whole. Safe. The horizon stretches endlessly before you — and in this moment, you have everything you need.",
+              ],
+              mountain: [
+                "You are standing on a mountain path, surrounded by towering pines. The air is crisp and clean... cold enough to feel alive in your lungs.",
+                "Look up. The sky above the peaks is the deepest, most impossible blue you have ever seen. A few clouds drift slowly... unhurried. Like you can be... right now.",
+                "Feel the solid rock beneath your feet. These mountains have stood for millions of years. Their stillness is available to you. Breathe it in.",
+                "A hawk circles lazily overhead. You watch it ride the thermals — effortless, unhurried. For a moment... you see yourself from above. Small... and somehow perfectly placed.",
+                "The mountain asks nothing of you. You belong here, among these ancient stones. You are as worthy of this peace... as anything that has ever lived.",
+              ],
+              forest: [
+                "You are walking a soft forest path. Moss carpets the ground on either side. Each step is quiet... absorbed by the earth beneath you.",
+                "Sunlight filters through the canopy above in long, golden shafts. Dust motes float in the light like tiny stars. The world moves slowly here.",
+                "The forest hums — insects, a distant woodpecker, wind moving through the high branches. You are held inside a living sound... vast... and gentle.",
+                "Stop. Place your hand on the bark of a great oak. Feel its texture. It has stood here longer than you have been alive. Breathe in its steadiness.",
+                "The forest does not worry. It simply grows... and rests... and grows again. You are allowed to simply be, right now, exactly as you are.",
+              ],
+              cabin: [
+                "Imagine a small cabin at the edge of a snow-dusted wood. Inside, a fire crackles in the hearth. Amber light dances on the walls. You are warm... and completely safe.",
+                "You are wrapped in the softest blanket. A cup of something warm is in your hands. Outside, snowflakes drift silently. In here... time has stopped.",
+                "The fire speaks in pops and hisses. Your body sinks deeper into the chair. Your shoulders drop. Your jaw... unclenches.",
+                "There is nowhere to be. No one expects anything. This moment belongs entirely to you. The cabin holds you like an embrace that asks for nothing in return.",
+                "Breathe out... slowly. The fire breathes with you. You are safe, warm, held. Whatever you have been carrying — you can set it down... right here.",
+              ],
+              garden: [
+                "You step through a gate into a healing garden — fragrant with lavender and jasmine... warm with afternoon light.",
+                "Butterflies move between blossoms. A fountain murmurs nearby. Bees hum their ancient, contented song. Everything here... tends toward healing.",
+                "You sit on a bench beneath a wisteria arch. The blossoms hang like purple clouds above you. A petal drifts down... and lands softly... on your arm.",
+                "This garden was made for you. Every flower is a message — you deserve beauty. Every stone path says — you are allowed to walk slowly.",
+                "In this garden, your body remembers how to rest. Your nervous system unwinds like a vine finding sunlight. You are blooming... in your own time.",
+              ],
+              stars: [
+                "You are lying on warm grass on a clear summer night. Above you, the Milky Way arcs across the sky like a river of light... impossibly vast... and impossibly beautiful.",
+                "You watch a star shift and realize you are seeing a satellite — someone's creation, orbiting this small, precious world. You are on that world. How remarkable.",
+                "The silence up here is different. It has depth. The stars don't rush. They simply burn, steady and ancient, and in doing so... they light everything.",
+                "Feel how small you are. Let this feel like relief, not smallness. Your worries are tiny against this sky — and you are part of something enormous... and alive.",
+                "One by one... release each worry into the stars. Watch them float upward and dissolve into light. You are lighter now. You are made of stardust... returned to itself.",
+              ],
+            };
+            const steps = SCENES[imageryScene] || SCENES.ocean;
+            const currentStep = steps[imageryStep];
+            const sceneMeta = {
+              ocean:{emoji:'🌊',label:'Ocean Shore'}, mountain:{emoji:'🏔',label:'Mountain Peaks'},
+              forest:{emoji:'🌲',label:'Forest Path'}, cabin:{emoji:'🏡',label:'Cozy Cabin'},
+              garden:{emoji:'🌸',label:'Healing Garden'}, stars:{emoji:'✨',label:'Night Stars'}
+            }[imageryScene];
+
+            // Auto-advance: when voice ends, wait 3s then go next
+            const handleStartJourney = () => {
+              setImageryAutoPlay(true);
+              const doStep = (stepIdx) => {
+                if (stepIdx >= steps.length) { setImageryAutoPlay(false); return; }
+                setImageryStep(stepIdx);
+                speakImagery(steps[stepIdx], () => {
+                  // 3 second reflection pause then advance
+                  imageryAutoRef.current = setTimeout(() => doStep(stepIdx + 1), 3000);
+                });
+              };
+              doStep(imageryStep);
+            };
+
+            return (
+              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                {/* Header */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <button onClick={()=>{ setImageryScene(null); stopImageryVoice(); setImageryAutoPlay(false); clearTimeout(imageryAutoRef.current); }}
+                    style={{ fontSize:15, color:'rgba(201,168,76,.6)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+                    ← Choose scene
+                  </button>
+                  <div style={{ fontSize:22 }}>{sceneMeta.emoji} <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'rgba(240,232,255,.7)' }}>{sceneMeta.label}</span></div>
+                </div>
+
+                {/* Voice & Speed controls */}
+                <div style={{ padding:'14px 16px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:14, display:'flex', flexWrap:'wrap', gap:14, alignItems:'center' }}>
+                  <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:160 }}>
+                    <label style={{ fontSize:13, color:'rgba(240,232,255,.45)', fontFamily:"'DM Sans',sans-serif" }}>Voice</label>
+                    <select value={imageryVoiceIdx} onChange={e=>setImageryVoiceIdx(+e.target.value)}
+                      style={{ padding:'5px 8px', borderRadius:8, background:'rgba(0,0,0,.4)', border:'1px solid rgba(42,92,173,.3)', color:'rgba(240,232,255,.8)', fontSize:14, fontFamily:"'DM Sans',sans-serif" }}>
+                      {availableVoices.length ? availableVoices.map((v,i)=>(
+                        <option key={i} value={i}>{v.name} ({v.lang})</option>
+                      )) : <option>Loading voices...</option>}
+                    </select>
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                    <label style={{ fontSize:13, color:'rgba(240,232,255,.45)', fontFamily:"'DM Sans',sans-serif" }}>Speed: {imageryRate.toFixed(2)}x</label>
+                    <input type="range" min="0.5" max="1.2" step="0.05" value={imageryRate}
+                      onChange={e=>setImageryRate(+e.target.value)}
+                      style={{ width:120, accentColor:'#C9A84C' }}/>
+                  </div>
+                </div>
+
+                {/* Step dots */}
+                <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+                  {steps.map((_,i)=>(
+                    <div key={i} style={{ width:i===imageryStep?24:8, height:8, borderRadius:4, background:i===imageryStep?'#C9A84C':i<imageryStep?'rgba(201,168,76,.4)':'rgba(42,92,173,.25)', transition:'all .35s', cursor:'pointer' }} onClick={()=>{ if(!imageryAutoPlay){ stopImageryVoice(); setImageryStep(i); }}}/>
+                  ))}
+                </div>
+
+                {/* Narration card */}
+                <div style={{ padding:'30px 34px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.18)', borderRadius:20, fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.88)', lineHeight:2.0, fontStyle:'italic', textAlign:'center', minHeight:180, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+                  {imageryVoicePlaying && (
+                    <div style={{ position:'absolute', top:14, right:16, display:'flex', gap:3, alignItems:'flex-end', height:18 }}>
+                      {[1,2,3,2,1].map((h,i)=><div key={i} style={{ width:3, background:'rgba(201,168,76,.6)', borderRadius:2, height:`${h*4}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}
+                    </div>
+                  )}
+                  "{currentStep}"
+                </div>
+
+                {/* Controls */}
+                <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+                  {!imageryAutoPlay ? (
+                    <button className="btn btn-lapis" style={{ fontSize:16, padding:'12px 28px' }} onClick={handleStartJourney}>
+                      🎙 Begin Journey
+                    </button>
+                  ) : (
+                    <button className="btn btn-ghost" style={{ fontSize:16 }} onClick={()=>{ stopImageryVoice(); setImageryAutoPlay(false); clearTimeout(imageryAutoRef.current); }}>
+                      ■ Pause Journey
+                    </button>
+                  )}
+                  {!imageryAutoPlay && (
+                    <button className="btn btn-gold" style={{ fontSize:15 }} onClick={()=>speakImagery(currentStep)}>
+                      {imageryVoicePlaying ? '🔊 Speaking...' : '🔊 Hear This Step'}
+                    </button>
+                  )}
+                </div>
+
+                {imageryStep === steps.length-1 && !imageryAutoPlay && (
+                  <div style={{ textAlign:'center', fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', marginTop:4 }}>
+                    💜 Take your time returning. You can come back here anytime.
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
-      );
-    })()}
-  </div>
-)}
+      )}
 
       {/* ── Gratitude Jar ── */}
       {tool==='gratitude' && (
@@ -3004,69 +3373,61 @@ function Mindfulness() {
 )}
 
       {/* ── Zen Garden ── */}
-      {tool==='zen' && (
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.7)', textAlign:'center' }}>Draw in the sand. Breathe.</div>
-          <div style={{ display:'flex', gap:10, marginBottom:4 }}>
-            {['rake','smooth','circle'].map(t=>(
-              <button key={t} onClick={()=>setZenTool(t)} style={{ padding:'8px 18px', borderRadius:20, border:`1.5px solid ${zenTool===t?'rgba(201,168,76,.5)':'rgba(42,92,173,.25)'}`, background:zenTool===t?'rgba(201,168,76,.1)':'transparent', color:zenTool===t?'#C9A84C':'rgba(240,232,255,.5)', fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{t}</button>
-            ))}
-          </div>
-          <div
-            onMouseMove={e=>{ if(e.buttons===1) drawZen(e); }}
-            onClick={drawZen}
-            style={{ width:'100%', maxWidth:560, height:280, background:'rgba(201,168,76,.04)', border:'1.5px solid rgba(201,168,76,.15)', borderRadius:16, position:'relative', cursor:'crosshair', overflow:'hidden' }}>
-            {/* Sand texture lines */}
-            {[...Array(12)].map((_,i)=>(
-              <div key={i} style={{ position:'absolute', left:0, right:0, top:`${8+i*22}px`, height:'1px', background:'rgba(201,168,76,.06)' }}/>
-            ))}
-            {zenLines.map((l,i)=>(
-              <div key={l.id} style={{ position:'absolute', left:`${l.x}%`, top:`${l.y}%`, width:zenTool==='circle'?20:4, height:zenTool==='circle'?20:zenTool==='rake'?12:4, borderRadius:zenTool==='circle'?'50%':'2px', background:'rgba(201,168,76,.3)', transform:'translate(-50%,-50%)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>
-            ))}
-            {zenLines.length===0 && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(240,232,255,.15)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Drag to draw in the sand</div>}
-          </div>
-          <button className="btn btn-ghost" onClick={()=>setZenLines([])} style={{ fontSize:16 }}>Clear Garden</button>
-        </div>
-      )}
+      {tool==='zen' && <ZenGardenCanvas/>}
 
       {/* ── Soundscapes ── */}
       {tool==='soundscapes' && (
-  <div style={{ display:'flex', flexDirection:'column', gap:12, maxWidth:540, margin:'0 auto' }}>
-    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.85)', textAlign:'center', marginBottom:4 }}>Healing Frequencies & Soundscapes</div>
-    <div style={{ fontSize:16, color:'rgba(240,232,255,.38)', textAlign:'center', marginBottom:12, fontStyle:'italic' }}>All sounds generated live in your browser — no downloads needed.<br/>Use headphones for binaural beats.</div>
-
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-      {SOUNDSCAPES.map(s=>{
-        const isPlaying = playingSound===s.id;
-        return (
-          <div key={s.id} onClick={()=>toggleSound(s.id)}
-            style={{ display:'flex', flexDirection:'column', gap:6, padding:'16px', background:isPlaying?`${s.color}15`:'rgba(42,92,173,.06)', border:`1.5px solid ${isPlaying?s.color+'55':'rgba(42,92,173,.15)'}`, borderRadius:16, cursor:'pointer', transition:'all .22s', position:'relative', overflow:'hidden' }}>
-            {isPlaying && <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 50%, ${s.color}10 0%, transparent 70%)`, animation:'pulseGlow 2s ease-in-out infinite', pointerEvents:'none' }}/>}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div style={{ fontSize:26 }}>{s.icon}</div>
-              <div style={{ width:32, height:32, borderRadius:'50%', border:`2px solid ${isPlaying?s.color:'rgba(42,92,173,.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', color:isPlaying?s.color:'rgba(240,232,255,.4)', fontSize:14, transition:'all .2s', background:isPlaying?`${s.color}18`:'transparent' }}>
-                {isPlaying ? (
-                  <span style={{ display:'flex', gap:2, alignItems:'flex-end', height:14 }}>
-                    {[1,2,3].map(i=><span key={i} style={{ width:3, background:s.color, borderRadius:2, height:`${8+i*3}px`, animation:`barBounce .6s ${i*.1}s ease-in-out infinite alternate` }}/>)}
-                  </span>
-                ) : '▶'}
-              </div>
-            </div>
-            <div style={{ fontWeight:700, color:isPlaying?s.color:'rgba(240,232,255,.82)', fontSize:16 }}>{s.label}</div>
-            <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', lineHeight:1.5 }}>{s.desc}</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:14, maxWidth:560, margin:'0 auto' }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.85)', textAlign:'center', marginBottom:4 }}>
+            Healing Soundscapes
           </div>
-        );
-      })}
-    </div>
-
-    {playingSound && (
-      <div style={{ textAlign:'center', padding:'14px 20px', background:'rgba(42,92,173,.1)', borderRadius:14, border:'1px solid rgba(42,92,173,.25)', fontSize:16, color:'rgba(168,196,240,.7)' }}>
-        ♪ Playing: <strong style={{ color:'#C9A84C' }}>{SOUNDSCAPES.find(s=>s.id===playingSound)?.label}</strong>
-        <button onClick={()=>toggleSound(null)} style={{ marginLeft:14, fontSize:14, color:'rgba(240,232,255,.4)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>■ Stop</button>
-      </div>
-    )}
-  </div>
-)}
+          <div style={{ fontSize:15, color:'rgba(240,232,255,.38)', textAlign:'center', marginBottom:8, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
+            Add your audio files to the <code style={{ fontSize:13, color:'rgba(201,168,76,.6)' }}>/public/sounds/</code> folder.<br/>
+            Use headphones for binaural beats.
+          </div>
+          {SOUNDSCAPES.map(s=>{
+            const isPlaying = playingSound===s.id;
+            const vol = soundVolumes[s.id] ?? 0.7;
+            return (
+              <div key={s.id} style={{ padding:'16px 18px', background:isPlaying?`${s.color}12`:'rgba(14,28,75,.5)', border:`1.5px solid ${isPlaying?s.color+'55':'rgba(42,92,173,.2)'}`, borderRadius:18, transition:'all .22s', position:'relative', overflow:'hidden' }}>
+                {isPlaying && <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 20% 50%, ${s.color}08 0%, transparent 60%)`, animation:'pulseGlow 2s ease-in-out infinite', pointerEvents:'none' }}/>}
+                <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative' }}>
+                  {/* Play button */}
+                  <button onClick={()=>toggleSound(s.id)}
+                    style={{ width:48, height:48, borderRadius:'50%', border:`2px solid ${isPlaying?s.color:'rgba(42,92,173,.35)'}`, background:isPlaying?`${s.color}22`:'rgba(42,92,173,.1)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', transition:'all .2s', flexShrink:0 }}>
+                    {isPlaying ? (
+                      <span style={{ display:'flex', gap:2, alignItems:'flex-end', height:16 }}>
+                        {[1,2,3,2,1].map((h,i)=><span key={i} style={{ width:3, background:s.color, borderRadius:2, height:`${h*3}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}
+                      </span>
+                    ) : <span style={{ fontSize:16 }}>▶</span>}
+                  </button>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:18, fontWeight:700, color:isPlaying?s.color:'rgba(240,232,255,.82)', marginBottom:2, display:'flex', alignItems:'center', gap:8 }}>
+                      <span>{s.icon}</span> {s.label}
+                    </div>
+                    <div style={{ fontSize:14, color:'rgba(240,232,255,.4)' }}>{s.desc}</div>
+                    {/* Volume slider */}
+                    {isPlaying && (
+                      <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8 }}>
+                        <span style={{ fontSize:13, color:'rgba(240,232,255,.4)' }}>🔈</span>
+                        <input type="range" min="0" max="1" step="0.05" value={vol}
+                          onChange={e=>{
+                            const v=+e.target.value;
+                            setSoundVolumes(sv=>({...sv,[s.id]:v}));
+                            const el=audioElsRef.current[s.id];
+                            if(el) el.volume=v;
+                          }}
+                          style={{ flex:1, accentColor:s.color, height:4 }}/>
+                        <span style={{ fontSize:13, color:'rgba(240,232,255,.4)' }}>🔊</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Fountain Wishes ── */}
       {tool==='fountain' && (
