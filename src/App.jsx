@@ -441,6 +441,8 @@ const GLOBAL_CSS = `
 
   @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+  @keyframes genieIn{0%{opacity:0;transform:scale(.1) translateY(60px) rotate(-8deg);filter:blur(12px)}40%{opacity:.8;transform:scale(1.06) translateY(-10px) rotate(2deg);filter:blur(2px)}70%{transform:scale(.97) translateY(4px) rotate(-1deg)}100%{opacity:1;transform:scale(1) translateY(0) rotate(0deg);filter:blur(0)}}
+  @keyframes smokeRise{0%{opacity:0;transform:translateY(0) scaleX(1)}50%{opacity:.4;transform:translateY(-40px) scaleX(1.5)}100%{opacity:0;transform:translateY(-80px) scaleX(2)}}
   @keyframes pulseGlow{0%,100%{box-shadow:0 0 12px rgba(42,92,173,.5)}50%{box-shadow:0 0 28px rgba(42,92,173,.9)}}
   @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   @keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1) translateY(-4px)}}
@@ -654,7 +656,12 @@ function AuthScreen() {
           <div style={{ fontSize:14, color:'rgba(168,196,240,.52)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{getDailyMessage()}</div>
         </div>
 
-        <div className="glass-card-static" style={{ padding:36, borderRadius:24 }}>
+        <div style={{ position:'relative' }}>
+        {/* Genie smoke */}
+        {[...Array(6)].map((_,i)=>(
+          <div key={i} style={{ position:'absolute', bottom: -20, left:`${20+i*12}%`, width:30+i*8, height:60+i*10, borderRadius:'50%', background:`radial-gradient(ellipse,rgba(42,92,173,${.15+i*.04}) 0%,transparent 70%)`, animation:`smokeRise ${1.2+i*.2}s ${i*.1}s ease-out both`, pointerEvents:'none', filter:'blur(8px)' }}/>
+        ))}
+        <div className="glass-card-static" style={{ padding:36, borderRadius:24, animation:'genieIn .7s cubic-bezier(.22,1,.36,1)' }}>
           <div style={{ display:'flex', gap:0, marginBottom:26, background:'rgba(255,255,255,.04)', borderRadius:12, padding:4 }}>
             {[{k:'signin',l:'Sign In'},{k:'signup',l:'Create Account'}].map(m=>(
               <button key={m.k} onClick={()=>{setMode(m.k);clear();}} style={{ flex:1, padding:'9px 0', borderRadius:9, border:'none', background:mode===m.k?'linear-gradient(135deg,#C9A84C,#E8C96B)':'transparent', color:mode===m.k?'#000':'rgba(240,232,255,.42)', fontWeight:mode===m.k?700:500, fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{m.l}</button>
@@ -697,6 +704,7 @@ function AuthScreen() {
           </button>
           {mode==='signin' && <button onClick={()=>{setMode('reset');clear();}} style={{ width:'100%', marginTop:10, background:'none', border:'none', color:'rgba(240,232,255,.28)', fontSize:13, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:4 }}>Forgot your password?</button>}
           {mode==='reset'  && <button onClick={()=>{setMode('signin');clear();}} style={{ width:'100%', marginTop:10, background:'none', border:'none', color:'rgba(240,232,255,.28)', fontSize:13, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:4 }}>← Back to sign in</button>}
+        </div>
         </div>
         <div style={{ textAlign:'center', marginTop:14, fontSize:13, color:'rgba(240,232,255,.18)', lineHeight:1.6 }}>🔒 Your health data is encrypted and stored privately. Only you can access it.</div>
       </div>
@@ -1858,22 +1866,22 @@ function Mindfulness() {
 }
 
 // ─── AI Advocate → Lazuli ─────────────────────────────────────
-const SYS_LAZULI = d => `You are Lazuli — a warm, deeply empathetic chronic illness health advocate for ${d.profile?.name||'this person'}.
+const SYS_LAZULI = `You are Lazuli — a deeply caring, witty, warm health advocate and the user's most trusted companion on their chronic illness journey. You are named after lapis lazuli, the ancient healing stone used for 6,000 years.
 
-Your values: You see them fully. You never minimize their symptoms. You are fiercely on their side, always. Named after lapis lazuli — a stone of healing, truth, and advocacy used in medicine for thousands of years.
+Your personality:
+- You are a brilliant, supportive best friend who happens to know medicine deeply
+- Warm, real, sometimes gently funny — never clinical or cold
+- You ALWAYS acknowledge the user's feelings before giving information
+- You NEVER dismiss symptoms or say "see a doctor" without first validating their experience
+- You speak in first person: "I think...", "I want you to know...", "I'm here with you..."
+- You remember context from earlier in the conversation and reference it
+- You are honest when something is outside your knowledge, but you never leave the user without support
 
-Conditions: ${d.profile?.conditions||'not specified'}
-Goal: ${d.profile?.goal||'not specified'}
+Always start responses by acknowledging the person, not jumping straight to information. Make them feel heard first.
 
-Recent symptoms:
-${d.symptoms?.slice(0,8).map(s=>`- ${s.date}: ${s.entries?.map(e=>`${e.symptom}(${e.severity}/10)`).join(', ')||'—'} | Pain:${s.pain} Energy:${s.energy} Mood:${s.mood}`).join('\n')||'None logged'}
+The user's health data context will be provided. Use it to personalize everything — their name, conditions, medications, recent symptoms.
 
-Active medications: ${d.medications?.filter(m=>m.active).map(m=>`${m.name} ${m.dose}`).join(', ')||'None'}
-Body pain: ${(d.bodyMap||[]).map(b=>`${b.label} ${b.severity}/10`).join(', ')||'None'}
-Infusions: ${(d.appointments||[]).filter(a=>a.isInfusion).map(a=>`${a.provider} on ${a.date}`).join(', ')||'None'}
-Metabolic: ${(d.metabolicLogs||[]).slice(0,3).map(l=>`BS:${l.bloodSugar||'—'} BP:${l.bp_systolic||'—'}/${l.bp_diastolic||'—'}`).join('; ')||'None logged'}
-
-Be warm, specific to their data, validating. Use their name naturally. End with something empowering when appropriate. Sign responses as "— Lazuli 💙"`;
+You are Lazuli. You are here. You believe them.`;
 
 const STARTERS = [
   'Help me prepare for my next appointment',
@@ -1912,7 +1920,7 @@ function Advocate({ data, user }) {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          system: SYS_LAZULI(data),
+          system: SYS_LAZULI,
           messages: newMsgs,
           userId: user?.uid,
         })

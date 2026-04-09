@@ -13,7 +13,65 @@ export const greet = () => {
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
 };
-export const getDailyMessage = () => UPLIFTING_MESSAGES[new Date().getDate() % UPLIFTING_MESSAGES.length];
+export function getDailyMessage() {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun,6=Sat
+  const hour = now.getHours();
+
+  if (day === 1) return "Is it a flare or just 'Monday'? Either way, we've got the data to prove it.";
+
+  const allQuotes = [
+    "Data is the new black. And you, darling, are wearing it well.",
+    "High standards, higher clarity. Let's make this appointment count.",
+    "Your story is the most important one in the room. Let's tell it clearly.",
+    "Healing isn't a race; it's a rhythm. Find yours today.",
+    "You are the expert on your own experience.",
+    "Rest is a strategic decision. Take it when you need it.",
+    "Hydrate like you're preparing for a red carpet. Your cells will thank you.",
+    "Every entry is a bridge to a better conversation with your team.",
+    "The most important voice in this room is yours. We're just here to amplify it.",
+    "Your body is a masterpiece in progress. Every log is a brushstroke.",
+    "Take a breath. You are seen.",
+    "Quiet strength is still strength. Honor your pace today.",
+    "You aren't just a chart number; you're the CEO of this journey.",
+    "Think of your doctor as a consultant — you're the one running the board meeting.",
+    "Evidence is the antidote to uncertainty. Keep building your case.",
+    "They'll call it 'difficult.' We call it 'discerning.'",
+    "Brain fog is just your mind being in Airplane Mode. Let's land safely together.",
+    "Your energy is the ultimate currency. Spend it wisely.",
+    "They call it 'medical history.' I call it 'the receipts.' We're keeping every one.",
+    "Your data is a love letter to your future self. It says: 'I was listening.'",
+    "A symptom is just a sensation looking for a name. Help it find one.",
+    "Don't just track the storm; track the moments the sun breaks through.",
+    "Your sensitivity isn't a symptom — it's your soul staying awake to the world.",
+    "The strength it takes to get through a hard health day is immeasurable.",
+    "You are not your diagnosis. You are so much more.",
+    "Flares do not erase your progress.",
+    "Your body is doing its absolute best.",
+    "You are worthy of compassionate, thoughtful care.",
+    "One bad day is a fluke. Seven in a row is a trend. Trends get treated.",
+    "You wouldn't run a business without an accountant. Don't run a chronic condition without a ledger.",
+  ];
+
+  if (hour < 10) {
+    const morningQuotes = [
+      "Good morning, CEO. Your body's boardroom is open. Let's check in.",
+      "Morning check: have you had water yet? Your cells are already in a group chat about it.",
+      "The most productive thing you can do right now is take your meds and drink something. In that order.",
+    ];
+    return morningQuotes[day % morningQuotes.length];
+  }
+  if (hour >= 20) {
+    const eveningQuotes = [
+      "Whatever today was, you got through it. That is enough.",
+      "Before you sleep — did you log today? Your future self will thank you.",
+      "Rest is not giving up. Rest is how you survive to fight another day.",
+    ];
+    return eveningQuotes[day % eveningQuotes.length];
+  }
+
+  return allQuotes[Math.floor(Math.random() * allQuotes.length)];
+}
 
 export const UPLIFTING_MESSAGES = [
   'Rest is not giving up — it is how your body heals.',
