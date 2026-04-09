@@ -639,6 +639,67 @@ const GLOBAL_CSS = `
     background-position:0 50px
   }
   .diary-textarea{background:transparent;border:none;outline:none;width:100%;min-height:340px;padding:16px 28px 16px 16px;color:rgba(240,232,255,.92);line-height:36px;resize:none;caret-color:#C9A84C;font-size:18px}
+  /* ── Open Book ─────────────────────────────────────────── */
+  .book-wrap{
+    display:flex;
+    width:100%;
+    border-radius:4px 12px 12px 4px;
+    box-shadow:0 24px 70px rgba(0,0,0,.7),0 4px 20px rgba(0,0,0,.5),4px 0 20px rgba(0,0,0,.3);
+    min-height:480px;
+    position:relative;
+    overflow:hidden;
+  }
+  .book-wrap::after{
+    content:'';
+    position:absolute;
+    bottom:-16px;
+    left:8%;
+    right:8%;
+    height:18px;
+    background:rgba(0,0,0,.5);
+    border-radius:50%;
+    filter:blur(10px);
+    z-index:0;
+  }
+  .book-left{
+    flex:0 0 35%;
+    background:linear-gradient(160deg,rgba(18,28,68,.97) 0%,rgba(10,18,50,.99) 100%);
+    padding:28px 16px 28px 36px;
+    position:relative;
+    overflow:hidden;
+  }
+  .book-spine{
+    width:22px;
+    flex-shrink:0;
+    background:linear-gradient(90deg,rgba(5,10,30,1) 0%,rgba(22,38,95,.9) 40%,rgba(5,10,30,1) 100%);
+    box-shadow:inset -4px 0 10px rgba(0,0,0,.5),inset 4px 0 10px rgba(0,0,0,.5);
+    position:relative;
+    z-index:3;
+  }
+  .book-right{
+    flex:1;
+    background:linear-gradient(160deg,rgba(10,20,62,.98) 0%,rgba(5,12,42,1) 100%);
+    padding:28px 28px 28px 20px;
+    position:relative;
+    overflow:auto;
+  }
+  .book-ruled{
+    background-image:repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 35px,
+      rgba(42,92,173,.09) 35px,
+      rgba(42,92,173,.09) 36px
+    );
+    background-position:0 52px;
+  }
+  @keyframes pageFlip{
+    0%{opacity:1;transform:perspective(800px) rotateY(0deg);}
+    40%{opacity:.15;transform:perspective(800px) rotateY(-18deg) scaleX(.92);}
+    60%{opacity:.15;transform:perspective(800px) rotateY(18deg) scaleX(.92);}
+    100%{opacity:1;transform:perspective(800px) rotateY(0deg);}
+  }
+  .page-turning{animation:pageFlip .45s ease-in-out;}
   .diary-entry-card{
     background:linear-gradient(145deg,rgba(14,6,28,.92),rgba(10,4,22,.95));
     border:1px solid rgba(42,92,173,.2);
@@ -1630,131 +1691,232 @@ function Appointments({ data, upd }) {
 // ─── Diary (real notebook look) ───────────────────────────────
 function Diary({ data, upd }) {
   const diary = data.diary||[];
-  const [open,setOpen]=useState(false);
-  const [view,setView]=useState(null);
-  const [font,setFont]=useState(DIARY_FONTS[0].value);
-  const [fontSize,setFontSz]=useState(DIARY_FONTS[0].size);
-  const [mood,setMood]=useState('');
-  const [title,setTitle]=useState('');
-  const [body,setBody]=useState('');
-  const [date,setDate]=useState(todayStr());
-  const [editId,setEditId]=useState(null);
-  const [page,setPage]=useState(0);
-  const ENTRIES_PER_PAGE = 5;
+  const [open,setOpen]     = useState(false);
+  const [view,setView]     = useState(null);
+  const [font,setFont]     = useState(DIARY_FONTS[0].value);
+  const [fontSize,setFontSz] = useState(DIARY_FONTS[0].size);
+  const [mood,setMood]     = useState('');
+  const [title,setTitle]   = useState('');
+  const [body,setBody]     = useState('');
+  const [date,setDate]     = useState(todayStr());
+  const [editId,setEditId] = useState(null);
+  const [page,setPage]     = useState(0);
+  const [flipping,setFlipping] = useState(false);
 
   const openNew  = () => { setEditId(null);setTitle('');setBody('');setDate(todayStr());setMood('');const f=DIARY_FONTS[0];setFont(f.value);setFontSz(f.size);setOpen(true);setView(null); };
   const openEdit = e => { setEditId(e.id);setTitle(e.title||'');setBody(e.body||'');setDate(e.date||todayStr());setMood(e.mood||'');setFont(e.font||DIARY_FONTS[0].value);setFontSz(e.fontSize||DIARY_FONTS[0].size);setOpen(true);setView(null); };
+
   const save = () => {
     if(!body.trim()){alert('Please write something.');return;}
     const entry={id:editId||uid(),date,title:title.trim()||fmtDate(date),body,mood,font,fontSize};
     upd('diary',editId?diary.map(d=>d.id===editId?entry:d):[entry,...diary]);
     setOpen(false);setEditId(null);
   };
-  const del    = id => { if(window.confirm('Delete entry?')){upd('diary',diary.filter(d=>d.id!==id));setView(null);} };
+  const del = id => { if(window.confirm('Delete entry?')){upd('diary',diary.filter(d=>d.id!==id));setView(null);} };
   const chFont = v => { const f=DIARY_FONTS.find(x=>x.value===v); setFont(v); setFontSz(f?.size||17); };
 
   const sorted = [...diary].sort((a,b)=>b.date.localeCompare(a.date));
-  const paged  = sorted.slice(page*ENTRIES_PER_PAGE, (page+1)*ENTRIES_PER_PAGE);
-  const maxPage= Math.ceil(sorted.length/ENTRIES_PER_PAGE)-1;
+  const maxPage = Math.max(0, sorted.length - 1);
 
-  if(view){
-    const e=diary.find(d=>d.id===view);
-    if(!e){setView(null);return null;}
-    return(
-      <div className="slide-in">
-        <button onClick={()=>setView(null)} style={{ border:'none',background:'transparent',color:'rgba(201,168,76,.6)',fontWeight:600,fontSize:16,cursor:'pointer',marginBottom:16,fontFamily:"'DM Sans',sans-serif" }}>← Back to diary</button>
-        <div className="diary-book diary-lines">
-          {/* Ribbon bookmark */}
-          <div style={{ position:'absolute', top:0, right:32, width:18, height:80, background:'linear-gradient(180deg,#7B2FBE,#5B1F8E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)', boxShadow:'0 4px 12px rgba(123,47,190,.4)', opacity:.8 }}/>
-          {/* Spine dots */}
-          <div style={{ position:'absolute',left:0,top:0,bottom:0,width:72,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',gap:18,zIndex:2,pointerEvents:'none' }}>
-            {[...Array(8)].map((_,i)=><div key={i} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(201,168,76,.28)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>)}
-          </div>
-          <div style={{ padding:'24px 28px 18px 88px', borderBottom:'1px solid rgba(42,92,173,.1)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:9 }}>
-              <div>
-                <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:16,color:'rgba(201,168,76,.5)',letterSpacing:2,textTransform:'uppercase',marginBottom:4 }}>{fmtDate(e.date)}</div>
-                <div style={{ fontFamily:e.font||DIARY_FONTS[0].value,fontSize:(e.fontSize||18)+4,color:'#C9A84C',lineHeight:1.2 }}>{e.title}</div>
-                {e.mood&&<div style={{ marginTop:6,fontSize:16,color:'rgba(168,196,240,.65)' }}>{e.mood}</div>}
-              </div>
-              <div style={{ display:'flex',gap:7 }}>
-                <button className="btn btn-ghost" style={{ fontSize:12 }} onClick={()=>openEdit(e)}>Edit</button>
-                <button className="btn btn-danger" style={{ fontSize:12 }} onClick={()=>del(e.id)}>Delete</button>
-              </div>
+  const turnTo = (dir) => {
+    const next = page + dir;
+    if (next < 0 || next > maxPage) return;
+    setFlipping(true);
+    setTimeout(() => { setPage(next); setFlipping(false); }, 450);
+  };
+
+  // Binding holes on left margin
+  const BindingHoles = () => (
+    <div style={{ position:'absolute', left:10, top:0, bottom:0, display:'flex', flexDirection:'column', justifyContent:'space-around', pointerEvents:'none', zIndex:3, paddingTop:20, paddingBottom:20 }}>
+      {[...Array(8)].map((_,i)=>(
+        <div key={i} style={{ width:11, height:11, borderRadius:'50%', background:'rgba(0,0,0,.8)', border:'1px solid rgba(201,168,76,.15)', boxShadow:'inset 0 1px 3px rgba(0,0,0,.6)' }}/>
+      ))}
+    </div>
+  );
+
+  // Spine stitching
+  const SpineStitch = () => (
+    <div className="book-spine">
+      <div style={{ position:'absolute', top:0, bottom:0, left:3, width:1, background:'rgba(201,168,76,.12)' }}/>
+      <div style={{ position:'absolute', top:0, bottom:0, right:3, width:1, background:'rgba(201,168,76,.12)' }}/>
+      {[...Array(14)].map((_,i)=>(
+        <div key={i} style={{ position:'absolute', left:'50%', top:`${3+i*7}%`, transform:'translateX(-50%)', width:3, height:3, borderRadius:'50%', background:'rgba(201,168,76,.18)' }}/>
+      ))}
+    </div>
+  );
+
+  // TOC list for left page
+  const TocPage = ({ activeId }) => (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
+      <div style={{ fontFamily:"'Cinzel',serif", fontSize:11, color:'rgba(201,168,76,.45)', letterSpacing:3, textTransform:'uppercase', textAlign:'center', marginBottom:20 }}>Journal</div>
+      <div style={{ fontSize:11, color:'rgba(201,168,76,.3)', letterSpacing:1.5, textTransform:'uppercase', fontFamily:"'DM Sans',sans-serif", marginBottom:10 }}>Entries</div>
+      <div style={{ flex:1, overflow:'auto', display:'flex', flexDirection:'column', gap:2 }}>
+        {sorted.map((e,i)=>(
+          <button key={e.id} onClick={()=>{ setView(e.id); }}
+            style={{ display:'block', width:'100%', textAlign:'left', padding:'5px 7px', borderRadius:5, background:e.id===activeId?'rgba(201,168,76,.1)':'transparent', border:'none', cursor:'pointer', transition:'background .12s' }}>
+            <div style={{ fontSize:12, color:e.id===activeId?'#C9A84C':'rgba(240,232,255,.5)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'DM Sans',sans-serif" }}>
+              · {e.title||fmtDate(e.date)}
             </div>
+            <div style={{ fontSize:10, color:'rgba(240,232,255,.22)', marginTop:1, fontFamily:"'DM Sans',sans-serif" }}>{fmtDate(e.date)}</div>
+          </button>
+        ))}
+      </div>
+      {/* Page rule lines as texture */}
+      {[...Array(16)].map((_,i)=>(
+        <div key={i} style={{ position:'absolute', left:36, right:0, top:`${55+i*2.5}%`, height:1, background:'rgba(42,92,173,.05)', pointerEvents:'none' }}/>
+      ))}
+    </div>
+  );
+
+  // Single entry right page
+  const EntryPage = ({ e }) => (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
+      {/* Ribbon bookmark */}
+      <div style={{ position:'absolute', top:0, right:32, width:14, height:70, background:'linear-gradient(180deg,#7B2FBE,#5B1F8E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0,100% 0,100% 88%,50% 100%,0 88%)', boxShadow:'0 4px 12px rgba(123,47,190,.4)', opacity:.75 }}/>
+      <div style={{ marginBottom:14, paddingBottom:12, borderBottom:'1px solid rgba(42,92,173,.12)', display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:8 }}>
+        <div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:13, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase', marginBottom:3 }}>{fmtDate(e.date)}</div>
+          <div style={{ fontFamily:e.font||DIARY_FONTS[0].value, fontSize:(e.fontSize||18)+2, color:'#C9A84C', lineHeight:1.2 }}>{e.title}</div>
+          {e.mood && <div style={{ marginTop:3, fontSize:13, color:'rgba(168,196,240,.6)' }}>{e.mood}</div>}
+        </div>
+        <div style={{ display:'flex', gap:5 }}>
+          <button className="btn btn-ghost" style={{ fontSize:11, padding:'3px 9px' }} onClick={()=>openEdit(e)}>Edit</button>
+          <button className="btn btn-danger" style={{ fontSize:11, padding:'3px 9px' }} onClick={()=>del(e.id)}>Delete</button>
+        </div>
+      </div>
+      <div style={{ flex:1, overflow:'auto', fontFamily:e.font||DIARY_FONTS[0].value, fontSize:e.fontSize||18, color:'rgba(240,232,255,.88)', lineHeight:'36px', whiteSpace:'pre-wrap' }}>
+        {e.body}
+      </div>
+      <div style={{ textAlign:'right', fontSize:12, color:'rgba(240,232,255,.18)', fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', marginTop:8, paddingTop:8, borderTop:'1px solid rgba(42,92,173,.08)' }}>
+        — {sorted.findIndex(x=>x.id===e.id)+1} of {sorted.length} —
+      </div>
+    </div>
+  );
+
+  // === READING VIEW (single entry) ===
+  if (view) {
+    const e = diary.find(d=>d.id===view);
+    if (!e) { setView(null); return null; }
+    return (
+      <div className="slide-in">
+        <button onClick={()=>setView(null)} style={{ border:'none', background:'transparent', color:'rgba(201,168,76,.6)', fontWeight:600, fontSize:16, cursor:'pointer', marginBottom:16, fontFamily:"'DM Sans',sans-serif" }}>← All entries</button>
+        <div className="book-wrap">
+          <div className="book-left">
+            <BindingHoles/>
+            <TocPage activeId={e.id}/>
           </div>
-          <div style={{ padding:'22px 28px 36px 88px', minHeight:320 }}>
-            <div style={{ fontFamily:e.font||DIARY_FONTS[0].value,fontSize:e.fontSize||18,color:'rgba(240,232,255,.85)',lineHeight:'38px',whiteSpace:'pre-wrap' }}>{e.body}</div>
+          <SpineStitch/>
+          <div className="book-right book-ruled">
+            <EntryPage e={e}/>
           </div>
         </div>
       </div>
     );
   }
 
-  return(
+  // === WRITE VIEW ===
+  if (open) {
+    return (
+      <div className="slide-in">
+        <button onClick={()=>setOpen(false)} style={{ border:'none', background:'transparent', color:'rgba(201,168,76,.6)', fontWeight:600, fontSize:16, cursor:'pointer', marginBottom:16, fontFamily:"'DM Sans',sans-serif" }}>← Cancel</button>
+        <div className="book-wrap">
+          {/* Left page — controls */}
+          <div className="book-left">
+            <BindingHoles/>
+            <div style={{ height:'100%', display:'flex', flexDirection:'column', gap:12, justifyContent:'center' }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:11, color:'rgba(201,168,76,.4)', letterSpacing:3, textTransform:'uppercase', textAlign:'center', marginBottom:8 }}>
+                {editId ? 'Editing Entry' : 'New Entry'}
+              </div>
+              <div>
+                <label style={{ fontSize:12, color:'rgba(240,232,255,.4)', display:'block', marginBottom:4 }}>Handwriting</label>
+                <select className="field" value={font} onChange={e=>chFont(e.target.value)} style={{ width:'100%', padding:'5px 8px', fontSize:13 }}>
+                  {DIARY_FONTS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize:12, color:'rgba(240,232,255,.4)', display:'block', marginBottom:4 }}>Mood</label>
+                <select className="field" value={mood} onChange={e=>setMood(e.target.value)} style={{ width:'100%', padding:'5px 8px', fontSize:13 }}>
+                  <option value="">—</option>
+                  {DIARY_MOODS.map(m=><option key={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize:12, color:'rgba(240,232,255,.4)', display:'block', marginBottom:4 }}>Date</label>
+                <input type="date" className="field" value={date} onChange={e=>setDate(e.target.value)} style={{ width:'100%', padding:'5px 8px', fontSize:14 }}/>
+              </div>
+              <button className="btn btn-gold" style={{ fontSize:15, width:'100%', marginTop:8 }} onClick={save}>Save Entry ✑</button>
+              {editId && <button className="btn btn-danger" style={{ fontSize:13, width:'100%' }} onClick={()=>del(editId)}>Delete Entry</button>}
+            </div>
+          </div>
+          <SpineStitch/>
+          {/* Right page — writing area */}
+          <div className="book-right book-ruled" style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {/* Ribbon */}
+            <div style={{ position:'absolute', top:0, right:32, width:14, height:60, background:'linear-gradient(180deg,#C9A84C,#A0782E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0,100% 0,100% 82%,50% 100%,0 82%)', opacity:.7 }}/>
+            <input className="field" value={title} onChange={e=>setTitle(e.target.value)}
+              placeholder="Entry title…"
+              style={{ fontFamily:font, fontSize:fontSize+2, background:'transparent', border:'none', borderBottom:'1px solid rgba(201,168,76,.2)', borderRadius:0, padding:'4px 0', color:'#C9A84C', outline:'none', width:'100%' }}/>
+            <textarea value={body} onChange={e=>setBody(e.target.value)}
+              placeholder="Write freely — this is your space. No judgment, no rules. Just you…"
+              autoFocus
+              className="diary-textarea"
+              style={{ flex:1, fontFamily:font, fontSize:fontSize, background:'transparent', border:'none', outline:'none', color:'rgba(240,232,255,.9)', lineHeight:'36px', resize:'none', caretColor:'#C9A84C', padding:0, width:'100%', minHeight:340 }}/>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // === MAIN LIST VIEW (open book with TOC + current entry) ===
+  return (
     <div>
       <PH emoji="✑" title="My Diary" sub="Your private space — write freely, in your voice">
         <button className="btn btn-gold" onClick={openNew}>+ New entry</button>
       </PH>
-      <div style={{ marginBottom:18,padding:'13px 18px',background:'rgba(42,92,173,.06)',border:'1px solid rgba(42,92,173,.12)',borderRadius:14,fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:'rgba(168,196,240,.6)',fontStyle:'italic',lineHeight:1.7 }}>
+      <div style={{ marginBottom:18, padding:'12px 18px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.12)', borderRadius:14, fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'rgba(168,196,240,.6)', fontStyle:'italic', lineHeight:1.7 }}>
         💜 The most healing act is to be truly witnessed. This diary sees you, exactly as you are.
       </div>
-      {open&&(
-        <div className="diary-book" style={{ marginBottom:24,overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:0, right:28, width:16, height:60, background:'linear-gradient(180deg,#C9A84C,#A0782E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%)', boxShadow:'0 3px 10px rgba(201,168,76,.35)', opacity:.75 }}/>
-          <div style={{ position:'absolute',left:0,top:0,bottom:0,width:72,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',gap:18,zIndex:2,pointerEvents:'none' }}>
-            {[...Array(8)].map((_,i)=><div key={i} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(201,168,76,.28)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>)}
-          </div>
-          <div style={{ padding:'14px 18px 14px 88px',borderBottom:'1px solid rgba(42,92,173,.1)',display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap',background:'rgba(0,0,0,.18)' }}>
-            <div><label style={{ marginBottom:4 }}>Handwriting</label>
-              <select className="field" value={font} onChange={e=>chFont(e.target.value)} style={{ width:'auto',padding:'6px 11px',fontSize:12 }}>
-                {DIARY_FONTS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}
-              </select>
-            </div>
-            <div><label style={{ marginBottom:4 }}>Mood</label>
-              <select className="field" value={mood} onChange={e=>setMood(e.target.value)} style={{ width:'auto',padding:'6px 11px',fontSize:12 }}>
-                <option value="">Select…</option>
-                {DIARY_MOODS.map(m=><option key={m}>{m}</option>)}
-              </select>
-            </div>
-            <div><label style={{ marginBottom:4 }}>Date</label>
-              <input type="date" className="field" value={date} onChange={e=>setDate(e.target.value)} style={{ padding:'6px 11px',fontSize:16,width:'auto' }}/>
-            </div>
-          </div>
-          <div style={{ padding:'14px 18px 0 88px' }}>
-            <input className="field" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Entry title (optional)…" style={{ fontFamily:font,fontSize:fontSize+2,background:'transparent',border:'none',borderBottom:'1px solid rgba(42,92,173,.12)',borderRadius:0,padding:'4px 0',color:'#C9A84C',width:'100%',outline:'none' }}/>
-          </div>
-          <div className="diary-lines" style={{ paddingLeft:88,paddingRight:18,paddingTop:6,paddingBottom:8 }}>
-            <textarea value={body} onChange={e=>setBody(e.target.value)} className="diary-textarea" style={{ fontFamily:font,fontSize:fontSize }} placeholder="Write freely — this is your space. No judgment, no rules. Just you…" autoFocus/>
-          </div>
-          <div style={{ padding:'10px 18px 14px 88px',display:'flex',gap:8,justifyContent:'flex-end' }}>
-            <button className="btn btn-ghost" onClick={()=>setOpen(false)}>Cancel</button>
-            <button className="btn btn-gold" onClick={save}>Save to diary</button>
-          </div>
-        </div>
+
+      {diary.length === 0 && (
+        <Nil icon="✑" msg="Your diary is empty." sub="Write anything — how you feel, what you wish your doctor understood." cta="Write first entry" fn={openNew}/>
       )}
-      {diary.length===0&&!open&&<Nil icon="✑" msg="Your diary is empty." sub="Write anything — how you feel, what you wish your doctor understood." cta="Write first entry" fn={openNew}/>}
-      <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
-        {paged.map(e=>(
-          <div key={e.id} className="diary-entry-card" onClick={()=>setView(e.id)} style={{ position:'relative', paddingLeft:22, borderLeft:'3px solid rgba(42,92,173,.3)' }}>
-            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6,flexWrap:'wrap',gap:7 }}>
-              <div>
-                <div style={{ fontSize:16,color:'rgba(201,168,76,.5)',fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',marginBottom:3 }}>{fmtDate(e.date)}</div>
-                <div style={{ fontFamily:e.font||DIARY_FONTS[0].value,fontSize:(e.fontSize||18)+2,color:'#C9A84C',lineHeight:1.2 }}>{e.title}</div>
-                {e.mood&&<div style={{ fontSize:16,color:'rgba(168,196,240,.55)',marginTop:4 }}>{e.mood}</div>}
-              </div>
-              <span style={{ fontSize:18,color:'rgba(240,232,255,.2)' }}>›</span>
+
+      {diary.length > 0 && (
+        <>
+          <div className={`book-wrap${flipping?' page-turning':''}`}>
+            {/* Left page — table of contents */}
+            <div className="book-left">
+              <BindingHoles/>
+              <TocPage activeId={sorted[page]?.id}/>
             </div>
-            <div style={{ fontFamily:e.font||DIARY_FONTS[0].value,fontSize:e.fontSize||16,color:'rgba(240,232,255,.32)',lineHeight:1.85,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' }}>{e.body}</div>
+            <SpineStitch/>
+            {/* Right page — current entry */}
+            <div className="book-right book-ruled">
+              {sorted[page] && <EntryPage e={sorted[page]}/>}
+            </div>
           </div>
-        ))}
-      </div>
-      {maxPage>0 && (
-        <div style={{ display:'flex',justifyContent:'center',gap:9,marginTop:18 }}>
-          <button className="btn btn-ghost" style={{ fontSize:16,padding:'6px 14px' }} onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0}>← Prev</button>
-          <span style={{ fontSize:16,color:'rgba(240,232,255,.28)',alignSelf:'center' }}>Page {page+1} of {maxPage+1}</span>
-          <button className="btn btn-ghost" style={{ fontSize:16,padding:'6px 14px' }} onClick={()=>setPage(p=>Math.min(maxPage,p+1))} disabled={page===maxPage}>Next →</button>
-        </div>
+
+          {/* Page turn controls */}
+          {sorted.length > 1 && (
+            <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:18, marginTop:18 }}>
+              <button
+                onClick={()=>turnTo(-1)}
+                disabled={page === 0 || flipping}
+                style={{ width:46, height:46, borderRadius:'50%', border:'1.5px solid rgba(42,92,173,.3)', background:'rgba(42,92,173,.08)', color:page===0?'rgba(240,232,255,.2)':'rgba(240,232,255,.75)', fontSize:22, cursor:page===0?'default':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s', boxShadow:page===0?'none':'0 4px 14px rgba(42,92,173,.2)' }}>
+                ‹
+              </button>
+              <div style={{ fontSize:14, color:'rgba(240,232,255,.35)', fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>
+                Entry {page+1} of {sorted.length}
+              </div>
+              <button
+                onClick={()=>turnTo(1)}
+                disabled={page >= maxPage || flipping}
+                style={{ width:46, height:46, borderRadius:'50%', border:'1.5px solid rgba(42,92,173,.3)', background:'rgba(42,92,173,.08)', color:page>=maxPage?'rgba(240,232,255,.2)':'rgba(240,232,255,.75)', fontSize:22, cursor:page>=maxPage?'default':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s', boxShadow:page>=maxPage?'none':'0 4px 14px rgba(42,92,173,.2)' }}>
+                ›
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
