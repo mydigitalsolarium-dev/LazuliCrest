@@ -3666,8 +3666,6 @@ function Advocate({ data, user }) {
   const generateSummary = async () => {
     if (summaryLoading || loading) return;
     setSummaryLoading(true); setError('');
-    const FREE_SUMMARIES = 3;
-    const isFree = summariesUsed < FREE_SUMMARIES;
     const summaryPrompt = `Please generate a comprehensive full health summary for me. Include:
 1. My chronic conditions and diagnoses
 2. Current medications and supplements
