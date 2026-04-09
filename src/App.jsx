@@ -555,19 +555,49 @@ const GLOBAL_CSS = `
 
   /* ── Diary — real notebook ───────────────────────────────── */
   .diary-book{
-    background:linear-gradient(160deg,rgba(20,10,40,.97) 0%,rgba(12,4,26,.99) 100%);
-    border:1.5px solid rgba(42,92,173,.28);
-    border-radius:4px 18px 18px 4px;
-    box-shadow:inset -5px 0 18px rgba(0,0,0,.4),-3px 0 0 rgba(42,92,173,.3),0 12px 40px rgba(0,0,0,.5);
+    background:linear-gradient(175deg,rgba(32,18,52,.97) 0%,rgba(22,10,38,.98) 40%,rgba(18,8,32,.99) 100%);
+    border:1px solid rgba(42,92,173,.2);
+    border-radius:3px 16px 16px 3px;
+    box-shadow:
+      -8px 0 0 rgba(10,4,20,.9),
+      -6px 0 0 rgba(20,8,40,.95),
+      -4px 0 0 rgba(30,12,55,.9),
+      inset -2px 0 20px rgba(0,0,0,.5),
+      0 16px 50px rgba(0,0,0,.7),
+      0 0 0 1px rgba(0,0,0,.5);
     position:relative;overflow:hidden;
     animation:pageTurn .4s cubic-bezier(.22,1,.36,1)
   }
-  .diary-book::before{content:'';position:absolute;left:72px;top:0;bottom:0;width:1px;background:rgba(201,168,76,.12)}
-  .diary-book::after{content:'';position:absolute;left:0;top:0;bottom:0;width:72px;background:linear-gradient(90deg,rgba(42,92,173,.08),transparent)}
-  .diary-lines{background-image:repeating-linear-gradient(transparent,transparent 37px,rgba(42,92,173,.08) 37px,rgba(42,92,173,.08) 38px);background-size:100% 38px;background-position:0 48px}
-  .diary-textarea{background:transparent;border:none;outline:none;width:100%;min-height:320px;padding:16px 24px 16px 18px;color:rgba(240,232,255,.9);line-height:38px;resize:none;caret-color:#C9A84C;font-size:17px}
-  .diary-entry-card{background:rgba(8,3,22,.85);border:1.5px solid rgba(42,92,173,.22);border-radius:14px;padding:20px 24px;transition:all .22s;cursor:pointer}
-  .diary-entry-card:hover{border-color:rgba(201,168,76,.32);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .diary-book::before{
+    content:'';position:absolute;left:68px;top:0;bottom:0;width:2px;
+    background:linear-gradient(180deg,rgba(201,168,76,.06),rgba(201,168,76,.14) 30%,rgba(201,168,76,.1) 70%,rgba(201,168,76,.05));
+  }
+  .diary-book::after{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:68px;
+    background:linear-gradient(90deg,rgba(10,4,22,.98) 0%,rgba(20,8,38,.95) 60%,transparent 100%);
+  }
+  /* Binding holes via pseudo-element on .diary-spine */
+  .diary-lines{
+    background-image:
+      repeating-linear-gradient(transparent,transparent 35px,rgba(42,92,173,.07) 35px,rgba(42,92,173,.07) 36px);
+    background-size:100% 36px;
+    background-position:0 50px
+  }
+  .diary-textarea{background:transparent;border:none;outline:none;width:100%;min-height:340px;padding:16px 28px 16px 16px;color:rgba(240,232,255,.92);line-height:36px;resize:none;caret-color:#C9A84C;font-size:18px}
+  .diary-entry-card{
+    background:linear-gradient(145deg,rgba(14,6,28,.92),rgba(10,4,22,.95));
+    border:1px solid rgba(42,92,173,.2);
+    border-left:3px solid rgba(201,168,76,.25);
+    border-radius:3px 14px 14px 3px;
+    padding:20px 24px 20px 20px;
+    transition:all .22s;cursor:pointer;
+    box-shadow:-3px 0 0 rgba(10,4,20,.8), 0 4px 16px rgba(0,0,0,.4)
+  }
+  .diary-entry-card:hover{
+    border-left-color:rgba(201,168,76,.55);
+    transform:translateY(-2px) translateX(2px);
+    box-shadow:-3px 0 0 rgba(10,4,20,.8), 0 10px 32px rgba(0,0,0,.6)
+  }
 
   .share-card{background:linear-gradient(135deg,rgba(8,3,22,.94),rgba(15,6,36,.97));border:1.5px solid rgba(201,168,76,.28);border-radius:20px;padding:28px;position:relative;overflow:hidden}
 
@@ -1145,8 +1175,12 @@ function Symptoms({ data, upd }) {
   return (
     <div>
       {viewPhoto && (
-        <div onClick={()=>setViewPhoto(null)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.9)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer' }}>
-          <img src={viewPhoto} alt="Symptom" style={{ maxWidth:'90vw',maxHeight:'90vh',borderRadius:12,objectFit:'contain' }}/>
+        <div onClick={()=>setViewPhoto(null)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:1000,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer', gap:14 }}>
+          <img src={viewPhoto} alt="Symptom" style={{ maxWidth:'88vw',maxHeight:'80vh',borderRadius:12,objectFit:'contain' }}/>
+          <div style={{ display:'flex', gap:10 }} onClick={e=>e.stopPropagation()}>
+            <a href={viewPhoto} download="symptom-photo.jpg" style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', color:'#000', fontWeight:700, fontSize:16, textDecoration:'none', fontFamily:"'DM Sans',sans-serif" }}>⬇ Download Photo</a>
+            <button onClick={()=>setViewPhoto(null)} style={{ padding:'10px 22px', borderRadius:12, border:'1.5px solid rgba(255,255,255,.2)', background:'transparent', color:'rgba(255,255,255,.7)', fontSize:16, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>Close</button>
+          </div>
         </div>
       )}
       <PH emoji="◈" title="Symptoms" sub="Track how you feel — log symptoms, vitals, and photos">
@@ -1264,8 +1298,11 @@ function Symptoms({ data, upd }) {
             </div>
             {(s.photos||[]).length>0 && (
               <div style={{ display:'flex', gap:7, flexWrap:'wrap', marginBottom:8 }}>
-                {(s.photos||[]).map(p=>(
-                  <img key={p.id} src={p.data} alt="symptom" style={{ width:56,height:56,objectFit:'cover',borderRadius:9,border:'1px solid rgba(42,92,173,.3)',cursor:'pointer' }} onClick={()=>setViewPhoto(p.data)}/>
+                {(s.photos||[]).map((p,pi)=>(
+                  <div key={p.id} style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                    <img src={p.data} alt="symptom" style={{ width:64,height:64,objectFit:'cover',borderRadius:9,border:'1px solid rgba(42,92,173,.3)',cursor:'pointer' }} onClick={()=>setViewPhoto(p.data)}/>
+                    <a href={p.data} download={`symptom-${s.date}-${pi+1}.jpg`} onClick={e=>e.stopPropagation()} style={{ fontSize:11, color:'rgba(42,92,173,.7)', textDecoration:'none', background:'rgba(42,92,173,.12)', border:'1px solid rgba(42,92,173,.25)', borderRadius:6, padding:'2px 7px', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", lineHeight:1.3 }}>⬇ Save</a>
+                  </div>
                 ))}
               </div>
             )}
@@ -1542,9 +1579,11 @@ function Diary({ data, upd }) {
       <div className="slide-in">
         <button onClick={()=>setView(null)} style={{ border:'none',background:'transparent',color:'rgba(201,168,76,.6)',fontWeight:600,fontSize:16,cursor:'pointer',marginBottom:16,fontFamily:"'DM Sans',sans-serif" }}>← Back to diary</button>
         <div className="diary-book diary-lines">
+          {/* Ribbon bookmark */}
+          <div style={{ position:'absolute', top:0, right:32, width:18, height:80, background:'linear-gradient(180deg,#7B2FBE,#5B1F8E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)', boxShadow:'0 4px 12px rgba(123,47,190,.4)', opacity:.8 }}/>
           {/* Spine dots */}
           <div style={{ position:'absolute',left:0,top:0,bottom:0,width:72,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',gap:18,zIndex:2,pointerEvents:'none' }}>
-            {[...Array(6)].map((_,i)=><div key={i} style={{ width:5,height:5,borderRadius:'50%',background:'rgba(201,168,76,.22)' }}/>)}
+            {[...Array(8)].map((_,i)=><div key={i} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(201,168,76,.28)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>)}
           </div>
           <div style={{ padding:'24px 28px 18px 88px', borderBottom:'1px solid rgba(42,92,173,.1)' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:9 }}>
@@ -1577,8 +1616,9 @@ function Diary({ data, upd }) {
       </div>
       {open&&(
         <div className="diary-book" style={{ marginBottom:24,overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:0, right:28, width:16, height:60, background:'linear-gradient(180deg,#C9A84C,#A0782E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%)', boxShadow:'0 3px 10px rgba(201,168,76,.35)', opacity:.75 }}/>
           <div style={{ position:'absolute',left:0,top:0,bottom:0,width:72,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',gap:18,zIndex:2,pointerEvents:'none' }}>
-            {[...Array(6)].map((_,i)=><div key={i} style={{ width:5,height:5,borderRadius:'50%',background:'rgba(201,168,76,.22)' }}/>)}
+            {[...Array(8)].map((_,i)=><div key={i} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(201,168,76,.28)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>)}
           </div>
           <div style={{ padding:'14px 18px 14px 88px',borderBottom:'1px solid rgba(42,92,173,.1)',display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap',background:'rgba(0,0,0,.18)' }}>
             <div><label style={{ marginBottom:4 }}>Handwriting</label>
@@ -1649,21 +1689,28 @@ function AIDiet({ data, upd }) {
   const [aiReply, setAiReply]   = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
   const [showLog, setShowLog]   = useState(false);
+  const [mealPhoto, setMealPhoto] = useState(null);
+  const mealPhotoRef = useRef();
 
   const today = todayStr();
   const todayMeals = (data.dietLogs||[]).filter(l=>l.date===today);
 
-  const saveProtocol = p => {
-    setProtocol(p);
-    upd('dietProtocol', p);
+  const saveProtocol = p => { setProtocol(p); upd('dietProtocol', p); };
+
+  const addMealPhoto = file => {
+    const r = new FileReader();
+    r.onload = e => setMealPhoto({ name:file.name, data:e.target.result });
+    r.readAsDataURL(file);
   };
 
   const logMeal = () => {
     if (!mealLog.trim()) return;
-    const entry = { id:uid(), date:today, time:mealTime, text:mealLog.trim(), timestamp:Date.now() };
+    const entry = { id:uid(), date:today, time:mealTime, text:mealLog.trim(), timestamp:Date.now(), photo: mealPhoto||null };
     upd('dietLogs', [...(data.dietLogs||[]), entry]);
-    setMealLog(''); setShowLog(false);
+    setMealLog(''); setShowLog(false); setMealPhoto(null);
   };
+
+  const deleteMeal = id => upd('dietLogs', (data.dietLogs||[]).filter(l=>l.id!==id));
 
   const askAI = async () => {
     if (!aiPrompt.trim()) return;
@@ -1671,8 +1718,7 @@ function AIDiet({ data, upd }) {
     try {
       const sys = `You are a nutritionist specializing in chronic illness dietary management. The user follows a ${protocol||'general healthy'} diet. Their conditions: ${data.profile?.conditions||'not specified'}. Their recent meals: ${todayMeals.map(m=>m.text).join(', ')||'none logged today'}. Be practical, specific, and kind. Flag any foods that conflict with their protocol.`;
       const res = await fetch('/api/chat', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ messages:[{role:'user',content:aiPrompt}], system:sys, userId:data.uid }),
       });
       const json = await res.json();
@@ -1681,86 +1727,156 @@ function AIDiet({ data, upd }) {
     setLoadingAI(false);
   };
 
-  return (
-    <div>
-      <PH emoji="✿" title="AI Nutrition" sub="Log meals, follow your protocol, and let Lazuli curate a diet for your health needs"/>
+  const MEAL_ICONS = { breakfast:'🍳', lunch:'🥗', dinner:'🍽', snack:'🫙' };
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, marginBottom:18 }} className="two-col">
-        {/* Left: Diet Protocol */}
-        <div className="glass-card-static" style={{ padding:22 }}>
-          <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, color:'#C9A84C', marginBottom:14 }}>My Diet Protocol</div>
-          <div style={{ fontSize:15, color:'rgba(240,232,255,.5)', marginBottom:14 }}>Select your current dietary approach</div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+  return (
+    <div style={{ position:'relative' }}>
+      {/* Kitchen header */}
+      <div style={{ position:'relative', borderRadius:20, overflow:'hidden', marginBottom:24, padding:'28px 28px 22px', background:'linear-gradient(160deg, rgba(20,10,5,.97) 0%, rgba(30,16,8,.98) 60%, rgba(15,8,4,.99) 100%)', border:'1.5px solid rgba(139,90,43,.3)', boxShadow:'0 8px 40px rgba(0,0,0,.7), inset 0 1px 0 rgba(201,168,76,.1)' }}>
+        {/* Tile pattern overlay */}
+        <div style={{ position:'absolute', inset:0, opacity:.04, backgroundImage:`repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,168,76,.5) 39px, rgba(201,168,76,.5) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,168,76,.5) 39px, rgba(201,168,76,.5) 40px)` }}/>
+        <div style={{ position:'relative', zIndex:1 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:8 }}>
+            <div style={{ fontSize:36, filter:'drop-shadow(0 2px 8px rgba(201,168,76,.4))' }}>👩‍🍳</div>
+            <div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', letterSpacing:2, textShadow:'0 0 20px rgba(201,168,76,.35)' }}>Lazuli Kitchen</div>
+              <div style={{ fontSize:16, color:'rgba(201,168,76,.5)', letterSpacing:1, marginTop:2 }}>Your personal nutrition sanctuary</div>
+            </div>
+          </div>
+          {/* Hanging pots row */}
+          <div style={{ display:'flex', gap:20, marginTop:4, paddingTop:10, borderTop:'1px solid rgba(139,90,43,.2)' }}>
+            {['🫙','🥗','🍳','🥘','🫕','🍲'].map((e,i)=>(
+              <span key={i} style={{ fontSize:20, opacity:.45, filter:'drop-shadow(0 2px 4px rgba(0,0,0,.5))' }}>{e}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Chalkboard Protocol Selector */}
+      <div style={{ marginBottom:20, borderRadius:18, overflow:'hidden', border:'2px solid rgba(60,60,55,.8)', background:'linear-gradient(145deg,rgba(22,26,22,.97),rgba(28,32,26,.98))', boxShadow:'inset 0 2px 12px rgba(0,0,0,.6), 0 4px 24px rgba(0,0,0,.5)', padding:'20px 22px', position:'relative' }}>
+        {/* Chalk texture */}
+        <div style={{ position:'absolute', inset:0, opacity:.03, backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize:'200px 200px' }}/>
+        <div style={{ position:'relative', zIndex:1 }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'rgba(220,210,190,.7)', letterSpacing:3, textTransform:'uppercase', marginBottom:14, display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ fontSize:18 }}>🪵</span> Today's Protocol
+            {protocol && <span style={{ fontSize:14, background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.25)', color:'#6ee7b7', padding:'2px 10px', borderRadius:20, letterSpacing:1 }}>✓ {protocol}</span>}
+          </div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
             {DIET_PROTOCOLS.map(p=>(
-              <button key={p} onClick={()=>saveProtocol(p)} style={{ padding:'6px 14px', borderRadius:20, fontSize:15, border:`1.5px solid ${protocol===p?'#C9A84C':'rgba(42,92,173,.3)'}`, background:protocol===p?'rgba(201,168,76,.15)':'rgba(4,16,52,.8)', color:protocol===p?'#C9A84C':'rgba(240,232,255,.65)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s' }}>
+              <button key={p} onClick={()=>saveProtocol(p)} style={{ padding:'7px 16px', borderRadius:8, fontSize:15, border:`1.5px solid ${protocol===p?'rgba(220,210,190,.6)':'rgba(220,210,190,.15)'}`, background:protocol===p?'rgba(220,210,190,.12)':'transparent', color:protocol===p?'rgba(220,210,190,.9)':'rgba(220,210,190,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .15s', letterSpacing:.3 }}>
                 {p}
               </button>
             ))}
           </div>
-          {protocol && (
-            <div style={{ marginTop:14, padding:'12px 15px', background:'rgba(110,231,183,.07)', border:'1px solid rgba(110,231,183,.2)', borderRadius:11 }}>
-              <div style={{ fontSize:15, color:'#6ee7b7', fontWeight:600 }}>{protocol} Protocol Active ✓</div>
-              <div style={{ fontSize:14, color:'rgba(240,232,255,.5)', marginTop:4, lineHeight:1.6 }}>Lazuli will flag conflicting ingredients and suggest compliant recipes based on your logged symptoms and known triggers.</div>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Today's Meals */}
-        <div className="glass-card-static" style={{ padding:22 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-            <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, color:'#C9A84C' }}>Today's Meals</div>
-            <button className="btn btn-gold" style={{ fontSize:14, padding:'7px 16px' }} onClick={()=>setShowLog(s=>!s)}>+ Log meal</button>
-          </div>
-          {showLog && (
-            <div style={{ marginBottom:14, padding:'14px 16px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:12, animation:'popIn .2s ease' }}>
-              <div style={{ display:'flex', gap:8, marginBottom:10 }}>
-                {['breakfast','lunch','dinner','snack'].map(t=>(
-                  <button key={t} onClick={()=>setMealTime(t)} style={{ padding:'5px 12px', borderRadius:20, fontSize:14, border:`1px solid ${mealTime===t?'#C9A84C':'rgba(42,92,173,.25)'}`, background:mealTime===t?'rgba(201,168,76,.1)':'transparent', color:mealTime===t?'#C9A84C':'rgba(240,232,255,.5)', cursor:'pointer', textTransform:'capitalize', fontFamily:"'DM Sans',sans-serif" }}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-              <textarea className="field" rows={2} value={mealLog} onChange={e=>setMealLog(e.target.value)} placeholder="What did you eat? e.g. Salmon with arugula, olive oil dressing" style={{ resize:'none', marginBottom:10 }}/>
-              <div style={{ display:'flex', gap:8 }}>
-                <button className="btn btn-gold" style={{ fontSize:14 }} onClick={logMeal}>Save</button>
-                <button className="btn btn-ghost" style={{ fontSize:14 }} onClick={()=>setShowLog(false)}>Cancel</button>
-              </div>
-            </div>
-          )}
-          {todayMeals.length === 0 && !showLog && <div style={{ fontSize:15, color:'rgba(240,232,255,.28)', fontStyle:'italic', textAlign:'center', padding:'20px 0' }}>No meals logged today yet.</div>}
-          {todayMeals.map(m=>(
-            <div key={m.id} style={{ marginBottom:10, padding:'10px 14px', background:'rgba(255,255,255,.03)', borderRadius:11, border:'1px solid rgba(42,92,173,.15)' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                <span style={{ fontSize:14, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'capitalize' }}>{m.time}</span>
-                <span style={{ fontSize:13, color:'rgba(240,232,255,.3)' }}>{new Date(m.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>
-              </div>
-              <div style={{ fontSize:16, color:'rgba(240,232,255,.75)', lineHeight:1.6 }}>{m.text}</div>
-            </div>
-          ))}
         </div>
       </div>
 
-      {/* AI Recipe Curator */}
-      <div className="glass-card-static" style={{ padding:22 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>✦</div>
-          <div>
-            <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, color:'#C9A84C' }}>Lazuli Recipe Curator</div>
-            <div style={{ fontSize:15, color:'rgba(240,232,255,.45)', marginTop:2 }}>Tell Lazuli what you have or what you're craving. I'll suggest recipes that fit your {protocol||'dietary'} protocol and avoid your known triggers.</div>
+      {/* Counter-top Meal Logger */}
+      <div style={{ marginBottom:20, borderRadius:18, background:'linear-gradient(160deg,rgba(25,15,8,.96),rgba(35,20,10,.97))', border:'1.5px solid rgba(139,90,43,.3)', padding:'20px 22px', boxShadow:'0 6px 30px rgba(0,0,0,.5), inset 0 1px 0 rgba(201,168,76,.06)', position:'relative', overflow:'hidden' }}>
+        {/* Wood grain */}
+        <div style={{ position:'absolute', inset:0, opacity:.035, backgroundImage:`repeating-linear-gradient(92deg, transparent, transparent 3px, rgba(139,90,43,.6) 3px, rgba(139,90,43,.6) 4px)` }}/>
+        <div style={{ position:'relative', zIndex:1 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'#C9A84C', display:'flex', alignItems:'center', gap:10 }}>
+              <span>🍽</span> Today's Meals
+              {todayMeals.length>0 && <span style={{ fontSize:14, color:'rgba(240,232,255,.35)', fontFamily:"'DM Sans',sans-serif" }}>{todayMeals.length} logged</span>}
+            </div>
+            <button className="btn btn-gold" style={{ fontSize:14, padding:'8px 18px' }} onClick={()=>setShowLog(s=>!s)}>+ Add to counter</button>
+          </div>
+
+          {showLog && (
+            <div style={{ marginBottom:16, padding:'18px 20px', background:'rgba(0,0,0,.35)', border:'1px solid rgba(139,90,43,.3)', borderRadius:14, animation:'popIn .2s ease' }}>
+              {/* Time selector */}
+              <div style={{ display:'flex', gap:8, marginBottom:12, flexWrap:'wrap' }}>
+                {['breakfast','lunch','dinner','snack'].map(t=>(
+                  <button key={t} onClick={()=>setMealTime(t)} style={{ padding:'7px 16px', borderRadius:20, fontSize:15, border:`1.5px solid ${mealTime===t?'#C9A84C':'rgba(139,90,43,.3)'}`, background:mealTime===t?'rgba(201,168,76,.12)':'transparent', color:mealTime===t?'#C9A84C':'rgba(240,232,255,.45)', cursor:'pointer', textTransform:'capitalize', fontFamily:"'DM Sans',sans-serif", display:'flex', alignItems:'center', gap:6 }}>
+                    {MEAL_ICONS[t]} {t}
+                  </button>
+                ))}
+              </div>
+              <textarea className="field" rows={2} value={mealLog} onChange={e=>setMealLog(e.target.value)} placeholder="What's on your plate? e.g. Grilled salmon, roasted sweet potato, arugula salad…" style={{ resize:'none', marginBottom:10, background:'rgba(255,255,255,.04)', borderColor:'rgba(139,90,43,.35)' }}/>
+              {/* Photo upload for meal */}
+              <div style={{ marginBottom:12 }}>
+                {mealPhoto ? (
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <img src={mealPhoto.data} alt="meal" style={{ width:56, height:56, objectFit:'cover', borderRadius:10, border:'1.5px solid rgba(201,168,76,.3)' }}/>
+                    <div>
+                      <div style={{ fontSize:15, color:'rgba(240,232,255,.6)' }}>{mealPhoto.name}</div>
+                      <button onClick={()=>setMealPhoto(null)} style={{ fontSize:13, color:'#f87171', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:0, marginTop:3 }}>Remove photo</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button className="btn btn-ghost" style={{ fontSize:14, padding:'8px 16px' }} onClick={()=>mealPhotoRef.current?.click()}>📷 Add meal photo</button>
+                )}
+                <input ref={mealPhotoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>e.target.files[0]&&addMealPhoto(e.target.files[0])}/>
+              </div>
+              <div style={{ display:'flex', gap:8 }}>
+                <button className="btn btn-gold" onClick={logMeal}>Log meal</button>
+                <button className="btn btn-ghost" onClick={()=>{setShowLog(false);setMealPhoto(null);}}>Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {todayMeals.length === 0 && !showLog && (
+            <div style={{ textAlign:'center', padding:'24px 0', color:'rgba(240,232,255,.2)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>
+              Counter is empty — log your first meal today
+            </div>
+          )}
+
+          {/* Meal cards — recipe card style */}
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {todayMeals.map(m=>(
+              <div key={m.id} style={{ background:'rgba(252,248,238,.04)', border:'1px solid rgba(201,168,76,.15)', borderRadius:12, padding:'13px 16px', display:'flex', gap:14, alignItems:'flex-start', position:'relative', overflow:'hidden' }}>
+                {/* Index card top stripe */}
+                <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg, ${m.time==='breakfast'?'#f97316':m.time==='lunch'?'#6ee7b7':m.time==='dinner'?'#A8C4F0':'#C9A84C'}, transparent)` }}/>
+                <div style={{ fontSize:26, flexShrink:0, marginTop:2 }}>{MEAL_ICONS[m.time]||'🍽'}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                    <span style={{ fontSize:14, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'capitalize', letterSpacing:.5 }}>{m.time}</span>
+                    <span style={{ fontSize:13, color:'rgba(240,232,255,.25)' }}>{new Date(m.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>
+                  </div>
+                  <div style={{ fontSize:17, color:'rgba(240,232,255,.82)', lineHeight:1.6 }}>{m.text}</div>
+                  {m.photo && (
+                    <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
+                      <img src={m.photo.data} alt="meal" style={{ width:52, height:52, objectFit:'cover', borderRadius:8, border:'1px solid rgba(201,168,76,.2)', cursor:'pointer' }} onClick={()=>window.open(m.photo.data,'_blank')}/>
+                      <a href={m.photo.data} download={`meal-${m.date}-${m.time}.jpg`} style={{ fontSize:13, color:'rgba(42,92,173,.7)', textDecoration:'none', background:'rgba(42,92,173,.1)', border:'1px solid rgba(42,92,173,.2)', borderRadius:6, padding:'3px 10px', fontFamily:"'DM Sans',sans-serif" }}>⬇ Save photo</a>
+                    </div>
+                  )}
+                </div>
+                <button onClick={()=>deleteMeal(m.id)} style={{ background:'transparent', border:'none', color:'rgba(240,232,255,.2)', cursor:'pointer', fontSize:16, flexShrink:0, padding:'2px 4px' }}>×</button>
+              </div>
+            ))}
           </div>
         </div>
-        <div style={{ display:'flex', gap:10, marginBottom:14 }}>
-          <input className="field" value={aiPrompt} onChange={e=>setAiPrompt(e.target.value)} placeholder={`e.g. "AIP breakfast with sweet potato" or "What can I eat for fatigue?"`} onKeyDown={e=>e.key==='Enter'&&askAI()} style={{ flex:1 }}/>
-          <button className="btn btn-gold" style={{ flexShrink:0, fontSize:15 }} onClick={askAI} disabled={loadingAI||!aiPrompt.trim()}>
-            {loadingAI ? <span style={{ display:'inline-block', width:15, height:15, border:'2px solid rgba(0,0,0,.3)', borderTopColor:'#000', borderRadius:'50%', animation:'spin .7s linear infinite' }}/> : 'Get recipes'}
-          </button>
-        </div>
-        {aiReply && (
-          <div style={{ padding:'16px 18px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:14, animation:'popIn .3s ease' }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'rgba(201,168,76,.7)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:8 }}>✦ Suggested by Lazuli</div>
-            <div style={{ fontSize:16, color:'rgba(240,232,255,.82)', lineHeight:1.85, whiteSpace:'pre-wrap', fontFamily:"Georgia,serif" }}>{aiReply}</div>
+      </div>
+
+      {/* Recipe / AI section — Hanging recipe card */}
+      <div style={{ borderRadius:18, background:'linear-gradient(145deg,rgba(252,248,238,.04),rgba(252,248,238,.02))', border:'1.5px solid rgba(201,168,76,.2)', padding:'22px 24px', boxShadow:'0 4px 24px rgba(0,0,0,.4)', position:'relative', overflow:'hidden' }}>
+        {/* Recipe card lines */}
+        <div style={{ position:'absolute', inset:0, opacity:.04, backgroundImage:`repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(201,168,76,.8) 27px, rgba(201,168,76,.8) 28px)`, backgroundPosition:'0 52px' }}/>
+        {/* Pin */}
+        <div style={{ position:'absolute', top:-6, left:'50%', transform:'translateX(-50%)', width:14, height:14, borderRadius:'50%', background:'#f87171', boxShadow:'0 0 8px rgba(248,113,113,.6)', border:'2px solid rgba(0,0,0,.4)' }}/>
+        <div style={{ position:'relative', zIndex:1 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:18 }}>
+            <div style={{ fontSize:28 }}>📋</div>
+            <div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:17, color:'#C9A84C' }}>Lazuli Recipe Curator</div>
+              <div style={{ fontSize:15, color:'rgba(240,232,255,.45)', marginTop:2 }}>Tell me what you have or what you're craving — I'll suggest recipes for your {protocol||'dietary'} needs.</div>
+            </div>
           </div>
-        )}
+          <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+            <input className="field" value={aiPrompt} onChange={e=>setAiPrompt(e.target.value)} placeholder={`e.g. "AIP breakfast with sweet potato" or "What's good for my fatigue?"`} onKeyDown={e=>e.key==='Enter'&&askAI()} style={{ flex:1, background:'rgba(252,248,238,.04)', borderColor:'rgba(201,168,76,.25)' }}/>
+            <button className="btn btn-gold" style={{ flexShrink:0 }} onClick={askAI} disabled={loadingAI||!aiPrompt.trim()}>
+              {loadingAI ? <span style={{ display:'inline-block', width:15, height:15, border:'2px solid rgba(0,0,0,.3)', borderTopColor:'#000', borderRadius:'50%', animation:'spin .7s linear infinite' }}/> : '✦ Cook it up'}
+            </button>
+          </div>
+          {aiReply && (
+            <div style={{ padding:'18px 20px', background:'rgba(252,248,238,.03)', border:'1px solid rgba(201,168,76,.18)', borderRadius:14, animation:'popIn .3s ease' }}>
+              <div style={{ fontSize:14, fontWeight:700, color:'rgba(201,168,76,.6)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>✦ From Lazuli's Kitchen</div>
+              <div style={{ fontSize:18, color:'rgba(240,232,255,.85)', lineHeight:1.9, whiteSpace:'pre-wrap', fontFamily:"Georgia,serif" }}>{aiReply}</div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
