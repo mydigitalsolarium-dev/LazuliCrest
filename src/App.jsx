@@ -90,7 +90,7 @@ const NAV_GROUPS = [
       { id:'hydration',   icon:'◇',   label:'Hydration'         },
       { id:'diet',        icon:'✿',   label:'AI Nutrition'      },
       { id:'gym',         icon:'△',   label:'Lazuli Gym'        },
-      { id:'mindfulness', icon:'◌',   label:'Mindfulness'       },
+      { id:'mindfulness', icon:'🌟',   label:'Activities'        },
     ]
   },
   {
@@ -206,7 +206,7 @@ export default function App() {
         saveTimer.current = setTimeout(() => {
           setDoc(doc(db, 'users', user.uid), next, { merge:true })
             .then(()=>setSaving(false))
-            .catch(()=>setSaving(false));
+            .catch(err=>{ setSaving(false); console.error('[Firestore save error]', err); });
         }, 800);
       }
       return next;
@@ -219,7 +219,7 @@ export default function App() {
   const go = t => { setTab(t); setSideOpen(false); };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#03000C', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative', overflow:'hidden' }}>
+    <div style={{ minHeight:'100vh', background:'#03000C', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative' }}>
       <style>{GLOBAL_CSS}</style>
       <AnimatedBackground/>
 
@@ -230,7 +230,7 @@ export default function App() {
         {privacyOn && (
           <div style={{ position:'fixed', inset:0, zIndex:200, backdropFilter:'blur(18px) brightness(.4)', WebkitBackdropFilter:'blur(18px) brightness(.4)', pointerEvents:'none' }}/>
         )}
-        <main className={`main-content${privacyOn?' privacy-on':''}`} style={{ contain:'layout style' }}>
+        <main className={`main-content${privacyOn?' privacy-on':''}`}>
           <div className="mobile-topbar">
             <button className="hamburger" onClick={()=>setSideOpen(o=>!o)}>
               <span/><span/><span/>
@@ -490,7 +490,7 @@ const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
   html{font-size:20px}
-  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased}
+  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none}
   button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:18px}
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}
@@ -586,7 +586,7 @@ const GLOBAL_CSS = `
   .nav-item:hover{background:rgba(42,92,173,.14);color:rgba(240,232,255,.9);border-color:rgba(42,92,173,.28)}
   .nav-item.active{background:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));color:#C9A84C;border-color:rgba(201,168,76,.3);font-weight:600}
 
-  .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;contain:layout style}
+  .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;overscroll-behavior:contain}
   .privacy-sensitive{transition:filter .3s ease}
   .privacy-on .privacy-sensitive{filter:blur(8px)}
   .privacy-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;borderRadius:20px;border:1.5px solid rgba(42,92,173,.35);background:rgba(4,14,52,.8);color:rgba(168,196,240,.7);fontSize:14px;fontWeight:600;cursor:pointer;fontFamily:'DM Sans',sans-serif;transition:all .18s;backdropFilter:blur(8px)}
@@ -1783,9 +1783,19 @@ function AIDiet({ data, upd }) {
   const saveProtocol = p => { setProtocol(p); upd('dietProtocol', p); };
 
   const addMealPhoto = file => {
-    const r = new FileReader();
-    r.onload = e => setMealPhoto({ name:file.name, data:e.target.result });
-    r.readAsDataURL(file);
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 400;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = h*MAX/w; w = MAX; } }
+      else { if (h > MAX) { w = w*MAX/h; h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.55);
+      setMealPhoto({ name: file.name, data: compressed });
+    };
+    img.src = URL.createObjectURL(file);
   };
 
   const logMeal = () => {
@@ -2082,6 +2092,120 @@ const SOUNDSCAPES = [
   { id:'heartbeat', label:'Calm Heartbeat',     icon:'💓', desc:'Steady rhythm — anxiety relief',                  color:'#f87171' },
 ];
 
+// ─── Glass Arched Room Door ────────────────────────────────────
+const ROOM_DESCS = {
+  breathing:    'A quiet chamber where breath becomes medicine. Box breathing for calm and regulation.',
+  affirmations: 'A hall of mirrors reflecting only your strength. Daily affirmations to rewire your mind.',
+  tension:      'A warmth room for releasing stored tension. Progressive muscle relaxation for your whole body.',
+  imagery:      'A travel room for the mind. Close your eyes and let Lazuli guide you anywhere.',
+  gratitude:    'A golden jar room. Drop what you\'re grateful for and watch it fill with light.',
+  worry:        'A sacred stone chamber. Let the floating worry stone carry what you cannot.',
+  zen:          'A Japanese sand garden. Rake patterns, breathe, and find stillness in simplicity.',
+  soundscapes:  'A healing frequency room. Binaural beats, nature sounds, and Tibetan tones.',
+  fountain:     'A wish fountain glowing with intention. Toss your hopes into the flowing waters.',
+};
+
+function RoomDoor({ tool, onEnter, index }) {
+  const [hover, setHover]     = useState(false);
+  const [preview, setPreview] = useState(false);
+
+  const colors = [
+    '#3B82F6','#C9A84C','#7B2FBE','#6ee7b7','#f59e0b','#a78bfa','#60a5fa','#f87171','#34d399'
+  ];
+  const color = colors[index % colors.length];
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:0 }}>
+      {/* The arched door */}
+      <div
+        onMouseEnter={()=>{ setHover(true); setPreview(true); }}
+        onMouseLeave={()=>{ setHover(false); }}
+        style={{ position:'relative', width:'100%', cursor:'pointer', transition:'transform .25s' }}
+      >
+        <svg viewBox="0 0 120 160" width="100%" preserveAspectRatio="xMidYMid meet"
+          style={{ filter: hover ? `drop-shadow(0 0 18px ${color}66)` : `drop-shadow(0 4px 12px rgba(0,0,0,.5))`, transition:'filter .3s', animation:`toolFloat ${4+index*.3}s ease-in-out infinite` }}>
+          <defs>
+            <linearGradient id={`doorGlass-${tool.id}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor={`${color}22`}/>
+              <stop offset="40%" stopColor={`${color}10`}/>
+              <stop offset="100%" stopColor={`${color}28`}/>
+            </linearGradient>
+            <linearGradient id={`doorFrame-${tool.id}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="rgba(255,255,255,.25)"/>
+              <stop offset="50%" stopColor="rgba(255,255,255,.08)"/>
+              <stop offset="100%" stopColor="rgba(255,255,255,.2)"/>
+            </linearGradient>
+            <filter id={`doorGlow-${tool.id}`}>
+              <feGaussianBlur stdDeviation="2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          {/* Door frame — arched top */}
+          <path d="M10,155 L10,60 Q10,10 60,10 Q110,10 110,60 L110,155 Z"
+            fill={`url(#doorGlass-${tool.id})`}
+            stroke={`${color}${hover?'88':'44'}`}
+            strokeWidth={hover?2:1.5}
+            style={{ transition:'stroke .3s' }}/>
+
+          {/* Glass panel divisions — cross bar */}
+          <line x1="10" y1="105" x2="110" y2="105" stroke={`${color}33`} strokeWidth="1"/>
+          <line x1="60" y1="10" x2="60" y2="155" stroke={`${color}22`} strokeWidth="1"/>
+
+          {/* Arch cross bar */}
+          <path d="M10,80 Q10,35 60,35 Q110,35 110,80" fill="none" stroke={`${color}22`} strokeWidth="1"/>
+
+          {/* Glass shine — left highlight */}
+          <path d="M15,60 Q15,20 45,15" fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="1.5" strokeLinecap="round"/>
+
+          {/* Outer frame border */}
+          <path d="M8,157 L8,60 Q8,8 60,8 Q112,8 112,60 L112,157"
+            fill="none" stroke={`url(#doorFrame-${tool.id})`} strokeWidth="3" strokeLinecap="round"/>
+
+          {/* Aura ring when hovered */}
+          {hover && <path d="M6,158 L6,59 Q6,5 60,5 Q114,5 114,59 L114,158"
+            fill="none" stroke={`${color}44`} strokeWidth="5"
+            style={{ animation:'auraRing 1.5s ease-out infinite' }}/>}
+
+          {/* Room icon */}
+          <text x="60" y="82" textAnchor="middle" fontSize="28" filter={`url(#doorGlow-${tool.id})`}
+            style={{ animation:`toolFloat ${3+index*.2}s ease-in-out infinite` }}>
+            {tool.icon}
+          </text>
+
+          {/* Door handle */}
+          <circle cx="75" cy="130" r="4" fill={`${color}66`} stroke={`${color}88`} strokeWidth="1"/>
+          <line x1="75" y1="130" x2="75" y2="138" stroke={`${color}55`} strokeWidth="1.5" strokeLinecap="round"/>
+
+          {/* Bottom step */}
+          <rect x="5" y="153" width="110" height="5" rx="2" fill={`${color}22`} stroke={`${color}33`} strokeWidth=".5"/>
+        </svg>
+
+        {/* Room name label */}
+        <div style={{ textAlign:'center', marginTop:-4, fontFamily:"'Cormorant Garamond',serif", fontSize:16, color: hover ? color : 'rgba(240,232,255,.65)', fontWeight:600, transition:'color .2s', letterSpacing:.5 }}>
+          {tool.label}
+        </div>
+      </div>
+
+      {/* Preview tooltip + Enter button — appears on hover */}
+      {preview && (
+        <div style={{ marginTop:10, padding:'12px 14px', background:'rgba(4,10,40,.95)', border:`1.5px solid ${color}44`, borderRadius:14, maxWidth:200, textAlign:'center', animation:'popIn .18s ease', position:'relative', zIndex:20 }}>
+          <div style={{ fontSize:14, color:'rgba(240,232,255,.7)', lineHeight:1.6, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', marginBottom:10 }}>
+            {ROOM_DESCS[tool.id]}
+          </div>
+          <button
+            onClick={onEnter}
+            style={{ padding:'8px 20px', borderRadius:20, border:`1.5px solid ${color}88`, background:`${color}18`, color:color, fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", letterSpacing:.5, transition:'all .15s' }}
+            onMouseEnter={e=>{ e.currentTarget.style.background=`${color}30`; e.currentTarget.style.transform='scale(1.04)'; }}
+            onMouseLeave={e=>{ e.currentTarget.style.background=`${color}18`; e.currentTarget.style.transform='none'; }}>
+            Enter Room →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Mindfulness() {
   const TOOLS = [
     { id:'breathing',  icon:'🫁', label:'Box Breathing'    },
@@ -2102,7 +2226,8 @@ function Mindfulness() {
     { label:'Rest',        dur:2, color:'#6ee7b7',  scale:0.72 },
   ];
 
-  const [tool, setTool]           = useState('breathing');
+  const [tool, setTool]           = useState(null);
+  const [roomEntering, setRoomEntering] = useState(null);
   const [active, setActive]       = useState(false);
   const [phaseIdx, setPhaseIdx]   = useState(0);
   const [secs, setSecs]           = useState(PHASES[0].dur);
@@ -2325,16 +2450,27 @@ function Mindfulness() {
 
   return (
     <div>
-      <PH emoji="🌸" title="Mindfulness" sub="Breathe, ground yourself, and find stillness"/>
+      <PH emoji="🌟" title="Activities" sub="Your personal wellness sanctuary — choose a room to enter"/>
 
-      {/* Tool selector */}
-      <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:28 }}>
-        {TOOLS.map(t=>(
-          <button key={t.id} onClick={()=>setTool(t.id)} style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 16px', borderRadius:30, border:`1.5px solid ${tool===t.id?'rgba(201,168,76,.6)':'rgba(42,92,173,.25)'}`, background:tool===t.id?'rgba(201,168,76,.12)':'rgba(42,92,173,.07)', color:tool===t.id?'#C9A84C':'rgba(240,232,255,.6)', fontSize:15, fontWeight:tool===t.id?700:400, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s', animation:tool===t.id?'toolFloat 3s ease-in-out infinite, auraRing 2s ease-in-out infinite':'none' }}>
-            <span>{t.icon}</span>{t.label}
+      {/* Glass Arched Door Room Selector */}
+      {!tool ? (
+        <div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'rgba(168,196,240,.5)', textAlign:'center', marginBottom:28, fontStyle:'italic' }}>
+            Choose a room to enter your sanctuary
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, maxWidth:700, margin:'0 auto' }}>
+            {TOOLS.map((t,i) => (
+              <RoomDoor key={t.id} tool={t} onEnter={()=>setTool(t.id)} index={i}/>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ marginBottom:20 }}>
+          <button onClick={()=>setTool(null)} style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'8px 18px', borderRadius:20, border:'1.5px solid rgba(42,92,173,.25)', background:'rgba(42,92,173,.08)', color:'rgba(240,232,255,.6)', fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>
+            ← All Rooms
           </button>
-        ))}
-      </div>
+        </div>
+      )}
 
       {/* ── Box Breathing ── */}
       {tool==='breathing' && (
@@ -3176,6 +3312,7 @@ function Updates() {
     { icon:'🏋️', title:'Lazuli Gym — Adaptive Fitness', desc:'AI-powered gentle exercise guidance designed specifically for chronic illness patients. Your occupational therapist in your pocket.', status:'coming' },
     { icon:'📱', title:'Google Play Store App', desc:'Take Lazuli Crest everywhere — the full native Android app is in development and coming to Google Play Store soon.', status:'coming' },
     { icon:'🤝', title:'Care Team Collaboration', desc:'Invite a caregiver, family member, or care coordinator to view your health data in a separate read-only care portal.', status:'coming' },
+    { icon:'📚', title:'Research Library & AI Librarian', desc:'A curated library of peer-reviewed research on chronic illness, rare disease, and treatment options. Click any book to read the source — or ask the AI Librarian for a plain-language summary of the science.', status:'coming' },
     { icon:'📊', title:'Advanced Health Analytics', desc:'Trend charts, symptom correlations, flare pattern detection, and exportable health reports for your medical team.', status:'coming' },
     { icon:'🏥', title:'Doctor Finder & Specialist Map', desc:'Find chronic illness specialists, patient advocates, and rare disease centers near you — filtered by your conditions.', status:'coming' },
     { icon:'💊', title:'Medication Interaction Checker', desc:'AI-powered medication safety checker that flags potential interactions and reminds you of time-sensitive doses.', status:'coming' },
