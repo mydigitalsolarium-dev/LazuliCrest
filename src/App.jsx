@@ -246,16 +246,23 @@ function LogoImg({ size=56 }) {
 }
 
 // ─── Animated background (symbols rise bottom → top) ──────────
+// Scientific/medical outline symbols — Unicode chars that render as outlines
 const FLOAT_ITEMS = [
-  {sym:'⚕',  x:5,  size:50, delay:0,   dur:65},
-  {sym:'🧬', x:18, size:44, delay:8,   dur:70},
-  {sym:'🔬', x:33, size:46, delay:16,  dur:62},
-  {sym:'🩺', x:58, size:48, delay:4,   dur:68},
-  {sym:'❤️', x:72, size:42, delay:20,  dur:60},
-  {sym:'⚕',  x:85, size:52, delay:12,  dur:72},
-  {sym:'🧬', x:92, size:40, delay:28,  dur:64},
-  {sym:'🔬', x:45, size:38, delay:36,  dur:66},
-  {sym:'🩺', x:8,  size:36, delay:44,  dur:58},
+  {sym:'⚕',  x:5,  size:44, delay:0,   dur:80},
+  {sym:'∮',  x:14, size:38, delay:12,  dur:90},
+  {sym:'∇',  x:24, size:36, delay:25,  dur:85},
+  {sym:'⚛',  x:36, size:42, delay:5,   dur:95},
+  {sym:'∞',  x:48, size:40, delay:18,  dur:88},
+  {sym:'∑',  x:58, size:38, delay:30,  dur:92},
+  {sym:'Ψ',  x:68, size:40, delay:8,   dur:78},
+  {sym:'∆',  x:78, size:36, delay:22,  dur:86},
+  {sym:'⊕',  x:88, size:38, delay:40,  dur:82},
+  {sym:'ℏ',  x:10, size:34, delay:55,  dur:94},
+  {sym:'∂',  x:42, size:36, delay:48,  dur:87},
+  {sym:'⊗',  x:62, size:34, delay:62,  dur:91},
+  {sym:'Ω',  x:82, size:38, delay:35,  dur:83},
+  {sym:'π',  x:20, size:36, delay:70,  dur:89},
+  {sym:'μ',  x:52, size:34, delay:15,  dur:96},
 ];
 
 const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
@@ -274,13 +281,20 @@ function AnimatedBackground() {
       <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.22) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
       <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.18) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
       <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.1) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
-      {/* Rising medical symbols */}
+      <div style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.12) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
+      <div style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.15) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
+      {/* Rising scientific symbols — outline ghost style */}
       {FLOAT_ITEMS.map((s,i) => (
         <div key={`sym-${i}`} style={{
           position:'absolute', left:`${s.x}%`, bottom:'-10%',
           fontSize:s.size, opacity:0,
           animation:`riseUp ${s.dur}s ${s.delay}s ease-in-out infinite`,
-          userSelect:'none', filter:'drop-shadow(0 0 12px rgba(42,92,173,.8)) drop-shadow(0 0 24px rgba(42,92,173,.4))',
+          userSelect:'none',
+          color:'transparent',
+          WebkitTextStroke:`1px rgba(42,92,173,0.35)`,
+          filter:'drop-shadow(0 0 8px rgba(42,92,173,.5)) drop-shadow(0 0 16px rgba(42,92,173,.2))',
+          fontFamily:"'DM Sans',sans-serif",
+          fontWeight:100,
         }}>{s.sym}</div>
       ))}
       {/* Floating chronic illness quotes */}
@@ -426,9 +440,9 @@ function RotatingQuoteBanner() {
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  html{font-size:19px}
-  body{font-size:19px;line-height:1.65;-webkit-font-smoothing:antialiased}
-  button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:17px}
+  html{font-size:20px}
+  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:18px}
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}
   ::-webkit-scrollbar-track{background:transparent}
@@ -445,7 +459,11 @@ const GLOBAL_CSS = `
   @keyframes inkDrop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
   @keyframes slideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
   @keyframes auroraFloat{0%{transform:translate(0,0) scale(1);opacity:.8}25%{transform:translate(20px,-14px) scale(1.08);opacity:1}50%{transform:translate(5px,10px) scale(1.04);opacity:.85}75%{transform:translate(-10px,5px) scale(0.96);opacity:.95}100%{transform:translate(-12px,20px) scale(1.02);opacity:.9}}
-  @keyframes riseUp{0%{transform:translateY(0) rotate(0deg);opacity:0}6%{opacity:.7}70%{opacity:.6}92%{opacity:.15}100%{transform:translateY(-108vh) rotate(8deg);opacity:0}}
+  @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+  @keyframes orbitX{0%,100%{transform:translateX(0)}50%{transform:translateX(30px)}}
+  @keyframes breathePulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.08);opacity:.9}}
+  @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  @keyframes riseUp{0%{transform:translateY(0) rotate(0deg);opacity:0}8%{opacity:.22}50%{opacity:.18}85%{opacity:.1}100%{transform:translateY(-108vh) rotate(5deg);opacity:0}}
   @keyframes breatheIn{0%{transform:scale(.75);opacity:.5}100%{transform:scale(1.18);opacity:1}}
   @keyframes breatheOut{0%{transform:scale(1.18);opacity:1}100%{transform:scale(.75);opacity:.5}}
   @keyframes breatheHold{0%,100%{transform:scale(1.18)}}
@@ -453,6 +471,9 @@ const GLOBAL_CSS = `
   @keyframes pageTurn{from{transform:rotateY(-15deg) translateX(-10px);opacity:.7}to{transform:rotateY(0deg) translateX(0);opacity:1}}
   @keyframes fogDrift{0%,100%{opacity:.3}50%{opacity:.6}}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  @keyframes ripple0{0%{opacity:.7;transform:translateX(-50%) scale(.3)}100%{opacity:0;transform:translateX(-50%) scale(2)}}
+  @keyframes ripple1{0%{opacity:.5;transform:translateX(-50%) scale(.3)}100%{opacity:0;transform:translateX(-50%) scale(2.5)}}
+  @keyframes ripple2{0%{opacity:.3;transform:translateX(-50%) scale(.3)}100%{opacity:0;transform:translateX(-50%) scale(3)}}
   @keyframes twinkle{0%{opacity:.2;r:1}50%{opacity:.9;r:2.5}100%{opacity:.35;r:1.5}}
   @keyframes constellFade{0%{opacity:.04}50%{opacity:.22}100%{opacity:.06}}
 
@@ -486,7 +507,7 @@ const GLOBAL_CSS = `
   .matriarch-tag{text-transform:uppercase;letter-spacing:.45em;font-size:13px;color:rgba(255,255,255,.4);margin-bottom:6px;display:block}
 
   /* ── Buttons ─────────────────────────────────────────────── */
-  .btn{border:none;border-radius:12px;padding:13px 26px;font-weight:600;font-size:16px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;letter-spacing:.15px}
+  .btn{border:none;border-radius:12px;padding:13px 26px;font-weight:600;font-size:17px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;letter-spacing:.15px}
   .btn-gold{background:linear-gradient(135deg,#C9A84C,#E8C96B);color:#000;font-weight:700;box-shadow:0 4px 20px rgba(201,168,76,.4),inset 0 1px 0 rgba(255,255,255,.25)}
   .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.55)}
   .btn-gold:active{transform:translateY(0)}
@@ -500,18 +521,18 @@ const GLOBAL_CSS = `
   .btn-lapis:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(42,92,173,.6)}
 
   /* ── Form fields ─────────────────────────────────────────── */
-  .field{background:rgba(255,255,255,.055);border:1.5px solid rgba(42,92,173,.4);border-radius:12px;padding:13px 16px;font-size:17px;color:#F0E8FF;width:100%;outline:none;transition:all .18s;caret-color:#C9A84C}
+  .field{background:rgba(255,255,255,.055);border:1.5px solid rgba(42,92,173,.4);border-radius:12px;padding:13px 16px;font-size:18px;color:#F0E8FF;width:100%;outline:none;transition:all .18s;caret-color:#C9A84C}
   .field:focus{border-color:#C9A84C;background:rgba(201,168,76,.055);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
   .field::placeholder{color:rgba(240,232,255,.32)}
   select.field option{background:#080316;color:#F0E8FF}
-  label{font-size:15px;font-weight:600;color:#C9A84C;display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:.9px}
+  label{font-size:16px;font-weight:600;color:#C9A84C;display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:.9px}
   input[type=range]{accent-color:#C9A84C;cursor:pointer;width:100%}
   input[type=checkbox]{accent-color:#2A5CAD;width:18px;height:18px;cursor:pointer}
   .pill{display:inline-flex;align-items:center;gap:6px;background:rgba(42,92,173,.2);border:1.5px solid rgba(42,92,173,.45);color:#A8C4F0;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
   /* ── Sidebar — z-index fix for mobile ────────────────────── */
   .sidebar{width:272px;background:rgba(4,1,16,.98);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(42,92,173,.22);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7);transition:transform .3s cubic-bezier(.22,1,.36,1)}
-  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.62);font-size:15px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative}
+  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.62);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative}
   .nav-item:hover{background:rgba(42,92,173,.14);color:rgba(240,232,255,.9);border-color:rgba(42,92,173,.28)}
   .nav-item.active{background:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));color:#C9A84C;border-color:rgba(201,168,76,.3);font-weight:600}
 
@@ -575,7 +596,7 @@ function Splash() {
       <style>{GLOBAL_CSS}</style>
       <div style={{ textAlign:'center' }}>
         <div style={{ marginBottom:18, animation:'floatUp 2.5s ease-in-out infinite' }}><LogoImg size={80}/></div>
-        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#fff', letterSpacing:3, marginBottom:4 }}>LAZULI LABS</div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#fff', letterSpacing:3, marginBottom:4 }}>LAZULI CREST</div>
         <div style={{ fontSize:16, color:'#C9A84C', letterSpacing:4, textTransform:'uppercase', marginBottom:24 }}>The Gold Standard in Health Advocacy</div>
         <div style={{ width:64, height:2, background:'linear-gradient(90deg,#2A5CAD,#C9A84C)', margin:'0 auto', borderRadius:2 }}/>
       </div>
@@ -646,7 +667,7 @@ function AuthScreen() {
       <div style={{ width:'100%', maxWidth:480, position:'relative', zIndex:1 }}>
         <div style={{ textAlign:'center', marginBottom:36 }}>
           <div style={{ marginBottom:16, animation:'floatUp 3s ease-in-out infinite' }}><LogoImg size={78}/></div>
-          <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:26, fontWeight:700, color:'#fff', letterSpacing:3, marginBottom:5 }}>LAZULI LABS</div>
+          <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:26, fontWeight:700, color:'#fff', letterSpacing:3, marginBottom:5 }}>LAZULI CREST</div>
           <div style={{ fontSize:16, color:'#C9A84C', letterSpacing:3.5, textTransform:'uppercase', marginBottom:6 }}>The Gold Standard in Health Advocacy</div>
           <div style={{ fontSize:16, color:'rgba(168,196,240,.52)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{getDailyMessage()}</div>
         </div>
@@ -1848,18 +1869,62 @@ const MINDFUL_QUOTES = [
   { text:'Peace is available to you right now, in this breath.', attr:'Lazuli' },
 ];
 
+const SOUNDSCAPES = [
+  { id:'rain',    label:'Rainfall',      emoji:'🌧',  freq:432, desc:'Deep relaxing rain' },
+  { id:'ocean',   label:'Ocean Waves',   emoji:'🌊',  freq:396, desc:'Rhythmic tide' },
+  { id:'forest',  label:'Forest Birds',  emoji:'🌿',  freq:528, desc:'Morning birdsong' },
+  { id:'binaural',label:'Binaural Beat', emoji:'🎵',  freq:40,  desc:'Focus: 40Hz gamma' },
+  { id:'tibetan', label:'Tibetan Bowl',  emoji:'🔔',  freq:174, desc:'Grounding tone' },
+  { id:'white',   label:'White Noise',   emoji:'📡',  freq:0,   desc:'Masking, focus' },
+];
+
 function Mindfulness() {
+  const TOOLS = [
+    { id:'breathing',  icon:'🫁', label:'Box Breathing'    },
+    { id:'affirmations',icon:'💙',label:'Affirmations'      },
+    { id:'tension',    icon:'🧘',  label:'Tension Release'  },
+    { id:'imagery',    icon:'🌅', label:'Guided Imagery'   },
+    { id:'gratitude',  icon:'🫙', label:'Gratitude Jar'    },
+    { id:'worry',      icon:'🪨', label:'Worry Stone'      },
+    { id:'zen',        icon:'🪴', label:'Zen Garden'       },
+    { id:'soundscapes',icon:'🎧',label:'Soundscapes'       },
+    { id:'fountain',   icon:'⛲',label:'Fountain Wishes'   },
+  ];
+
   const PHASES = [
     { label:'Breathe In',  dur:4, color:'#3B82F6',  scale:1.22 },
     { label:'Hold',        dur:4, color:'#C9A84C',  scale:1.22 },
     { label:'Breathe Out', dur:6, color:'#7B2FBE',  scale:0.72 },
     { label:'Rest',        dur:2, color:'#6ee7b7',  scale:0.72 },
   ];
-  const [active, setActive]   = useState(false);
-  const [phaseIdx, setPhaseIdx] = useState(0);
-  const [secs, setSecs]       = useState(PHASES[0].dur);
-  const [quoteIdx, setQuoteIdx] = useState(0);
+
+  const [tool, setTool]           = useState('breathing');
+  const [active, setActive]       = useState(false);
+  const [phaseIdx, setPhaseIdx]   = useState(0);
+  const [secs, setSecs]           = useState(PHASES[0].dur);
+  const [quoteIdx, setQuoteIdx]   = useState(0);
   const [quoteFade, setQuoteFade] = useState(true);
+
+  // Gratitude jar
+  const [gratEntries, setGratEntries] = useState([]);
+  const [gratInput, setGratInput]     = useState('');
+
+  // Worry stone rubs
+  const [rubs, setRubs]       = useState(0);
+  const [rubGlow, setRubGlow] = useState(false);
+
+  // Zen garden
+  const [zenLines, setZenLines]   = useState([]);
+  const [zenTool, setZenTool]     = useState('rake');
+
+  // Soundscape
+  const [playingSound, setPlayingSound] = useState(null);
+
+  // Fountain wishes
+  const [wishText, setWishText]   = useState('');
+  const [wishes, setWishes]       = useState([]);
+  const [wishRipple, setWishRipple] = useState(false);
+
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -1889,72 +1954,253 @@ function Mindfulness() {
   }, []);
 
   const phase = PHASES[phaseIdx];
+
+  const rubStone = () => {
+    setRubs(r=>r+1);
+    setRubGlow(true);
+    setTimeout(()=>setRubGlow(false), 600);
+  };
+
+  const makeWish = () => {
+    if (!wishText.trim()) return;
+    setWishes(w=>[{ text:wishText.trim(), id:Date.now() }, ...w.slice(0,7)]);
+    setWishText('');
+    setWishRipple(true);
+    setTimeout(()=>setWishRipple(false), 1200);
+  };
+
+  const drawZen = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left)/rect.width*100).toFixed(1);
+    const y = ((e.clientY - rect.top)/rect.height*100).toFixed(1);
+    setZenLines(l=>[...l, {x,y,id:Date.now()}].slice(-80));
+  };
+
   const q = MINDFUL_QUOTES[quoteIdx];
 
   return (
     <div>
       <PH emoji="🌸" title="Mindfulness" sub="Breathe, ground yourself, and find stillness"/>
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:32 }}>
-        {/* Breathing circle */}
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:22 }}>
+
+      {/* Tool selector */}
+      <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:28 }}>
+        {TOOLS.map(t=>(
+          <button key={t.id} onClick={()=>setTool(t.id)} style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 16px', borderRadius:30, border:`1.5px solid ${tool===t.id?'rgba(201,168,76,.6)':'rgba(42,92,173,.25)'}`, background:tool===t.id?'rgba(201,168,76,.12)':'rgba(42,92,173,.07)', color:tool===t.id?'#C9A84C':'rgba(240,232,255,.6)', fontSize:15, fontWeight:tool===t.id?700:400, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>
+            <span>{t.icon}</span>{t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Box Breathing ── */}
+      {tool==='breathing' && (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:28 }}>
           <div style={{ position:'relative', width:220, height:220 }}>
-            {/* Outer glow rings */}
             <div style={{ position:'absolute', inset:-20, borderRadius:'50%', border:`2px solid ${phase.color}22`, transition:'all 1s ease' }}/>
             <div style={{ position:'absolute', inset:-10, borderRadius:'50%', border:`1px solid ${phase.color}33`, transition:'all 1s ease' }}/>
-            {/* Main breathing circle */}
-            <div style={{
-              position:'absolute', inset:0, borderRadius:'50%',
-              background:`radial-gradient(circle, ${phase.color}44 0%, ${phase.color}18 50%, transparent 75%)`,
-              border:`2px solid ${phase.color}88`,
-              boxShadow:`0 0 40px ${phase.color}44, inset 0 0 30px ${phase.color}22`,
-              transform:`scale(${active ? phase.scale : 0.9})`,
-              transition:`transform ${phase.dur}s cubic-bezier(0.4,0,0.2,1), background ${0.8}s ease, border-color ${0.8}s ease, box-shadow ${0.8}s ease`,
-              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-            }}>
+            <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:`radial-gradient(circle, ${phase.color}44 0%, ${phase.color}18 50%, transparent 75%)`, border:`2px solid ${phase.color}88`, boxShadow:`0 0 40px ${phase.color}44, inset 0 0 30px ${phase.color}22`, transform:`scale(${active ? phase.scale : 0.9})`, transition:`transform ${phase.dur}s cubic-bezier(0.4,0,0.2,1), background .8s ease`, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
               <div style={{ fontFamily:"'Cinzel',serif", fontSize:18, fontWeight:600, color:phase.color, textAlign:'center', letterSpacing:1 }}>{active ? phase.label : 'Ready'}</div>
               {active && <div style={{ fontFamily:"'Cinzel',serif", fontSize:32, fontWeight:700, color:'#fff', lineHeight:1, marginTop:5 }}>{secs}</div>}
             </div>
           </div>
-          <button
-            className={active ? 'btn btn-ghost' : 'btn btn-lapis'}
-            style={{ fontSize:15, padding:'12px 32px', letterSpacing:1 }}
-            onClick={()=>{ setActive(a=>!a); setPhaseIdx(0); setSecs(PHASES[0].dur); }}
-          >
+          <button className={active ? 'btn btn-ghost' : 'btn btn-lapis'} style={{ fontSize:16, padding:'12px 32px', letterSpacing:1 }} onClick={()=>{ setActive(a=>!a); setPhaseIdx(0); setSecs(PHASES[0].dur); }}>
             {active ? '⏸ Pause' : '▶ Begin Breathing'}
           </button>
-          <div style={{ fontSize:16, color:'rgba(240,232,255,.28)', textAlign:'center', maxWidth:300, lineHeight:1.7 }}>
-            Box breathing: 4 counts in · 4 hold · 6 out · 2 rest<br/>
-            <span style={{ fontSize:16, color:'rgba(240,232,255,.18)' }}>Shown to calm the nervous system in minutes.</span>
-          </div>
-        </div>
-
-        {/* Phase progress dots */}
-        <div style={{ display:'flex', gap:10 }}>
-          {PHASES.map((p,i) => (
-            <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
-              <div style={{ width:10, height:10, borderRadius:'50%', background:i===phaseIdx&&active ? p.color : 'rgba(255,255,255,.1)', boxShadow:i===phaseIdx&&active?`0 0 10px ${p.color}`:undefined, transition:'all .4s' }}/>
-              <div style={{ fontSize:9, color:'rgba(240,232,255,.25)', textAlign:'center' }}>{p.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Affirmation quote */}
-        <div style={{ maxWidth:480, textAlign:'center', padding:'22px 28px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:18, transition:'opacity .6s', opacity:quoteFade?1:0 }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:21, fontStyle:'italic', color:'rgba(240,232,255,.85)', lineHeight:1.7, marginBottom:10 }}>"{q.text}"</div>
-          <div style={{ fontSize:16, color:'rgba(201,168,76,.45)', letterSpacing:2, textTransform:'uppercase' }}>— {q.attr}</div>
-        </div>
-
-        {/* All affirmations list */}
-        <div style={{ width:'100%', maxWidth:560 }}>
-          <div style={{ fontSize:16, fontWeight:700, color:'rgba(201,168,76,.4)', textTransform:'uppercase', letterSpacing:2, marginBottom:12, textAlign:'center' }}>Daily Affirmations</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {MINDFUL_QUOTES.map((q,i) => (
-              <div key={i} style={{ padding:'13px 18px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.12)', borderRadius:13, fontFamily:"'Cormorant Garamond',serif", fontSize:16, fontStyle:'italic', color:'rgba(240,232,255,.6)', lineHeight:1.65 }}>
-                "{q.text}"
+          <div style={{ fontSize:18, color:'rgba(240,232,255,.4)', textAlign:'center', maxWidth:340, lineHeight:1.7 }}>Box breathing: 4 counts in · 4 hold · 6 out · 2 rest</div>
+          <div style={{ display:'flex', gap:10 }}>
+            {PHASES.map((p,i) => (
+              <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                <div style={{ width:10, height:10, borderRadius:'50%', background:i===phaseIdx&&active ? p.color : 'rgba(255,255,255,.1)', boxShadow:i===phaseIdx&&active?`0 0 10px ${p.color}`:undefined, transition:'all .4s' }}/>
+                <div style={{ fontSize:12, color:'rgba(240,232,255,.25)', textAlign:'center' }}>{p.label}</div>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* ── Affirmations ── */}
+      {tool==='affirmations' && (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20 }}>
+          <div style={{ maxWidth:480, textAlign:'center', padding:'28px 32px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.18)', borderRadius:20, transition:'opacity .6s', opacity:quoteFade?1:0 }}>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontStyle:'italic', color:'rgba(240,232,255,.9)', lineHeight:1.8, marginBottom:12 }}>"{q.text}"</div>
+            <div style={{ fontSize:16, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase' }}>— {q.attr}</div>
+          </div>
+          <div style={{ width:'100%', maxWidth:560 }}>
+            <div style={{ fontSize:16, fontWeight:700, color:'rgba(201,168,76,.4)', textTransform:'uppercase', letterSpacing:2, marginBottom:14, textAlign:'center' }}>All Affirmations</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {MINDFUL_QUOTES.map((q,i) => (
+                <div key={i} style={{ padding:'15px 20px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.14)', borderRadius:14, fontFamily:"'Cormorant Garamond',serif", fontSize:20, fontStyle:'italic', color:'rgba(240,232,255,.72)', lineHeight:1.7 }}>
+                  "{q.text}"
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Tension Release ── */}
+      {tool==='tension' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:16, maxWidth:560, margin:'0 auto' }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.85)', textAlign:'center', marginBottom:8 }}>Progressive Muscle Relaxation</div>
+          {[
+            { area:'Hands & Forearms', inst:'Clench your fists tightly for 5 seconds, then release completely.' },
+            { area:'Shoulders & Neck', inst:'Raise your shoulders to your ears, hold for 5 seconds, then drop.' },
+            { area:'Jaw & Face',       inst:'Scrunch your entire face tightly for 5 seconds, then relax.' },
+            { area:'Core & Stomach',   inst:'Tighten your stomach muscles for 5 seconds, then release.' },
+            { area:'Legs & Feet',      inst:'Point your toes, tighten your legs for 5 seconds, then release.' },
+          ].map((s,i)=>(
+            <div key={i} style={{ padding:'18px 22px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.16)', borderRadius:16 }}>
+              <div style={{ fontWeight:700, color:'#C9A84C', fontSize:18, marginBottom:6 }}>{s.area}</div>
+              <div style={{ color:'rgba(240,232,255,.7)', fontSize:18, lineHeight:1.7 }}>{s.inst}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Guided Imagery ── */}
+      {tool==='imagery' && (
+        <div style={{ maxWidth:560, margin:'0 auto', display:'flex', flexDirection:'column', gap:18 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.85)', textAlign:'center' }}>Close your eyes and breathe slowly.</div>
+          {[
+            "Imagine you're standing at the edge of a calm, warm ocean. The sky is a soft gradient of rose and gold.",
+            "Feel the soft sand beneath your feet. Each grain is cool and grounding. Your body is fully supported.",
+            "Hear gentle waves rolling in. With each wave, tension leaves your body and dissolves into the sea.",
+            "A warm breeze moves across your skin. You are completely safe. Your nervous system begins to soften.",
+            "You are whole. You are exactly where you need to be. This moment belongs only to you.",
+          ].map((line,i)=>(
+            <div key={i} style={{ padding:'18px 22px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.13)', borderRadius:16, fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.8)', lineHeight:1.8, fontStyle:'italic' }}>
+              {line}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Gratitude Jar ── */}
+      {tool==='gratitude' && (
+        <div style={{ maxWidth:520, margin:'0 auto', display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ fontSize:64, textAlign:'center', animation:'floatUp 3s ease-in-out infinite' }}>🫙</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', marginBottom:4 }}>What are you grateful for today?</div>
+          <div style={{ display:'flex', gap:10 }}>
+            <input className="field" value={gratInput} onChange={e=>setGratInput(e.target.value)} placeholder="Something small counts too..." onKeyDown={e=>{ if(e.key==='Enter'&&gratInput.trim()){ setGratEntries(g=>[{text:gratInput.trim(),id:Date.now()},...g.slice(0,19)]); setGratInput(''); }}} style={{ flex:1, fontSize:18 }}/>
+            <button className="btn btn-gold" onClick={()=>{ if(gratInput.trim()){ setGratEntries(g=>[{text:gratInput.trim(),id:Date.now()},...g.slice(0,19)]); setGratInput(''); } }}>Add</button>
+          </div>
+          {gratEntries.length===0 && <div style={{ textAlign:'center', color:'rgba(240,232,255,.3)', fontSize:18, padding:'20px 0' }}>Your jar is empty — drop something in.</div>}
+          <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+            {gratEntries.map((e,i)=>(
+              <div key={e.id} style={{ padding:'13px 18px', background:'rgba(201,168,76,.07)', border:'1px solid rgba(201,168,76,.18)', borderRadius:12, color:'rgba(240,232,255,.8)', fontSize:18, animation:'popIn .2s ease' }}>
+                🌟 {e.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Worry Stone ── */}
+      {tool==='worry' && (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:24 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', maxWidth:400, lineHeight:1.7 }}>
+            Hold your worry stone. Each rub transfers anxiety out of your hands and into the stone.
+          </div>
+          <div
+            onClick={rubStone}
+            style={{ width:160, height:100, borderRadius:'50% 50% 45% 45%', background:`radial-gradient(ellipse at 40% 35%, rgba(42,92,173,${rubGlow?.6:.35}), rgba(15,25,80,${rubGlow?.9:.7}))`, border:`2px solid rgba(42,92,173,${rubGlow?.8:.3})`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, color:'rgba(168,196,240,.6)', fontFamily:"'Cinzel',serif", letterSpacing:2, transition:'all .3s', boxShadow:rubGlow?'0 0 40px rgba(42,92,173,.8), 0 0 80px rgba(42,92,173,.3)':'0 4px 20px rgba(0,0,0,.5)', userSelect:'none' }}>
+            {rubs > 0 ? `${rubs} rubs` : 'Tap to rub'}
+          </div>
+          {rubs >= 10 && (
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', textAlign:'center', animation:'fadeUp .4s ease' }}>
+              {rubs >= 30 ? '💙 The stone has absorbed much. You are lighter.' : rubs >= 20 ? '✨ Feel your hands soften. The worry loosens.' : '🪨 The stone is warm now. Keep going.'}
+            </div>
+          )}
+          <button className="btn btn-ghost" onClick={()=>setRubs(0)} style={{ fontSize:16 }}>Reset Stone</button>
+        </div>
+      )}
+
+      {/* ── Zen Garden ── */}
+      {tool==='zen' && (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.7)', textAlign:'center' }}>Draw in the sand. Breathe.</div>
+          <div style={{ display:'flex', gap:10, marginBottom:4 }}>
+            {['rake','smooth','circle'].map(t=>(
+              <button key={t} onClick={()=>setZenTool(t)} style={{ padding:'8px 18px', borderRadius:20, border:`1.5px solid ${zenTool===t?'rgba(201,168,76,.5)':'rgba(42,92,173,.25)'}`, background:zenTool===t?'rgba(201,168,76,.1)':'transparent', color:zenTool===t?'#C9A84C':'rgba(240,232,255,.5)', fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{t}</button>
+            ))}
+          </div>
+          <div
+            onMouseMove={e=>{ if(e.buttons===1) drawZen(e); }}
+            onClick={drawZen}
+            style={{ width:'100%', maxWidth:560, height:280, background:'rgba(201,168,76,.04)', border:'1.5px solid rgba(201,168,76,.15)', borderRadius:16, position:'relative', cursor:'crosshair', overflow:'hidden' }}>
+            {/* Sand texture lines */}
+            {[...Array(12)].map((_,i)=>(
+              <div key={i} style={{ position:'absolute', left:0, right:0, top:`${8+i*22}px`, height:'1px', background:'rgba(201,168,76,.06)' }}/>
+            ))}
+            {zenLines.map((l,i)=>(
+              <div key={l.id} style={{ position:'absolute', left:`${l.x}%`, top:`${l.y}%`, width:zenTool==='circle'?20:4, height:zenTool==='circle'?20:zenTool==='rake'?12:4, borderRadius:zenTool==='circle'?'50%':'2px', background:'rgba(201,168,76,.3)', transform:'translate(-50%,-50%)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>
+            ))}
+            {zenLines.length===0 && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(240,232,255,.15)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Drag to draw in the sand</div>}
+          </div>
+          <button className="btn btn-ghost" onClick={()=>setZenLines([])} style={{ fontSize:16 }}>Clear Garden</button>
+        </div>
+      )}
+
+      {/* ── Soundscapes ── */}
+      {tool==='soundscapes' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:14, maxWidth:520, margin:'0 auto' }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', marginBottom:8 }}>Healing Frequencies & Soundscapes</div>
+          <div style={{ fontSize:18, color:'rgba(240,232,255,.45)', textAlign:'center', marginBottom:4 }}>Note: Audio plays through your browser. Use headphones for binaural beats.</div>
+          {SOUNDSCAPES.map(s=>(
+            <div key={s.id} onClick={()=>setPlayingSound(p=>p===s.id?null:s.id)} style={{ display:'flex', alignItems:'center', gap:16, padding:'18px 22px', background:playingSound===s.id?'rgba(42,92,173,.18)':'rgba(42,92,173,.07)', border:`1.5px solid ${playingSound===s.id?'rgba(42,92,173,.5)':'rgba(42,92,173,.15)'}`, borderRadius:16, cursor:'pointer', transition:'all .2s' }}>
+              <div style={{ fontSize:32 }}>{s.emoji}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontWeight:700, color: playingSound===s.id?'#C9A84C':'rgba(240,232,255,.85)', fontSize:18, marginBottom:3 }}>{s.label}</div>
+                <div style={{ fontSize:16, color:'rgba(240,232,255,.45)' }}>{s.desc}{s.freq>0?` — ${s.freq}Hz`:''}</div>
+              </div>
+              <div style={{ width:36, height:36, borderRadius:'50%', border:`2px solid ${playingSound===s.id?'#C9A84C':'rgba(42,92,173,.35)'}`, display:'flex', alignItems:'center', justifyContent:'center', color:playingSound===s.id?'#C9A84C':'rgba(240,232,255,.4)', fontSize:16, transition:'all .2s' }}>
+                {playingSound===s.id ? '■' : '▶'}
+              </div>
+            </div>
+          ))}
+          {playingSound && (
+            <div style={{ textAlign:'center', padding:'14px', background:'rgba(42,92,173,.08)', borderRadius:12, color:'rgba(168,196,240,.6)', fontSize:18 }}>
+              ♪ Now playing: {SOUNDSCAPES.find(s=>s.id===playingSound)?.label} — use your device's ambient sound app or YouTube for actual audio.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Fountain Wishes ── */}
+      {tool==='fountain' && (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', maxWidth:420, lineHeight:1.7 }}>
+            Write a wish, intention, or hope — then release it to the fountain.
+          </div>
+          {/* Fountain visual */}
+          <div style={{ position:'relative', width:200, height:140 }}>
+            <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:160, height:40, borderRadius:'50%', background:'rgba(42,92,173,.25)', border:'1.5px solid rgba(42,92,173,.4)', boxShadow:wishRipple?'0 0 40px rgba(42,92,173,.7)':'0 0 12px rgba(42,92,173,.2)', transition:'box-shadow .6s' }}/>
+            <div style={{ position:'absolute', bottom:38, left:'50%', transform:'translateX(-50%)', width:8, height:60, background:'linear-gradient(0deg,rgba(42,92,173,.5),rgba(168,196,240,.6))', borderRadius:4 }}/>
+            {wishRipple && [...Array(3)].map((_,i)=>(
+              <div key={i} style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', width:20+i*40, height:20+i*40, borderRadius:'50%', border:'1.5px solid rgba(42,92,173,.5)', animation:`ripple${i} .8s ${i*.15}s ease-out both`, opacity:0 }}/>
+            ))}
+            <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', fontSize:28, animation:'floatUp 2s ease-in-out infinite' }}>⛲</div>
+          </div>
+          <div style={{ display:'flex', gap:10, width:'100%', maxWidth:480 }}>
+            <input className="field" value={wishText} onChange={e=>setWishText(e.target.value)} placeholder="I wish for..." style={{ flex:1, fontSize:18 }} onKeyDown={e=>{ if(e.key==='Enter') makeWish(); }}/>
+            <button className="btn btn-lapis" onClick={makeWish} style={{ fontSize:16 }}>Release ✨</button>
+          </div>
+          {wishes.length > 0 && (
+            <div style={{ width:'100%', maxWidth:480, display:'flex', flexDirection:'column', gap:8 }}>
+              <div style={{ fontSize:15, color:'rgba(240,232,255,.3)', textAlign:'center', letterSpacing:1 }}>RELEASED TO THE WATERS</div>
+              {wishes.map(w=>(
+                <div key={w.id} style={{ padding:'12px 18px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.18)', borderRadius:12, color:'rgba(240,232,255,.65)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', animation:'fadeUp .3s ease' }}>
+                  ✨ {w.text}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bottom affirmation quote — always visible */}
+      <div style={{ maxWidth:480, margin:'32px auto 0', textAlign:'center', padding:'22px 28px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:18, transition:'opacity .6s', opacity:quoteFade?1:0 }}>
+        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontStyle:'italic', color:'rgba(240,232,255,.85)', lineHeight:1.7, marginBottom:10 }}>"{q.text}"</div>
+        <div style={{ fontSize:16, color:'rgba(201,168,76,.45)', letterSpacing:2, textTransform:'uppercase' }}>— {q.attr}</div>
       </div>
     </div>
   );
