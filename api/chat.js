@@ -1,6 +1,6 @@
 // api/chat.js — ADVY Health Vercel Serverless Function
 // ─────────────────────────────────────────────────────────────
-// AI:           Google Gemini 2.5 Flash-Lite (free tier: ~1,000 req/day)
+// AI:           Google Gemini 2.0 Flash (free tier: ~1,500 req/day)
 // Daily limit:  20 messages per user per day  (via Firestore REST — no Admin SDK needed)
 // Discord:      Pings on signup + login
 // Env vars needed in Vercel:
@@ -164,11 +164,11 @@ export default async function handler(req, res) {
     };
   }
 
-  // ── Call Gemini 2.5 Flash-Lite ────────────────────────────
-  // Model string: gemini-2.5-flash-lite-preview-06-17
-  // Falls back to gemini-1.5-flash if the preview isn't available yet
-  const MODEL   = 'gemini-2.5-flash-lite-preview-06-17';
-  const FALLBACK = 'gemini-1.5-flash';
+  // ── Call Gemini 2.0 Flash ─────────────────────────────────
+  // Model string: gemini-2.0-flash (stable, available on v1beta)
+  // Falls back to gemini-1.5-flash-latest if needed
+  const MODEL   = 'gemini-2.0-flash';
+  const FALLBACK = 'gemini-1.5-flash-latest';
 
   async function callGemini(model) {
     const endpoint =
