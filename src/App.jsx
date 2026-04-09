@@ -661,6 +661,25 @@ const GLOBAL_CSS = `
 
   /* ── Mindfulness ─────────────────────────────────────────── */
   .breathe-ring{border-radius:50%;position:absolute;inset:0;border:2px solid}
+  @keyframes toolFloat{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-4px) scale(1.02);}}
+  @keyframes auraRing{0%{box-shadow:0 0 0 0 rgba(201,168,76,.6),0 4px 20px rgba(0,0,0,.4);}70%{box-shadow:0 0 0 12px rgba(201,168,76,0),0 4px 20px rgba(0,0,0,.4);}100%{box-shadow:0 0 0 0 rgba(201,168,76,0),0 4px 20px rgba(0,0,0,.4);}}
+  @keyframes waterFlow{0%{stroke-dashoffset:0;opacity:.7;}100%{stroke-dashoffset:24;opacity:.4;}}
+  @keyframes dropFall{0%{transform:translateY(-30px);opacity:0;}20%{opacity:.8;}100%{transform:translateY(60px);opacity:0;}}
+  @keyframes rippleOut{0%{transform:scale(0);opacity:.8;}100%{transform:scale(1);opacity:0;}}
+  @keyframes coinThrow{0%{transform:translate(0,0) scale(1);opacity:1;}50%{transform:translate(0,80px) scale(0.7);}100%{transform:translate(0,140px) scale(0.3);opacity:0;}}
+  @keyframes coinFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+  @keyframes sparkle{0%{transform:translateY(0) scale(0);opacity:1;}100%{transform:translateY(-40px) scale(1.5);opacity:0;}}
+  @keyframes burstOut{0%{transform:translateX(-50%) scale(0);opacity:1;}100%{transform:translateX(-50%) scale(3);opacity:0;}}
+  @keyframes noteFloat{0%{transform:translateY(20px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+  @keyframes stoneFloat{0%,100%{transform:translateY(0) rotate(-1deg);}33%{transform:translateY(-12px) rotate(1deg);}66%{transform:translateY(-6px) rotate(-0.5deg);}}
+  @keyframes stoneRub{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
+  @keyframes stoneShadow{0%,100%{transform:translateX(-50%) scaleX(1);opacity:.5;}33%{transform:translateX(-50%) scaleX(.7);opacity:.25;}}
+  @keyframes stoneAura1{0%,100%{transform:scale(1);opacity:.6;}50%{transform:scale(1.15);opacity:1;}}
+  @keyframes stoneAura2{0%,100%{transform:scale(1) rotate(0deg);opacity:.4;}50%{transform:scale(1.2) rotate(180deg);opacity:.7;}}
+  @keyframes orbit0{from{transform:rotate(0deg) translateX(90px);}to{transform:rotate(360deg) translateX(90px);}}
+  @keyframes orbit1{from{transform:rotate(0deg) translateX(70px) rotate(0deg);}to{transform:rotate(360deg) translateX(70px) rotate(-360deg);}}
+  @keyframes orbit2{from{transform:rotate(120deg) translateX(85px);}to{transform:rotate(480deg) translateX(85px);}}
+  @keyframes barBounce{0%{transform:scaleY(.5);}100%{transform:scaleY(1.2);}}
 
   @media(max-width:768px){
     .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:100}
@@ -672,6 +691,9 @@ const GLOBAL_CSS = `
     .three-col{grid-template-columns:1fr !important}
     .stats-grid{grid-template-columns:repeat(2,1fr) !important}
   }
+
+  /* ── Diary book ruled lines ─── */
+  .diary-right-lines { background-image: repeating-linear-gradient(to bottom, transparent, transparent 33px, rgba(42,92,173,.08) 33px, rgba(42,92,173,.08) 34px); }
 `;
 
 // ─── Splash ───────────────────────────────────────────────────
@@ -2049,12 +2071,15 @@ const MINDFUL_QUOTES = [
 ];
 
 const SOUNDSCAPES = [
-  { id:'rain',    label:'Rainfall',      emoji:'🌧',  freq:432, desc:'Deep relaxing rain' },
-  { id:'ocean',   label:'Ocean Waves',   emoji:'🌊',  freq:396, desc:'Rhythmic tide' },
-  { id:'forest',  label:'Forest Birds',  emoji:'🌿',  freq:528, desc:'Morning birdsong' },
-  { id:'binaural',label:'Binaural Beat', emoji:'🎵',  freq:40,  desc:'Focus: 40Hz gamma' },
-  { id:'tibetan', label:'Tibetan Bowl',  emoji:'🔔',  freq:174, desc:'Grounding tone' },
-  { id:'white',   label:'White Noise',   emoji:'📡',  freq:0,   desc:'Masking, focus' },
+  { id:'rain',      label:'Gentle Rain',       icon:'🌧', desc:'Soft rainfall — grounding and calming',           color:'#93c5fd' },
+  { id:'ocean',     label:'Ocean Waves',        icon:'🌊', desc:'Rhythmic tides — nervous system reset',           color:'#60a5fa' },
+  { id:'forest',    label:'Forest & Birds',     icon:'🌿', desc:'Morning birdsong — awakening and alive',          color:'#6ee7b7' },
+  { id:'whitenoise',label:'White Noise',        icon:'〰', desc:'Steady masking noise — focus and sleep',          color:'#a78bfa' },
+  { id:'binaural40',label:'Gamma Binaural 40Hz',icon:'⚡', desc:'Focus & clarity — 40Hz gamma waves (headphones)', color:'#C9A84C' },
+  { id:'binaural10',label:'Alpha Binaural 10Hz',icon:'🧠', desc:'Calm focus — 10Hz alpha waves (headphones)',      color:'#7B2FBE' },
+  { id:'binaural4', label:'Theta Binaural 4Hz', icon:'💤', desc:'Deep rest — 4Hz theta waves (headphones)',        color:'#5B1F8E' },
+  { id:'tibetan',   label:'Tibetan Bowl 432Hz', icon:'🔔', desc:'Ancient healing frequency — grounding',           color:'#f59e0b' },
+  { id:'heartbeat', label:'Calm Heartbeat',     icon:'💓', desc:'Steady rhythm — anxiety relief',                  color:'#f87171' },
 ];
 
 function Mindfulness() {
@@ -2087,10 +2112,14 @@ function Mindfulness() {
   // Gratitude jar
   const [gratEntries, setGratEntries] = useState([]);
   const [gratInput, setGratInput]     = useState('');
+  const [gratLidOpen, setGratLidOpen] = useState(false);
+  const [gratBurst, setGratBurst]     = useState(false);
 
   // Worry stone rubs
-  const [rubs, setRubs]       = useState(0);
-  const [rubGlow, setRubGlow] = useState(false);
+  const [rubs, setRubs]           = useState(0);
+  const [rubGlow, setRubGlow]     = useState(false);
+  const [stoneMuted, setStoneMuted] = useState(false);
+  const stoneAudioCtxRef = useRef(null);
 
   // Zen garden
   const [zenLines, setZenLines]   = useState([]);
@@ -2098,11 +2127,18 @@ function Mindfulness() {
 
   // Soundscape
   const [playingSound, setPlayingSound] = useState(null);
+  const soundNodesRef = useRef(null);
+  const soundCtxRef   = useRef(null);
 
   // Fountain wishes
   const [wishText, setWishText]   = useState('');
   const [wishes, setWishes]       = useState([]);
   const [wishRipple, setWishRipple] = useState(false);
+
+  // Guided imagery
+  const [imageryScene, setImageryScene]               = useState(null);
+  const [imageryStep, setImageryStep]                 = useState(0);
+  const [imageryVoicePlaying, setImageryVoicePlaying] = useState(false);
 
   const timerRef = useRef(null);
 
@@ -2132,12 +2168,36 @@ function Mindfulness() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(()=>{
+    return ()=>{ try{ soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});soundCtxRef.current?.close();}catch(e){} };
+  },[]);
+
   const phase = PHASES[phaseIdx];
 
   const rubStone = () => {
     setRubs(r=>r+1);
     setRubGlow(true);
-    setTimeout(()=>setRubGlow(false), 600);
+    setTimeout(()=>setRubGlow(false), 300);
+    // Play crystal sound via Web Audio
+    if (!stoneMuted) {
+      try {
+        if (!stoneAudioCtxRef.current) {
+          stoneAudioCtxRef.current = new (window.AudioContext||window.webkitAudioContext)();
+        }
+        const ctx = stoneAudioCtxRef.current;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(528 + Math.random()*60, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(396, ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      } catch(e) {}
+    }
   };
 
   const makeWish = () => {
@@ -2148,11 +2208,117 @@ function Mindfulness() {
     setTimeout(()=>setWishRipple(false), 1200);
   };
 
+  const addGratitude = () => {
+    if (!gratInput.trim()) return;
+    setGratEntries(g=>[{text:gratInput.trim(),id:Date.now()},...g.slice(0,19)]);
+    setGratInput('');
+    setGratLidOpen(true);
+    setGratBurst(true);
+    setTimeout(()=>setGratLidOpen(false), 2000);
+    setTimeout(()=>setGratBurst(false), 800);
+  };
+
   const drawZen = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left)/rect.width*100).toFixed(1);
     const y = ((e.clientY - rect.top)/rect.height*100).toFixed(1);
     setZenLines(l=>[...l, {x,y,id:Date.now()}].slice(-80));
+  };
+
+  const toggleSound = (id) => {
+    // Stop current
+    try { soundNodesRef.current?.forEach(n=>{ try{n.stop?.();n.disconnect?.();}catch(e){} }); } catch(e){}
+    soundNodesRef.current = [];
+    if (playingSound === id || !id) { setPlayingSound(null); return; }
+
+    setPlayingSound(id);
+    try {
+      if (!soundCtxRef.current || soundCtxRef.current.state === 'closed') {
+        soundCtxRef.current = new (window.AudioContext||window.webkitAudioContext)();
+      }
+      const ctx = soundCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+      const nodes = [];
+
+      const mkNoise = (color='white') => {
+        const buf = ctx.createBuffer(1, ctx.sampleRate*4, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+        for(let i=0;i<d.length;i++){
+          const w=Math.random()*2-1;
+          if(color==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.96900*b2+w*.1538520;b3=.86650*b3+w*.3104856;b4=.55000*b4+w*.5329522;b5=-.7616*b5-w*.0168980;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*0.11;b6=w*.115926;}
+          else d[i]=w;
+        }
+        const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;return src;
+      };
+
+      if (id==='whitenoise') {
+        const src=mkNoise();const g=ctx.createGain();g.gain.value=0.18;src.connect(g);g.connect(ctx.destination);src.start();nodes.push(src);
+      } else if (id==='rain') {
+        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=900;f.Q.value=0.6;const g=ctx.createGain();g.gain.value=0.35;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
+        const src2=mkNoise('pink');const f2=ctx.createBiquadFilter();f2.type='highpass';f2.frequency.value=3000;const g2=ctx.createGain();g2.gain.value=0.08;src2.connect(f2);f2.connect(g2);g2.connect(ctx.destination);src2.start();
+        nodes.push(src,src2);
+      } else if (id==='ocean') {
+        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=500;const g=ctx.createGain();g.gain.value=0.5;
+        const lfo=ctx.createOscillator();lfo.frequency.value=0.15;const lfoG=ctx.createGain();lfoG.gain.value=0.3;lfo.connect(lfoG);lfoG.connect(g.gain);lfo.start();
+        src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src,lfo);
+      } else if (id==='forest') {
+        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2200;f.Q.value=0.4;const g=ctx.createGain();g.gain.value=0.2;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src);
+      } else if (id==='tibetan') {
+        [432,864,1296].forEach((freq,i)=>{
+          const o=ctx.createOscillator();const g=ctx.createGain();
+          o.type='sine';o.frequency.value=freq;
+          g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(0.08/(i+1),ctx.currentTime+2);
+          o.connect(g);g.connect(ctx.destination);o.start();nodes.push(o);
+        });
+      } else if (id==='heartbeat') {
+        const playBeat = () => {
+          [0,0.15].forEach(offset=>{
+            const o=ctx.createOscillator();const g=ctx.createGain();
+            o.type='sine';o.frequency.value=80+offset*20;
+            g.gain.setValueAtTime(0,ctx.currentTime+offset);g.gain.linearRampToValueAtTime(0.35,ctx.currentTime+offset+0.04);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+offset+0.25);
+            o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+offset);o.stop(ctx.currentTime+offset+0.3);
+          });
+        };
+        playBeat();
+        const interval=setInterval(playBeat,900);nodes.push({stop:()=>clearInterval(interval)});
+      } else if (id.startsWith('binaural')) {
+        const beatHz = id==='binaural40'?40:id==='binaural10'?10:4;
+        const base=200;
+        const merger=ctx.createChannelMerger(2);merger.connect(ctx.destination);
+        const oL=ctx.createOscillator(),oR=ctx.createOscillator();
+        const gL=ctx.createGain(),gR=ctx.createGain();
+        oL.frequency.value=base;oR.frequency.value=base+beatHz;
+        gL.gain.value=0.18;gR.gain.value=0.18;
+        oL.connect(gL);oR.connect(gR);gL.connect(merger,0,0);gR.connect(merger,0,1);
+        oL.start();oR.start();nodes.push(oL,oR);
+      }
+      soundNodesRef.current=nodes;
+    } catch(e){ console.warn('Audio error:',e); }
+  };
+
+  const speakImagery = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const brit = voices.find(v=>v.lang==='en-GB'&&v.name.toLowerCase().includes('female'))
+      || voices.find(v=>v.lang==='en-GB')
+      || voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))
+      || voices[0];
+    if (brit) utt.voice = brit;
+    utt.rate = 0.82;
+    utt.pitch = 1.05;
+    utt.volume = 0.9;
+    utt.onstart = () => setImageryVoicePlaying(true);
+    utt.onend = () => setImageryVoicePlaying(false);
+    utt.onerror = () => setImageryVoicePlaying(false);
+    window.speechSynthesis.speak(utt);
+  };
+
+  const stopImageryVoice = () => {
+    window.speechSynthesis?.cancel();
+    setImageryVoicePlaying(false);
   };
 
   const q = MINDFUL_QUOTES[quoteIdx];
@@ -2164,7 +2330,7 @@ function Mindfulness() {
       {/* Tool selector */}
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:28 }}>
         {TOOLS.map(t=>(
-          <button key={t.id} onClick={()=>setTool(t.id)} style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 16px', borderRadius:30, border:`1.5px solid ${tool===t.id?'rgba(201,168,76,.6)':'rgba(42,92,173,.25)'}`, background:tool===t.id?'rgba(201,168,76,.12)':'rgba(42,92,173,.07)', color:tool===t.id?'#C9A84C':'rgba(240,232,255,.6)', fontSize:15, fontWeight:tool===t.id?700:400, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>
+          <button key={t.id} onClick={()=>setTool(t.id)} style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 16px', borderRadius:30, border:`1.5px solid ${tool===t.id?'rgba(201,168,76,.6)':'rgba(42,92,173,.25)'}`, background:tool===t.id?'rgba(201,168,76,.12)':'rgba(42,92,173,.07)', color:tool===t.id?'#C9A84C':'rgba(240,232,255,.6)', fontSize:15, fontWeight:tool===t.id?700:400, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s', animation:tool===t.id?'toolFloat 3s ease-in-out infinite, auraRing 2s ease-in-out infinite':'none' }}>
             <span>{t.icon}</span>{t.label}
           </button>
         ))}
@@ -2237,61 +2403,299 @@ function Mindfulness() {
 
       {/* ── Guided Imagery ── */}
       {tool==='imagery' && (
-        <div style={{ maxWidth:560, margin:'0 auto', display:'flex', flexDirection:'column', gap:18 }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.85)', textAlign:'center' }}>Close your eyes and breathe slowly.</div>
-          {[
-            "Imagine you're standing at the edge of a calm, warm ocean. The sky is a soft gradient of rose and gold.",
-            "Feel the soft sand beneath your feet. Each grain is cool and grounding. Your body is fully supported.",
-            "Hear gentle waves rolling in. With each wave, tension leaves your body and dissolves into the sea.",
-            "A warm breeze moves across your skin. You are completely safe. Your nervous system begins to soften.",
-            "You are whole. You are exactly where you need to be. This moment belongs only to you.",
-          ].map((line,i)=>(
-            <div key={i} style={{ padding:'18px 22px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.13)', borderRadius:16, fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.8)', lineHeight:1.8, fontStyle:'italic' }}>
-              {line}
+  <div style={{ maxWidth:580, margin:'0 auto', display:'flex', flexDirection:'column', gap:16 }}>
+    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.9)', textAlign:'center' }}>Where would you like to go?</div>
+
+    {/* Scene selector */}
+    {!imageryScene && (
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginTop:8 }}>
+        {[
+          { id:'ocean',   label:'Ocean Shore',    emoji:'🌊', bg:'rgba(37,99,235,.15)', border:'rgba(37,99,235,.35)' },
+          { id:'mountain',label:'Mountain Peaks',  emoji:'🏔', bg:'rgba(100,116,139,.15)',border:'rgba(100,116,139,.35)'},
+          { id:'forest',  label:'Forest Path',     emoji:'🌲', bg:'rgba(22,163,74,.12)',  border:'rgba(22,163,74,.3)' },
+          { id:'cabin',   label:'Cozy Cabin',      emoji:'🏡', bg:'rgba(180,83,9,.12)',   border:'rgba(180,83,9,.3)'  },
+          { id:'garden',  label:'Healing Garden',  emoji:'🌸', bg:'rgba(236,72,153,.1)',  border:'rgba(236,72,153,.3)'},
+          { id:'stars',   label:'Night Stars',     emoji:'✨', bg:'rgba(109,40,217,.12)', border:'rgba(109,40,217,.3)'},
+        ].map(s=>(
+          <button key={s.id} onClick={()=>{ setImageryScene(s.id); setImageryStep(0); }} style={{ padding:'22px 16px', borderRadius:18, border:`1.5px solid ${s.border}`, background:s.bg, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:10, transition:'all .2s', fontFamily:"'DM Sans',sans-serif" }}>
+            <div style={{ fontSize:40 }}>{s.emoji}</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.85)', fontWeight:600 }}>{s.label}</div>
+          </button>
+        ))}
+      </div>
+    )}
+
+    {imageryScene && (() => {
+      const SCENES = {
+        ocean: [
+          "Close your eyes and take a slow, deep breath. You are standing at the edge of a warm, sun-kissed beach. The sky above you is a soft rose and gold — it's the golden hour.",
+          "Feel the cool, silky sand beneath your bare feet. Each grain is smooth and cool. The earth holds you completely. Your body is fully supported.",
+          "Hear the waves rolling in. Each one brings a whisper: you are safe. As the water retreats, it carries away whatever tension your body has been holding.",
+          "A warm, salty breeze moves across your face and neck. The sound of the ocean fills your mind, pushing all thoughts to the edges until they disappear completely.",
+          "You are here. Whole. Safe. The horizon stretches endlessly before you — and in this moment, you have everything you need.",
+        ],
+        mountain: [
+          "You are standing on a mountain path, surrounded by towering pines. The air is crisp and clean — cold enough to feel alive in your lungs.",
+          "Look up. The sky above the peaks is the deepest, most impossible blue you've ever seen. A few clouds drift slowly, unhurried. Like you can be right now.",
+          "Feel the solid rock beneath your boots. These mountains have stood for millions of years. Their stillness is available to you. Breathe it in.",
+          "A hawk circles lazily overhead. You watch it ride the thermals — effortless, unhurried. For a moment, you see yourself from above. Small, and somehow perfectly placed.",
+          "The mountain asks nothing of you. You belong here, among these ancient stones. You are as worthy of this peace as anything that has ever lived.",
+        ],
+        forest: [
+          "You're walking a soft forest path. Moss carpets the ground on either side. Each step is quiet — absorbed by the earth beneath you.",
+          "Sunlight filters through the canopy above in long, golden shafts. Dust motes float in the light like tiny stars. The world moves slowly here.",
+          "The forest hums — insects, a distant woodpecker, wind moving through the high branches. You are held inside a living sound, vast and gentle.",
+          "Stop. Place your hand on the bark of a great oak. Feel its texture. It has stood here longer than you've been alive. Breathe in its steadiness.",
+          "The forest does not worry. It simply grows, and rests, and grows again. You are allowed to simply be, right now, exactly as you are.",
+        ],
+        cabin: [
+          "Imagine a small cabin at the edge of a snow-dusted wood. Inside, a fire crackles in the hearth — amber light dancing on the walls. You are warm and completely safe.",
+          "You are wrapped in the softest blanket. A cup of something warm is in your hands. Outside, snowflakes drift silently. In here, time has stopped.",
+          "The fire speaks in pops and hisses — a private language. Your body sinks deeper into the chair. Your shoulders drop. Your jaw unclenches.",
+          "There is nowhere to be. No one expects anything. This moment belongs entirely to you. The cabin holds you like an embrace that asks for nothing in return.",
+          "Breathe out slowly. The fire breathes with you. You are safe, warm, held. Whatever you've been carrying — you can set it down right here.",
+        ],
+        garden: [
+          "You step through a gate into a healing garden — fragrant with lavender and jasmine, warm with afternoon light.",
+          "Butterflies move between blossoms. A fountain murmurs nearby. Bees hum their ancient, contented song. Everything here tends toward healing.",
+          "You sit on a bench beneath a wisteria arch. The blossoms hang like purple clouds above you. A petal drifts down and lands on your arm.",
+          "This garden was made for you. Every flower is a message: you deserve beauty. Every stone path says: you are allowed to walk slowly.",
+          "In this garden, your body remembers how to rest. Your nervous system unwinds like a vine finding sunlight. You are blooming, in your own time.",
+        ],
+        stars: [
+          "You are lying on warm grass on a clear summer night. Above you, the Milky Way arcs across the sky like a river of light — impossibly vast and impossibly beautiful.",
+          "You watch a star shift slightly and realize you are seeing a satellite — someone's creation, orbiting this small, precious world. You are on that world. How remarkable.",
+          "The silence up here is different. It has depth. The stars don't rush. They simply burn, steady and ancient, and in doing so, they light everything.",
+          "Feel how small you are. Let this feel like relief, not smallness. Your worries are tiny against this sky — and you are part of something enormous and alive.",
+          "One by one, release each worry into the stars. Watch them float upward and dissolve into light. You are lighter now. You are made of stardust, returned to itself.",
+        ],
+      };
+      const steps = SCENES[imageryScene] || SCENES.ocean;
+      const currentStep = steps[imageryStep] || steps[0];
+      const sceneMeta = { ocean:{emoji:'🌊',label:'Ocean Shore'}, mountain:{emoji:'🏔',label:'Mountain Peaks'}, forest:{emoji:'🌲',label:'Forest Path'}, cabin:{emoji:'🏡',label:'Cozy Cabin'}, garden:{emoji:'🌸',label:'Healing Garden'}, stars:{emoji:'✨',label:'Night Stars'} }[imageryScene];
+
+      return (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <button onClick={()=>{ setImageryScene(null); stopImageryVoice(); }} style={{ fontSize:15, color:'rgba(201,168,76,.6)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>← Choose different scene</button>
+            <div style={{ fontSize:20 }}>{sceneMeta.emoji} {sceneMeta.label}</div>
+          </div>
+
+          {/* Step dots */}
+          <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+            {steps.map((_,i)=>(
+              <div key={i} onClick={()=>setImageryStep(i)} style={{ width:i===imageryStep?24:8, height:8, borderRadius:4, background:i===imageryStep?'#C9A84C':i<imageryStep?'rgba(201,168,76,.4)':'rgba(42,92,173,.3)', transition:'all .3s', cursor:'pointer' }}/>
+            ))}
+          </div>
+
+          {/* Narration card */}
+          <div style={{ padding:'28px 32px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:20, fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.88)', lineHeight:1.9, fontStyle:'italic', textAlign:'center', minHeight:180, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+            {imageryVoicePlaying && <div style={{ position:'absolute', top:14, right:16, display:'flex', gap:3, alignItems:'flex-end', height:16 }}>
+              {[1,2,3,2,1].map((h,i)=><div key={i} style={{ width:3, background:'rgba(201,168,76,.6)', borderRadius:2, height:`${h*4}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}
+            </div>}
+            "{currentStep}"
+          </div>
+
+          {/* Controls */}
+          <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+            <button className="btn btn-lapis" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>speakImagery(currentStep)}>
+              {imageryVoicePlaying ? '🔊 Speaking...' : "🎙 Hear Lazuli's Voice"}
+            </button>
+            {imageryVoicePlaying && (
+              <button className="btn btn-ghost" style={{ fontSize:16 }} onClick={stopImageryVoice}>■ Stop</button>
+            )}
+            {imageryStep < steps.length-1 && (
+              <button className="btn btn-gold" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>{ stopImageryVoice(); setImageryStep(s=>s+1); }}>Next →</button>
+            )}
+          </div>
+          {imageryStep === steps.length-1 && (
+            <div style={{ textAlign:'center', fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', marginTop:8 }}>
+              💜 Take your time returning. You can come back here anytime.
             </div>
-          ))}
+          )}
         </div>
-      )}
+      );
+    })()}
+  </div>
+)}
 
       {/* ── Gratitude Jar ── */}
       {tool==='gratitude' && (
-        <div style={{ maxWidth:520, margin:'0 auto', display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ fontSize:64, textAlign:'center', animation:'floatUp 3s ease-in-out infinite' }}>🫙</div>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', marginBottom:4 }}>What are you grateful for today?</div>
-          <div style={{ display:'flex', gap:10 }}>
-            <input className="field" value={gratInput} onChange={e=>setGratInput(e.target.value)} placeholder="Something small counts too..." onKeyDown={e=>{ if(e.key==='Enter'&&gratInput.trim()){ setGratEntries(g=>[{text:gratInput.trim(),id:Date.now()},...g.slice(0,19)]); setGratInput(''); }}} style={{ flex:1, fontSize:18 }}/>
-            <button className="btn btn-gold" onClick={()=>{ if(gratInput.trim()){ setGratEntries(g=>[{text:gratInput.trim(),id:Date.now()},...g.slice(0,19)]); setGratInput(''); } }}>Add</button>
-          </div>
-          {gratEntries.length===0 && <div style={{ textAlign:'center', color:'rgba(240,232,255,.3)', fontSize:18, padding:'20px 0' }}>Your jar is empty — drop something in.</div>}
-          <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-            {gratEntries.map((e,i)=>(
-              <div key={e.id} style={{ padding:'13px 18px', background:'rgba(201,168,76,.07)', border:'1px solid rgba(201,168,76,.18)', borderRadius:12, color:'rgba(240,232,255,.8)', fontSize:18, animation:'popIn .2s ease' }}>
-                🌟 {e.text}
-              </div>
-            ))}
-          </div>
-        </div>
+  <div style={{ maxWidth:560, margin:'0 auto', display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
+    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.85)', textAlign:'center' }}>What are you grateful for today?</div>
+
+    {/* Big animated jar */}
+    <div style={{ position:'relative', width:200, height:260 }}>
+      <svg width="200" height="260" viewBox="0 0 200 260" style={{ overflow:'visible', filter:'drop-shadow(0 8px 40px rgba(201,168,76,.25))' }}>
+        <defs>
+          <linearGradient id="jarGlass" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="rgba(255,255,255,.22)"/>
+            <stop offset="20%" stopColor="rgba(255,255,255,.08)"/>
+            <stop offset="80%" stopColor="rgba(255,255,255,.04)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,.16)"/>
+          </linearGradient>
+          <linearGradient id="jarFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(201,168,76,.4)"/>
+            <stop offset="100%" stopColor="rgba(201,168,76,.15)"/>
+          </linearGradient>
+          <clipPath id="jarClip">
+            <path d="M40,90 Q35,90 35,95 L35,235 Q35,248 100,248 Q165,248 165,235 L165,95 Q165,90 160,90 Z"/>
+          </clipPath>
+        </defs>
+
+        {/* JAR LID — lifts up when jarOpen */}
+        <g style={{ transform: gratLidOpen ? 'translateY(-20px) rotate(-8deg)' : 'translateY(0)', transformOrigin:'100px 78px', transition:'transform .5s cubic-bezier(.4,0,.2,1)' }}>
+          {/* Lid knob */}
+          <ellipse cx="100" cy="68" rx="12" ry="8" fill="rgba(201,168,76,.8)" stroke="rgba(201,168,76,1)" strokeWidth="1.5"/>
+          <rect x="94" y="68" width="12" height="12" rx="2" fill="rgba(201,168,76,.8)"/>
+          {/* Lid top */}
+          <ellipse cx="100" cy="80" rx="66" ry="12" fill="rgba(201,168,76,.7)" stroke="rgba(201,168,76,.9)" strokeWidth="1.5"/>
+          {/* Lid band */}
+          <path d="M34,80 Q34,92 100,92 Q166,92 166,80" fill="rgba(180,140,50,.5)" stroke="rgba(201,168,76,.6)" strokeWidth="1"/>
+        </g>
+
+        {/* JAR BODY */}
+        {/* Shoulder curve */}
+        <path d="M55,90 Q38,90 38,108 L38,235 Q38,248 100,248 Q162,248 162,235 L162,108 Q162,90 145,90 Z"
+          fill="url(#jarGlass)" stroke="rgba(201,168,76,.35)" strokeWidth="1.5"/>
+
+        {/* Fill level based on entries */}
+        {gratEntries.length > 0 && (
+          <rect x="38" y={248 - Math.min(gratEntries.length * 12, 130)} width="124"
+            height={Math.min(gratEntries.length * 12, 130)}
+            fill="url(#jarFill)" clipPath="url(#jarClip)"
+            style={{ transition:'y .6s ease, height .6s ease' }}/>
+        )}
+
+        {/* Sparkle particles when lid opens */}
+        {gratLidOpen && [0,1,2,3,4,5].map(i=>(
+          <g key={i} style={{ animation:`sparkle .8s ${i*.08}s ease-out both` }}>
+            <circle cx={70+i*12} cy={80} r="3" fill="#C9A84C"/>
+            <circle cx={65+i*14} cy={70} r="2" fill="#E0D070"/>
+          </g>
+        ))}
+
+        {/* Gratitude notes visible through glass */}
+        {gratEntries.slice(0,8).map((e,i)=>(
+          <g key={e.id} clipPath="url(#jarClip)"
+            style={{ animation:'noteFloat .4s ease' }}>
+            <rect x={48+((i%3)*28)} y={235-(i*14)} width="24" height="11" rx="3"
+              fill={['rgba(201,168,76,.5)','rgba(93,168,255,.4)','rgba(168,93,255,.4)'][i%3]}
+              transform={`rotate(${(i%5)*8-16},${60+i*8},${230-i*12})`}/>
+          </g>
+        ))}
+
+        {/* Jar shine */}
+        <path d="M46,110 L46,230" stroke="rgba(255,255,255,.2)" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M54,108 L54,225" stroke="rgba(255,255,255,.1)" strokeWidth="1.5" strokeLinecap="round"/>
+
+        {/* Label band */}
+        <rect x="50" y="155" width="100" height="36" rx="6" fill="rgba(201,168,76,.12)" stroke="rgba(201,168,76,.3)" strokeWidth="1"/>
+        <text x="100" y="170" textAnchor="middle" fontSize="9" fill="rgba(201,168,76,.7)"
+          fontFamily="'DM Sans',sans-serif" letterSpacing="2">GRATITUDE</text>
+        <text x="100" y="182" textAnchor="middle" fontSize="9" fill="rgba(201,168,76,.5)"
+          fontFamily="'DM Sans',sans-serif" letterSpacing="1">{gratEntries.length} notes</text>
+      </svg>
+
+      {/* Sparkle burst on add */}
+      {gratBurst && (
+        <div style={{ position:'absolute', top:'20%', left:'50%', transform:'translateX(-50%)', fontSize:28, animation:'burstOut .6s ease-out both', pointerEvents:'none' }}>✨</div>
       )}
+    </div>
+
+    <div style={{ display:'flex', gap:10, width:'100%' }}>
+      <input className="field" value={gratInput} onChange={e=>setGratInput(e.target.value)}
+        placeholder="Something small counts too..."
+        style={{ flex:1, fontSize:18 }}
+        onKeyDown={e=>{ if(e.key==='Enter'&&gratInput.trim()) addGratitude(); }}/>
+      <button className="btn btn-gold" style={{ fontSize:16, whiteSpace:'nowrap' }} onClick={addGratitude}>
+        Drop It In ✨
+      </button>
+    </div>
+
+    {gratEntries.length===0 && (
+      <div style={{ textAlign:'center', color:'rgba(240,232,255,.28)', fontSize:18, padding:'8px 0' }}>
+        Your jar is waiting — drop something in.
+      </div>
+    )}
+    <div style={{ display:'flex', flexDirection:'column', gap:8, width:'100%' }}>
+      {gratEntries.map((e,i)=>(
+        <div key={e.id} style={{ padding:'14px 20px', background:'rgba(201,168,76,.07)', border:'1px solid rgba(201,168,76,.18)', borderRadius:14, color:'rgba(240,232,255,.82)', fontSize:18, display:'flex', gap:10, alignItems:'center', animation:'fadeUp .3s ease' }}>
+          <span>✨</span>{e.text}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
       {/* ── Worry Stone ── */}
       {tool==='worry' && (
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:24 }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', maxWidth:400, lineHeight:1.7 }}>
-            Hold your worry stone. Each rub transfers anxiety out of your hands and into the stone.
-          </div>
-          <div
-            onClick={rubStone}
-            style={{ width:160, height:100, borderRadius:'50% 50% 45% 45%', background:`radial-gradient(ellipse at 40% 35%, rgba(42,92,173,${rubGlow?.6:.35}), rgba(15,25,80,${rubGlow?.9:.7}))`, border:`2px solid rgba(42,92,173,${rubGlow?.8:.3})`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, color:'rgba(168,196,240,.6)', fontFamily:"'Cinzel',serif", letterSpacing:2, transition:'all .3s', boxShadow:rubGlow?'0 0 40px rgba(42,92,173,.8), 0 0 80px rgba(42,92,173,.3)':'0 4px 20px rgba(0,0,0,.5)', userSelect:'none' }}>
-            {rubs > 0 ? `${rubs} rubs` : 'Tap to rub'}
-          </div>
-          {rubs >= 10 && (
-            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', textAlign:'center', animation:'fadeUp .4s ease' }}>
-              {rubs >= 30 ? '💙 The stone has absorbed much. You are lighter.' : rubs >= 20 ? '✨ Feel your hands soften. The worry loosens.' : '🪨 The stone is warm now. Keep going.'}
-            </div>
-          )}
-          <button className="btn btn-ghost" onClick={()=>setRubs(0)} style={{ fontSize:16 }}>Reset Stone</button>
+  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:24 }}>
+    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', maxWidth:440, lineHeight:1.7 }}>
+      Hold your worry stone. Each rub transfers anxiety into the stone — let it carry what you cannot.
+    </div>
+
+    {/* Floating magical stone */}
+    <div style={{ position:'relative', width:260, height:260, display:'flex', alignItems:'center', justifyContent:'center' }}>
+      {/* Outer aura rings */}
+      <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:`radial-gradient(circle, rgba(42,92,173,${rubGlow?.15:.06}) 0%, transparent 70%)`, animation:'stoneAura1 3s ease-in-out infinite', pointerEvents:'none' }}/>
+      <div style={{ position:'absolute', inset:20, borderRadius:'50%', background:`radial-gradient(circle, rgba(123,47,190,${rubGlow?.12:.05}) 0%, transparent 70%)`, animation:'stoneAura2 4s ease-in-out infinite .5s', pointerEvents:'none' }}/>
+
+      {/* Star particles floating around stone */}
+      {[0,1,2,3,4,5,6,7].map(i=>(
+        <div key={i} style={{ position:'absolute', width:4, height:4, borderRadius:'50%', background:i%2===0?'rgba(201,168,76,.6)':'rgba(93,168,255,.5)', animation:`orbit${i%3} ${3+i*.4}s linear ${i*.3}s infinite`, boxShadow:i%2===0?'0 0 6px rgba(201,168,76,.8)':'0 0 6px rgba(93,168,255,.8)', left:'50%', top:'50%', transformOrigin:'0 0', pointerEvents:'none' }}/>
+      ))}
+
+      {/* The stone */}
+      <div
+        onMouseDown={rubStone}
+        onTouchStart={rubStone}
+        onMouseMove={e=>{ if(e.buttons===1) rubStone(); }}
+        style={{
+          width:160, height:105,
+          borderRadius:'50% 50% 46% 46% / 56% 56% 44% 44%',
+          background:`radial-gradient(ellipse at 38% 32%,
+            rgba(${rubGlow?'80,120,220':'42,92,173'},${rubGlow?.85:.6}) 0%,
+            rgba(${rubGlow?'30,60,160':'15,35,100'},${rubGlow?.95:.8}) 50%,
+            rgba(8,18,60,${rubGlow?.98:.9}) 100%)`,
+          border:`2px solid rgba(${rubGlow?'120,180,255':'42,92,173'},${rubGlow?.9:.4})`,
+          cursor:'grab',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          flexDirection:'column', gap:4,
+          animation: rubGlow ? 'stoneRub .15s ease-in-out' : 'stoneFloat 4s ease-in-out infinite',
+          boxShadow: rubGlow
+            ? '0 0 60px rgba(42,92,173,.9), 0 0 120px rgba(42,92,173,.4), inset 0 0 40px rgba(93,168,255,.3)'
+            : '0 0 30px rgba(42,92,173,.4), 0 10px 40px rgba(0,0,0,.5), inset 0 0 20px rgba(93,168,255,.1)',
+          transition:'background .3s, border .3s, box-shadow .3s',
+          userSelect:'none', WebkitUserSelect:'none',
+          position:'relative', overflow:'hidden',
+        }}>
+        {/* Stone surface texture highlights */}
+        <div style={{ position:'absolute', top:'20%', left:'15%', width:'30%', height:'25%', borderRadius:'50%', background:'rgba(255,255,255,.12)', filter:'blur(4px)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', top:'30%', left:'20%', width:'15%', height:'12%', borderRadius:'50%', background:'rgba(255,255,255,.08)', filter:'blur(2px)', pointerEvents:'none' }}/>
+        <div style={{ fontFamily:"'Cinzel',serif", fontSize:14, fontWeight:700, color:`rgba(168,196,240,${rubGlow?.95:.55})`, letterSpacing:3, textAlign:'center', zIndex:1 }}>
+          {rubs > 0 ? `${rubs}` : '✦'}
         </div>
-      )}
+        {rubs > 0 && <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, color:`rgba(168,196,240,${rubGlow?.7:.35})`, letterSpacing:2, zIndex:1 }}>RUBS</div>}
+      </div>
+
+      {/* Shadow beneath floating stone */}
+      <div style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', width:120, height:16, borderRadius:'50%', background:'rgba(0,0,0,.5)', filter:'blur(8px)', animation:'stoneShadow 4s ease-in-out infinite', pointerEvents:'none' }}/>
+    </div>
+
+    {/* Mute button */}
+    <button onClick={()=>setStoneMuted(m=>!m)} style={{ fontSize:14, color:'rgba(240,232,255,.35)', background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:20, padding:'5px 14px', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+      {stoneMuted ? '🔇 Sound off' : '🔊 Sound on'}
+    </button>
+
+    {rubs >= 10 && (
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:21, color:'rgba(110,231,183,.75)', textAlign:'center', animation:'fadeUp .4s ease', maxWidth:380 }}>
+        {rubs >= 50 ? '💙 The stone has absorbed your burden. You are lighter than before.' : rubs >= 30 ? '✨ Feel your hands soften. The worry loosens its grip.' : rubs >= 20 ? '🪨 The stone grows warm with your trust.' : '💎 The stone is awakening. Keep going.'}
+      </div>
+    )}
+    <button className="btn btn-ghost" onClick={()=>setRubs(0)} style={{ fontSize:16 }}>Reset Stone</button>
+  </div>
+)}
 
       {/* ── Zen Garden ── */}
       {tool==='zen' && (
@@ -2321,60 +2725,157 @@ function Mindfulness() {
 
       {/* ── Soundscapes ── */}
       {tool==='soundscapes' && (
-        <div style={{ display:'flex', flexDirection:'column', gap:14, maxWidth:520, margin:'0 auto' }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', marginBottom:8 }}>Healing Frequencies & Soundscapes</div>
-          <div style={{ fontSize:18, color:'rgba(240,232,255,.45)', textAlign:'center', marginBottom:4 }}>Note: Audio plays through your browser. Use headphones for binaural beats.</div>
-          {SOUNDSCAPES.map(s=>(
-            <div key={s.id} onClick={()=>setPlayingSound(p=>p===s.id?null:s.id)} style={{ display:'flex', alignItems:'center', gap:16, padding:'18px 22px', background:playingSound===s.id?'rgba(42,92,173,.18)':'rgba(42,92,173,.07)', border:`1.5px solid ${playingSound===s.id?'rgba(42,92,173,.5)':'rgba(42,92,173,.15)'}`, borderRadius:16, cursor:'pointer', transition:'all .2s' }}>
-              <div style={{ fontSize:32 }}>{s.emoji}</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontWeight:700, color: playingSound===s.id?'#C9A84C':'rgba(240,232,255,.85)', fontSize:18, marginBottom:3 }}>{s.label}</div>
-                <div style={{ fontSize:16, color:'rgba(240,232,255,.45)' }}>{s.desc}{s.freq>0?` — ${s.freq}Hz`:''}</div>
-              </div>
-              <div style={{ width:36, height:36, borderRadius:'50%', border:`2px solid ${playingSound===s.id?'#C9A84C':'rgba(42,92,173,.35)'}`, display:'flex', alignItems:'center', justifyContent:'center', color:playingSound===s.id?'#C9A84C':'rgba(240,232,255,.4)', fontSize:16, transition:'all .2s' }}>
-                {playingSound===s.id ? '■' : '▶'}
+  <div style={{ display:'flex', flexDirection:'column', gap:12, maxWidth:540, margin:'0 auto' }}>
+    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.85)', textAlign:'center', marginBottom:4 }}>Healing Frequencies & Soundscapes</div>
+    <div style={{ fontSize:16, color:'rgba(240,232,255,.38)', textAlign:'center', marginBottom:12, fontStyle:'italic' }}>All sounds generated live in your browser — no downloads needed.<br/>Use headphones for binaural beats.</div>
+
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+      {SOUNDSCAPES.map(s=>{
+        const isPlaying = playingSound===s.id;
+        return (
+          <div key={s.id} onClick={()=>toggleSound(s.id)}
+            style={{ display:'flex', flexDirection:'column', gap:6, padding:'16px', background:isPlaying?`${s.color}15`:'rgba(42,92,173,.06)', border:`1.5px solid ${isPlaying?s.color+'55':'rgba(42,92,173,.15)'}`, borderRadius:16, cursor:'pointer', transition:'all .22s', position:'relative', overflow:'hidden' }}>
+            {isPlaying && <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 50%, ${s.color}10 0%, transparent 70%)`, animation:'pulseGlow 2s ease-in-out infinite', pointerEvents:'none' }}/>}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div style={{ fontSize:26 }}>{s.icon}</div>
+              <div style={{ width:32, height:32, borderRadius:'50%', border:`2px solid ${isPlaying?s.color:'rgba(42,92,173,.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', color:isPlaying?s.color:'rgba(240,232,255,.4)', fontSize:14, transition:'all .2s', background:isPlaying?`${s.color}18`:'transparent' }}>
+                {isPlaying ? (
+                  <span style={{ display:'flex', gap:2, alignItems:'flex-end', height:14 }}>
+                    {[1,2,3].map(i=><span key={i} style={{ width:3, background:s.color, borderRadius:2, height:`${8+i*3}px`, animation:`barBounce .6s ${i*.1}s ease-in-out infinite alternate` }}/>)}
+                  </span>
+                ) : '▶'}
               </div>
             </div>
-          ))}
-          {playingSound && (
-            <div style={{ textAlign:'center', padding:'14px', background:'rgba(42,92,173,.08)', borderRadius:12, color:'rgba(168,196,240,.6)', fontSize:18 }}>
-              ♪ Now playing: {SOUNDSCAPES.find(s=>s.id===playingSound)?.label} — use your device's ambient sound app or YouTube for actual audio.
-            </div>
-          )}
-        </div>
-      )}
+            <div style={{ fontWeight:700, color:isPlaying?s.color:'rgba(240,232,255,.82)', fontSize:16 }}>{s.label}</div>
+            <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', lineHeight:1.5 }}>{s.desc}</div>
+          </div>
+        );
+      })}
+    </div>
+
+    {playingSound && (
+      <div style={{ textAlign:'center', padding:'14px 20px', background:'rgba(42,92,173,.1)', borderRadius:14, border:'1px solid rgba(42,92,173,.25)', fontSize:16, color:'rgba(168,196,240,.7)' }}>
+        ♪ Playing: <strong style={{ color:'#C9A84C' }}>{SOUNDSCAPES.find(s=>s.id===playingSound)?.label}</strong>
+        <button onClick={()=>toggleSound(null)} style={{ marginLeft:14, fontSize:14, color:'rgba(240,232,255,.4)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>■ Stop</button>
+      </div>
+    )}
+  </div>
+)}
 
       {/* ── Fountain Wishes ── */}
       {tool==='fountain' && (
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20 }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', maxWidth:420, lineHeight:1.7 }}>
-            Write a wish, intention, or hope — then release it to the fountain.
+  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20 }}>
+    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.8)', textAlign:'center', maxWidth:420, lineHeight:1.7 }}>
+      Write a wish and toss it into the fountain — let the waters carry it forward.
+    </div>
+
+    {/* Big Fountain SVG */}
+    <div style={{ position:'relative', width:320, height:280, margin:'0 auto' }}>
+      <svg width="320" height="280" viewBox="0 0 320 280" style={{ overflow:'visible', filter:`drop-shadow(0 0 ${wishRipple?'30px':'12px'} rgba(42,92,173,${wishRipple?.9:.4}))`, transition:'filter .6s' }}>
+        <defs>
+          <radialGradient id="poolGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(42,92,173,.7)"/>
+            <stop offset="60%" stopColor="rgba(30,58,138,.5)"/>
+            <stop offset="100%" stopColor="rgba(15,25,80,.3)"/>
+          </radialGradient>
+          <radialGradient id="poolShine" cx="40%" cy="35%" r="50%">
+            <stop offset="0%" stopColor="rgba(255,255,255,.18)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <filter id="waterGlow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        {/* Pool basin */}
+        <ellipse cx="160" cy="240" rx="140" ry="32" fill="url(#poolGrad)" stroke="rgba(168,196,240,.3)" strokeWidth="1.5"/>
+        <ellipse cx="160" cy="238" rx="138" ry="28" fill="url(#poolShine)" opacity="0.6"/>
+
+        {/* Basin wall front */}
+        <path d="M20,238 Q20,262 160,262 Q300,262 300,238" fill="rgba(20,35,90,.6)" stroke="rgba(168,196,240,.25)" strokeWidth="1"/>
+        <path d="M30,240 Q30,256 160,256 Q290,256 290,240" fill="rgba(42,92,173,.15)"/>
+
+        {/* Center pillar */}
+        <rect x="148" y="160" width="24" height="80" rx="6" fill="rgba(20,40,100,.7)" stroke="rgba(168,196,240,.25)" strokeWidth="1"/>
+        <rect x="152" y="163" width="16" height="74" rx="4" fill="rgba(42,92,173,.2)"/>
+
+        {/* Upper basin */}
+        <ellipse cx="160" cy="165" rx="55" ry="14" fill="rgba(30,58,138,.5)" stroke="rgba(168,196,240,.35)" strokeWidth="1.5"/>
+        <ellipse cx="160" cy="163" rx="53" ry="11" fill="rgba(42,92,173,.25)"/>
+
+        {/* Upper pillar */}
+        <rect x="154" y="100" width="12" height="65" rx="4" fill="rgba(20,40,100,.7)" stroke="rgba(168,196,240,.2)" strokeWidth="1"/>
+
+        {/* Top spout plate */}
+        <ellipse cx="160" cy="102" rx="28" ry="7" fill="rgba(30,58,138,.6)" stroke="rgba(168,196,240,.4)" strokeWidth="1.5"/>
+
+        {/* Water streams — main arcs */}
+        {[
+          { d:"M160,96 Q130,60 110,165", color:"rgba(93,168,255,.55)" },
+          { d:"M160,96 Q190,60 210,165", color:"rgba(93,168,255,.55)" },
+          { d:"M160,96 Q110,50 80,165",  color:"rgba(93,168,255,.35)" },
+          { d:"M160,96 Q210,50 240,165", color:"rgba(93,168,255,.35)" },
+          { d:"M160,165 Q120,190 80,238", color:"rgba(93,168,255,.35)" },
+          { d:"M160,165 Q200,190 240,238", color:"rgba(93,168,255,.35)" },
+          { d:"M160,165 Q130,195 100,238", color:"rgba(93,168,255,.25)" },
+          { d:"M160,165 Q190,195 220,238", color:"rgba(93,168,255,.25)" },
+        ].map((arc,i)=>(
+          <path key={i} d={arc.d} fill="none" stroke={arc.color} strokeWidth={i<4?"2.5":"2"}
+            filter="url(#waterGlow)"
+            style={{ animation:`waterFlow ${1.8+i*.2}s ease-in-out ${i*.12}s infinite alternate`, strokeDasharray:"8 4" }}/>
+        ))}
+
+        {/* Water droplets falling */}
+        {[...Array(8)].map((_,i)=>(
+          <circle key={i} cx={100+i*18} cy={200+i*4} r="2.5"
+            fill="rgba(168,218,255,.6)"
+            filter="url(#waterGlow)"
+            style={{ animation:`dropFall ${1.2+i*.15}s ease-in ${i*.18}s infinite` }}/>
+        ))}
+
+        {/* Ripple rings when wish thrown */}
+        {wishRipple && [0,1,2,3].map(i=>(
+          <ellipse key={i} cx="160" cy="240" rx={30+i*28} ry={8+i*6}
+            fill="none" stroke="rgba(93,168,255,.6)"
+            strokeWidth={2-i*.3}
+            style={{ animation:`rippleOut .9s ${i*.18}s ease-out both` }}/>
+        ))}
+
+        {/* Glowing coins in water */}
+        {wishes.slice(0,6).map((w,i)=>(
+          <g key={w.id} style={{ animation:'coinFloat 4s ease-in-out infinite', animationDelay:`${i*.4}s` }}>
+            <circle cx={110+i*22} cy={238} r="5" fill="rgba(201,168,76,.6)" stroke="rgba(201,168,76,.8)" strokeWidth="1"/>
+            <circle cx={110+i*22} cy={238} r="3" fill="rgba(201,168,76,.4)"/>
+          </g>
+        ))}
+
+        {/* Wish coin flying animation */}
+        {wishRipple && (
+          <circle cx="160" cy="100" r="6" fill="#C9A84C"
+            style={{ animation:'coinThrow .7s ease-in both' }}/>
+        )}
+      </svg>
+    </div>
+
+    <div style={{ display:'flex', gap:10, width:'100%', maxWidth:500 }}>
+      <input className="field" value={wishText} onChange={e=>setWishText(e.target.value)}
+        placeholder="I wish for..." style={{ flex:1, fontSize:18 }}
+        onKeyDown={e=>{ if(e.key==='Enter') makeWish(); }}/>
+      <button className="btn btn-lapis" onClick={makeWish} style={{ fontSize:16, whiteSpace:'nowrap' }}>✨ Toss In</button>
+    </div>
+    {wishes.length > 0 && (
+      <div style={{ width:'100%', maxWidth:500, display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ fontSize:14, color:'rgba(240,232,255,.28)', textAlign:'center', letterSpacing:1.5, textTransform:'uppercase' }}>Released to the Waters</div>
+        {wishes.map((w,i)=>(
+          <div key={w.id} style={{ padding:'12px 18px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.18)', borderRadius:12, color:'rgba(240,232,255,.65)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', animation:'fadeUp .35s ease', display:'flex', gap:10, alignItems:'center' }}>
+            <span style={{ fontSize:14 }}>💫</span>{w.text}
           </div>
-          {/* Fountain visual */}
-          <div style={{ position:'relative', width:200, height:140 }}>
-            <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:160, height:40, borderRadius:'50%', background:'rgba(42,92,173,.25)', border:'1.5px solid rgba(42,92,173,.4)', boxShadow:wishRipple?'0 0 40px rgba(42,92,173,.7)':'0 0 12px rgba(42,92,173,.2)', transition:'box-shadow .6s' }}/>
-            <div style={{ position:'absolute', bottom:38, left:'50%', transform:'translateX(-50%)', width:8, height:60, background:'linear-gradient(0deg,rgba(42,92,173,.5),rgba(168,196,240,.6))', borderRadius:4 }}/>
-            {wishRipple && [...Array(3)].map((_,i)=>(
-              <div key={i} style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', width:20+i*40, height:20+i*40, borderRadius:'50%', border:'1.5px solid rgba(42,92,173,.5)', animation:`ripple${i} .8s ${i*.15}s ease-out both`, opacity:0 }}/>
-            ))}
-            <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', fontSize:28, animation:'floatUp 2s ease-in-out infinite' }}>⛲</div>
-          </div>
-          <div style={{ display:'flex', gap:10, width:'100%', maxWidth:480 }}>
-            <input className="field" value={wishText} onChange={e=>setWishText(e.target.value)} placeholder="I wish for..." style={{ flex:1, fontSize:18 }} onKeyDown={e=>{ if(e.key==='Enter') makeWish(); }}/>
-            <button className="btn btn-lapis" onClick={makeWish} style={{ fontSize:16 }}>Release ✨</button>
-          </div>
-          {wishes.length > 0 && (
-            <div style={{ width:'100%', maxWidth:480, display:'flex', flexDirection:'column', gap:8 }}>
-              <div style={{ fontSize:15, color:'rgba(240,232,255,.3)', textAlign:'center', letterSpacing:1 }}>RELEASED TO THE WATERS</div>
-              {wishes.map(w=>(
-                <div key={w.id} style={{ padding:'12px 18px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.18)', borderRadius:12, color:'rgba(240,232,255,.65)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', animation:'fadeUp .3s ease' }}>
-                  ✨ {w.text}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
       {/* Bottom affirmation quote — always visible */}
       <div style={{ maxWidth:480, margin:'32px auto 0', textAlign:'center', padding:'22px 28px', background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:18, transition:'opacity .6s', opacity:quoteFade?1:0 }}>
@@ -2474,8 +2975,11 @@ function Advocate({ data, user }) {
   const [dailyCount,setDailyCount] = useState(0);
   const [aiTyping,setAiTyping] = useState(false);
   const [shareStatus,setShareStatus] = useState('idle');
+  const [voiceCallActive, setVoiceCallActive] = useState(false);
+  const [voiceSpeaking, setVoiceSpeaking]     = useState(false);
   const bottomRef = useRef();
   const inputRef  = useRef();
+  const synthRef  = useRef(null);
   const {share}   = useShare();
 
   useEffect(() => { bottomRef.current?.scrollIntoView({behavior:'smooth'}); }, [msgs,loading]);
@@ -2486,6 +2990,25 @@ function Advocate({ data, user }) {
     const ok = await share({ title:'My Lazuli AI Session', text, url: window.location.href });
     setShareStatus(ok?'copied':'idle');
     if (ok) setTimeout(()=>setShareStatus('idle'), 2500);
+  };
+
+  const speakLazuli = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g,''));
+    const voices = window.speechSynthesis.getVoices();
+    const brit = voices.find(v=>v.lang==='en-GB'&&(v.name.toLowerCase().includes('female')||v.name.toLowerCase().includes('kate')||v.name.toLowerCase().includes('serena')||v.name.toLowerCase().includes('veena')))
+      || voices.find(v=>v.lang==='en-GB')
+      || voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))
+      || voices[0];
+    if (brit) utt.voice = brit;
+    utt.rate = 0.85;
+    utt.pitch = 1.08;
+    utt.volume = 1.0;
+    utt.onstart = () => setVoiceSpeaking(true);
+    utt.onend = () => setVoiceSpeaking(false);
+    utt.onerror = () => setVoiceSpeaking(false);
+    window.speechSynthesis.speak(utt);
   };
 
   const send = async (txt) => {
@@ -2510,6 +3033,10 @@ function Advocate({ data, user }) {
       const reply = json.content?.[0]?.text || json.text || '';
       if (json['x-daily-count']) setDailyCount(+json['x-daily-count']);
       setMsgs([...newMsgs, {role:'assistant', content:reply}]);
+      // Speak response if voice call active
+      if (voiceCallActive) {
+        speakLazuli(reply);
+      }
     } catch(e) {
       setError('Connection error — please try again.');
     }
@@ -2525,11 +3052,16 @@ function Advocate({ data, user }) {
           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 Lazuli AI</div>
           <div style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
-        {msgs.length>0 && (
-          <button onClick={handleShare} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:'1.5px solid rgba(201,168,76,.35)', background:'rgba(201,168,76,.08)', color:'#C9A84C', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', flexShrink:0 }}>
-            {getShareButtonLabel(shareStatus,'📋 Share with Doctor')}
+        <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
+          <button onClick={()=>{ setVoiceCallActive(v=>!v); if(voiceCallActive){ window.speechSynthesis?.cancel(); setVoiceSpeaking(false); }}} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:`1.5px solid ${voiceCallActive?'rgba(110,231,183,.5)':'rgba(42,92,173,.35)'}`, background:voiceCallActive?'rgba(110,231,183,.12)':'rgba(42,92,173,.08)', color:voiceCallActive?'#6ee7b7':'rgba(168,196,240,.7)', fontFamily:"'DM Sans',sans-serif", transition:'all .2s' }}>
+            {voiceCallActive ? '📞 On Call' : '📞 Call Lazuli'}
           </button>
-        )}
+          {msgs.length>0 && (
+            <button onClick={handleShare} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:'1.5px solid rgba(201,168,76,.35)', background:'rgba(201,168,76,.08)', color:'#C9A84C', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', flexShrink:0 }}>
+              {getShareButtonLabel(shareStatus,'📋 Share with Doctor')}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Limit / error banners */}
@@ -2599,6 +3131,22 @@ function Advocate({ data, user }) {
 
         {/* Input area */}
         <div style={{ position:'relative', zIndex:2, padding:'12px 16px 14px', borderTop:'1px solid rgba(42,92,173,.12)', background:'rgba(0,0,0,.25)', backdropFilter:'blur(12px)', flexShrink:0 }}>
+          {/* Voice Call bar */}
+          {voiceCallActive && (
+            <div style={{ margin:'0 0 10px', padding:'14px 20px', background:'linear-gradient(135deg,rgba(42,92,173,.25),rgba(123,47,190,.15))', border:'1.5px solid rgba(42,92,173,.5)', borderRadius:16, display:'flex', gap:14, alignItems:'center' }}>
+              <div style={{ width:44, height:44, borderRadius:'50%', background:'linear-gradient(135deg,rgba(42,92,173,.8),rgba(123,47,190,.8))', border:'2px solid rgba(168,196,240,.4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 20px rgba(42,92,173,.5)', animation: voiceSpeaking ? 'stoneAura1 1s ease-in-out infinite' : 'none' }}>
+                {voiceSpeaking
+                  ? <span style={{ display:'flex', gap:2, alignItems:'flex-end', height:16 }}>{[1,2,3,2,1].map((h,i)=><span key={i} style={{ width:3, background:'#C9A84C', borderRadius:2, height:`${h*4}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}</span>
+                  : <span style={{ fontSize:18 }}>🎙</span>
+                }
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:17, color:'rgba(240,232,255,.9)', fontWeight:600 }}>Calling Lazuli...</div>
+                <div style={{ fontSize:14, color:'rgba(168,196,240,.5)' }}>{voiceSpeaking ? 'Lazuli is speaking...' : 'Listening — type or send to respond'}</div>
+              </div>
+              <button onClick={()=>{ setVoiceCallActive(false); window.speechSynthesis?.cancel(); setVoiceSpeaking(false); }} style={{ padding:'7px 14px', borderRadius:20, background:'rgba(248,113,113,.15)', border:'1.5px solid rgba(248,113,113,.4)', color:'#f87171', fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>End Call</button>
+            </div>
+          )}
           <div style={{ display:'flex', gap:8, alignItems:'flex-end', background:'rgba(4,16,52,.8)', borderRadius:14, padding:'10px 10px 10px 16px', border:'1px solid rgba(42,92,173,.3)', boxShadow:'inset 0 1px 0 rgba(168,196,240,.06)' }}>
             <textarea ref={inputRef} style={{ flex:1, border:'none', background:'transparent', color:'#F0E8FF', fontFamily:"'DM Sans',sans-serif", fontSize:17, lineHeight:1.55, resize:'none', outline:'none', minHeight:24, maxHeight:120, caretColor:'#C9A84C', padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
             <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end', padding:'8px 18px', fontSize:15, opacity:loading||!input.trim()||limitHit?.35:1, flexShrink:0 }}>Send</button>
@@ -2639,7 +3187,7 @@ function Updates() {
       <div style={{ textAlign:'center', padding:'40px 20px 32px', position:'relative' }}>
         <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 30%, rgba(42,92,173,.2) 0%, transparent 65%)', pointerEvents:'none' }}/>
         <div style={{ display:'inline-block', marginBottom:16, animation:'floatUp 3s ease-in-out infinite' }}>
-          <div style={{ fontSize:56, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}>💎</div>
+          <img src="/icons/icon-192.png" alt="Lazuli Crest" style={{ width:80, height:80, borderRadius:18, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}/>
         </div>
         <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:6, textShadow:'0 0 30px rgba(201,168,76,.4)', letterSpacing:2 }}>Lazuli Crest</div>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'rgba(168,196,240,.7)', letterSpacing:4, textTransform:'uppercase', marginBottom:18 }}>The Gold Standard in Health Advocacy</div>
