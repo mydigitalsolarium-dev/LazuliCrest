@@ -39,6 +39,7 @@ const SYMS = [
   'Digestive issues','Fever','Chills','Burning sensation','Stiffness','Weakness','Tingling',
   'Blurred vision','Sensitivity to light','Sensitivity to sound','Memory issues','Confusion',
   'Chest tightness','Night sweats','Hot flashes','Dry eyes','Hair loss','Weight changes',
+  'Occipital Neuralgia','Cervicogenic Headache','Trigeminal Neuralgia','Allodynia','Central Sensitization',
 ];
 
 const ILLNESS_TYPES = [
@@ -219,7 +220,7 @@ export default function App() {
   const go = t => { setTab(t); setSideOpen(false); };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#03000C', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative' }}>
+    <div style={{ minHeight:'100vh', background:'#0A0520', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative' }}>
       <style>{GLOBAL_CSS}</style>
       <AnimatedBackground/>
 
@@ -227,9 +228,6 @@ export default function App() {
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
         <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn}/>
 
-        {privacyOn && (
-          <div style={{ position:'fixed', inset:0, zIndex:200, backdropFilter:'blur(18px) brightness(.4)', WebkitBackdropFilter:'blur(18px) brightness(.4)', pointerEvents:'none' }}/>
-        )}
         <main className={`main-content${privacyOn?' privacy-on':''}`}>
           <div className="mobile-topbar">
             <button className="hamburger" onClick={()=>setSideOpen(o=>!o)}>
@@ -310,15 +308,15 @@ const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
 
 function AnimatedBackground() {
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:0, overflow:'hidden', pointerEvents:'none' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:0, overflow:'hidden', pointerEvents:'none', willChange:'transform', backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden' }}>
       {/* Deep background */}
-      <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 25% 15%, rgba(42,92,173,.22) 0%, transparent 50%), radial-gradient(ellipse at 75% 85%, rgba(88,28,135,.28) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(15,5,35,.85) 0%, #03000C 100%)' }}/>
+      <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 25% 15%, rgba(42,92,173,.35) 0%, transparent 50%), radial-gradient(ellipse at 75% 85%, rgba(88,28,135,.4) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(20,8,50,.8) 0%, #0A0520 100%)' }}/>
       {/* Aurora orbs */}
-      <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.22) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.18) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
-      <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.1) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.12) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
-      <div style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.15) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.35) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.3) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
+      <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.25) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.28) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
+      <div style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.3) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
       {/* Rising scientific symbols — SVG outline with blue glow pulse */}
       {FLOAT_ITEMS.map((s,i) => (
         <div key={`sym-${i}`} style={{
@@ -326,6 +324,7 @@ function AnimatedBackground() {
           width:s.size, height:s.size, opacity:0,
           animation:`riseUp ${s.dur}s ${s.delay}s ease-in-out infinite`,
           userSelect:'none',
+          willChange:'transform,opacity',
         }}>
           <svg viewBox="0 0 40 40" width={s.size} height={s.size} style={{ overflow:'visible' }}>
             <defs>
@@ -490,7 +489,7 @@ const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
   html{font-size:20px}
-  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none}
+  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none;background:#0A0520}
   button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:18px}
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}
@@ -532,7 +531,7 @@ const GLOBAL_CSS = `
 
   /* ── Luxury glass cards — lapis gem ─────────────────────── */
   .glass-card{
-    background:rgba(6,18,52,.86);
+    background:rgba(14,28,75,.86);
     backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
     border:1px solid rgba(42,92,173,.4);
     border-radius:20px;
@@ -545,7 +544,7 @@ const GLOBAL_CSS = `
     transform:translateY(-2px)
   }
   .glass-card-static{
-    background:rgba(6,18,52,.86);
+    background:rgba(14,28,75,.86);
     backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
     border:1px solid rgba(42,92,173,.35);
     border-radius:20px;
@@ -581,14 +580,14 @@ const GLOBAL_CSS = `
   .pill{display:inline-flex;align-items:center;gap:6px;background:rgba(42,92,173,.2);border:1.5px solid rgba(42,92,173,.45);color:#A8C4F0;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
   /* ── Sidebar — z-index fix for mobile ────────────────────── */
-  .sidebar{width:272px;background:rgba(4,1,16,.98);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(42,92,173,.22);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7);transition:transform .3s cubic-bezier(.22,1,.36,1)}
-  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.62);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative}
+  .sidebar{width:272px;background:rgba(10,5,32,.98);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(42,92,173,.22);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.85);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative}
   .nav-item:hover{background:rgba(42,92,173,.14);color:rgba(240,232,255,.9);border-color:rgba(42,92,173,.28)}
   .nav-item.active{background:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));color:#C9A84C;border-color:rgba(201,168,76,.3);font-weight:600}
 
   .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;overscroll-behavior:contain}
   .privacy-sensitive{transition:filter .3s ease}
-  .privacy-on .privacy-sensitive{filter:blur(8px)}
+  .privacy-on .privacy-sensitive{filter:blur(7px) brightness(0.7);user-select:none}
   .privacy-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;borderRadius:20px;border:1.5px solid rgba(42,92,173,.35);background:rgba(4,14,52,.8);color:rgba(168,196,240,.7);fontSize:14px;fontWeight:600;cursor:pointer;fontFamily:'DM Sans',sans-serif;transition:all .18s;backdropFilter:blur(8px)}
   .privacy-btn.active{border-color:rgba(201,168,76,.5);background:rgba(201,168,76,.1);color:#C9A84C}
   .privacy-btn:hover{border-color:rgba(42,92,173,.6);color:#F0E8FF}
@@ -743,7 +742,7 @@ const GLOBAL_CSS = `
   @keyframes barBounce{0%{transform:scaleY(.5);}100%{transform:scaleY(1.2);}}
 
   @media(max-width:768px){
-    .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:100}
+    .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:100;overflow-y:scroll;-webkit-overflow-scrolling:touch}
     .sidebar.open{transform:translateX(0)}
     .main-content{margin-left:0}
     .mobile-topbar{display:flex}
@@ -760,7 +759,7 @@ const GLOBAL_CSS = `
 // ─── Splash ───────────────────────────────────────────────────
 function Splash() {
   return (
-    <div style={{ minHeight:'100vh', background:'#03000C', display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ minHeight:'100vh', background:'#0A0520', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <style>{GLOBAL_CSS}</style>
       <div style={{ textAlign:'center' }}>
         <div style={{ marginBottom:18, animation:'floatUp 2.5s ease-in-out infinite' }}><LogoImg size={80}/></div>
@@ -829,7 +828,7 @@ function AuthScreen() {
   const hk = e => { if (e.key==='Enter') { if(mode==='signin')handleSignin(); else if(mode==='signup')handleSignup(); else handleReset(); } };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#03000C', display:'flex', alignItems:'center', justifyContent:'center', padding:20, position:'relative' }}>
+    <div style={{ minHeight:'100vh', background:'#0A0520', display:'flex', alignItems:'center', justifyContent:'center', padding:20, position:'relative' }}>
       <style>{GLOBAL_CSS}</style>
       <AnimatedBackground/>
       <div style={{ width:'100%', maxWidth:480, position:'relative', zIndex:1 }}>
@@ -1018,7 +1017,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
           <div style={{ fontSize:16, color:'rgba(168,196,240,.75)', lineHeight:1.6, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", transition:'opacity .5s' }}>{LAZULI_FACTS[factIdx]}</div>
         </div>
       </div>
-      <nav style={{ padding:'4px 8px', overflowY:'auto' }}>
+      <nav style={{ padding:'4px 8px', overflowY:'auto', flex:1, WebkitOverflowScrolling:'touch' }}>
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
             <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.35)', textTransform:'uppercase', letterSpacing:1.8, padding:'10px 8px 4px', userSelect:'none' }}>{group.label}</div>
@@ -1036,7 +1035,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
           </div>
         ))}
       </nav>
-      <div style={{ padding:'10px 12px 14px', borderTop:'1px solid rgba(42,92,173,.15)', display:'flex', flexDirection:'column', gap:8, flex:1 }}>
+      <div style={{ padding:'10px 12px 34px', borderTop:'1px solid rgba(42,92,173,.15)', display:'flex', flexDirection:'column', gap:8 }}>
         <DailyQuoteSidebar/>
         <button onClick={()=>setPrivacyOn(p=>!p)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:`1.5px solid ${privacyOn?'rgba(201,168,76,.5)':'rgba(42,92,173,.3)'}`, background:privacyOn?'rgba(201,168,76,.1)':'rgba(42,92,173,.08)', color:privacyOn?'#C9A84C':'rgba(168,196,240,.6)', fontWeight:600, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', marginBottom:6 }}>
           {privacyOn ? '🔓 Show Details' : '🔒 Privacy Screen'}
@@ -1310,9 +1309,19 @@ function Symptoms({ data, upd }) {
 
   const save = () => {
     if (!form.entries.length) { alert('Please add at least one symptom.'); return; }
-    const entry = {...form, id:uid()};
-    const existing = data.symptoms.find(s=>s.date===form.date);
-    upd('symptoms', existing ? data.symptoms.map(s=>s.date===form.date?{...s,...entry,id:s.id}:s) : [entry,...data.symptoms]);
+    const entry = {...form, id:uid(), timestamp: Date.now()};
+    // Allow multiple per day — each gets its own ID with timestamp suffix
+    const existing = data.symptoms.filter(s=>s.date===form.date);
+    if (existing.length > 0) {
+      // Create an update entry — merge new symptoms with today's, keep unique
+      const merged = { ...existing[0], ...entry, id: existing[0].id,
+        entries: [...existing[0].entries.filter(e=>!entry.entries.find(n=>n.symptom===e.symptom)), ...entry.entries],
+        updates: [...(existing[0].updates||[]), { time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), entries: entry.entries, pain:entry.pain, energy:entry.energy, mood:entry.mood, notes:entry.notes }]
+      };
+      upd('symptoms', data.symptoms.map(s=>s.id===existing[0].id ? merged : s));
+    } else {
+      upd('symptoms', [entry, ...data.symptoms]);
+    }
     setForm(blank); setOpen(false);
   };
   const all      = [...data.symptoms].sort((a,b)=>b.date.localeCompare(a.date));
@@ -1427,7 +1436,7 @@ function Symptoms({ data, upd }) {
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:11, flexWrap:'wrap', gap:7 }}>
               <div>
                 <div style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:600, fontSize:15, color:'#C9A84C', marginBottom:5 }}>
-                  {fmtDate(s.date)}{s.date===todayStr()&&<span style={{ fontSize:16, background:'rgba(201,168,76,.12)', color:'#C9A84C', padding:'2px 8px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>Today</span>}
+                  {fmtDate(s.date)}{s.date===todayStr()&&<span style={{ fontSize:16, background:'rgba(201,168,76,.12)', color:'#C9A84C', padding:'2px 8px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>Today</span>}{(s.updates||[]).length > 0 && <span style={{ fontSize:13, background:'rgba(42,92,173,.18)', color:'rgba(168,196,240,.7)', padding:'2px 9px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>{(s.updates||[]).length} update{(s.updates||[]).length>1?'s':''}</span>}
                 </div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>{s.entries?.map((e,i)=><span key={i} className="pill">{e.symptom} <SevDot v={e.severity}/></span>)}</div>
                 {(s.illnesses||[]).length>0 && <div style={{ marginTop:5, display:'flex', gap:4, flexWrap:'wrap' }}>{(s.illnesses||[]).map(ill=><span key={ill} style={{ fontSize:16,background:'rgba(248,113,113,.1)',color:'#f87171',padding:'2px 9px',borderRadius:20,border:'1px solid rgba(248,113,113,.25)' }}>{ill}</span>)}</div>}
@@ -3485,7 +3494,37 @@ function Updates() {
       <div style={{ textAlign:'center', padding:'40px 20px 32px', position:'relative' }}>
         <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 30%, rgba(42,92,173,.2) 0%, transparent 65%)', pointerEvents:'none' }}/>
         <div style={{ display:'inline-block', marginBottom:16, animation:'floatUp 3s ease-in-out infinite' }}>
-          <img src="/icons/icon-192.png" alt="Lazuli Crest" style={{ width:80, height:80, borderRadius:18, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}/>
+          <svg width="90" height="90" viewBox="0 0 90 90" style={{ filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}>
+            {/* Outer lotus petals */}
+            {[0,45,90,135,180,225,270,315].map((deg,i)=>(
+              <ellipse key={i} cx="45" cy="45" rx="14" ry="24"
+                fill={`rgba(${i%2===0?'42,92,173':'60,30,140'},.75)`}
+                stroke="rgba(168,196,240,.4)" strokeWidth=".8"
+                transform={`rotate(${deg},45,45) translate(0,-16)`}/>
+            ))}
+            {/* Inner lotus petals */}
+            {[22.5,67.5,112.5,157.5,202.5,247.5,292.5,337.5].map((deg,i)=>(
+              <ellipse key={i} cx="45" cy="45" rx="9" ry="17"
+                fill="rgba(30,60,140,.9)"
+                stroke="rgba(168,196,240,.3)" strokeWidth=".6"
+                transform={`rotate(${deg},45,45) translate(0,-12)`}/>
+            ))}
+            {/* Center circle */}
+            <circle cx="45" cy="45" r="18" fill="rgba(8,20,60,.95)" stroke="rgba(201,168,76,.6)" strokeWidth="1.5"/>
+            {/* Caduceus staff */}
+            <line x1="45" y1="33" x2="45" y2="57" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round"/>
+            {/* Wings */}
+            <path d="M45,35 Q36,31 32,34 Q36,38 45,36" fill="rgba(201,168,76,.9)"/>
+            <path d="M45,35 Q54,31 58,34 Q54,38 45,36" fill="rgba(201,168,76,.9)"/>
+            {/* Snake coils */}
+            <path d="M43,56 Q39,50 43,46 Q47,42 43,38" fill="none" stroke="rgba(201,168,76,.8)" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M47,56 Q51,50 47,46 Q43,42 47,38" fill="none" stroke="rgba(201,168,76,.8)" strokeWidth="1.5" strokeLinecap="round"/>
+            {/* Gem sparkles */}
+            {[0,72,144,216,288].map((deg,i)=>(
+              <circle key={i} cx={45+22*Math.cos(deg*Math.PI/180)} cy={45+22*Math.sin(deg*Math.PI/180)} r="2"
+                fill="rgba(168,218,255,.7)" style={{ animation:`breathePulse ${2+i*.3}s ease-in-out infinite` }}/>
+            ))}
+          </svg>
         </div>
         <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:6, textShadow:'0 0 30px rgba(201,168,76,.4)', letterSpacing:2 }}>Lazuli Crest</div>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'rgba(168,196,240,.7)', letterSpacing:4, textTransform:'uppercase', marginBottom:18 }}>The Gold Standard in Health Advocacy</div>
