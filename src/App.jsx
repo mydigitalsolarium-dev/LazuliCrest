@@ -3642,6 +3642,8 @@ function Advocate({ data, user }) {
   const [error,setError]       = useState('');
   const [limitHit,setLimitHit] = useState(false);
   const [creditsLeft,setCreditsLeft] = useState(null);
+  const [summariesUsed,setSummariesUsed] = useState(0);
+  const [summaryLoading,setSummaryLoading] = useState(false);
   const [aiTyping,setAiTyping] = useState(false);
   const [shareStatus,setShareStatus] = useState('idle');
   const [voiceCallActive, setVoiceCallActive] = useState(false);
@@ -3659,6 +3661,44 @@ function Advocate({ data, user }) {
     const ok = await share({ title:'My Lazuli AI Session', text, url: window.location.href });
     setShareStatus(ok?'copied':'idle');
     if (ok) setTimeout(()=>setShareStatus('idle'), 2500);
+  };
+
+  const generateSummary = async () => {
+    if (summaryLoading || loading) return;
+    setSummaryLoading(true); setError('');
+    const FREE_SUMMARIES = 3;
+    const isFree = summariesUsed < FREE_SUMMARIES;
+    const summaryPrompt = `Please generate a comprehensive full health summary for me. Include:
+1. My chronic conditions and diagnoses
+2. Current medications and supplements
+3. Recent symptom patterns and severity trends
+4. Upcoming appointments and care team
+5. Key health goals and progress
+6. Important notes for my medical team
+Format it clearly with sections, as if written for a doctor's handoff. Be thorough and compassionate.`;
+    const summaryMsgs = [...msgs, {role:'user', content:summaryPrompt}];
+    setMsgs(summaryMsgs);
+    try {
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          messages: summaryMsgs,
+          system: SYS_LAZULI(data),
+          userId: user?.uid,
+          requestType: 'summary',
+        }),
+      });
+      const json = await res.json();
+      if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'Not enough credits for a full summary.'); setSummaryLoading(false); return; }
+      if (!res.ok) { setError(json.error||'Summary failed.'); setSummaryLoading(false); return; }
+      const reply = json.content?.[0]?.text || json.text || '';
+      const cl = res.headers?.get?.('X-Credits-Left'); if (cl !== null && cl !== undefined) setCreditsLeft(+cl);
+      const su = res.headers?.get?.('X-Summaries-Used'); if (su !== null && su !== undefined) setSummariesUsed(+su);
+      setMsgs([...summaryMsgs, {role:'assistant', content:reply}]);
+      if (voiceCallActive) speakLazuli(reply);
+    } catch { setError('Connection error — please try again.'); }
+    setSummaryLoading(false);
   };
 
   const speakLazuli = (text) => {
@@ -3694,6 +3734,7 @@ function Advocate({ data, user }) {
           messages: newMsgs,
           system: SYS_LAZULI(data),
           userId: user?.uid,
+          requestType: 'chat',
         }),
       });
       const json = await res.json();
@@ -3701,6 +3742,7 @@ function Advocate({ data, user }) {
       if (!res.ok) { setError(json.error||'Something went wrong.'); setLoading(false); return; }
       const reply = json.content?.[0]?.text || json.text || '';
       const cl = res.headers?.get?.('X-Credits-Left'); if (cl !== null && cl !== undefined) setCreditsLeft(+cl);
+      const su = res.headers?.get?.('X-Summaries-Used'); if (su !== null && su !== undefined) setSummariesUsed(+su);
       setMsgs([...newMsgs, {role:'assistant', content:reply}]);
       // Speak response if voice call active
       if (voiceCallActive) {
@@ -3721,7 +3763,11 @@ function Advocate({ data, user }) {
           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 Lazuli AI</div>
           <div style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
-        <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
+        <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center', flexWrap:'wrap' }}>
+          {/* Full Health Summary button */}
+          <button onClick={generateSummary} disabled={summaryLoading||loading} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:'1.5px solid rgba(160,100,240,.45)', background:'rgba(160,100,240,.1)', color:'#c084fc', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', opacity:summaryLoading||loading?.6:1, flexShrink:0 }}>
+            {summaryLoading ? '⏳ Generating…' : `📊 Full Health Summary${summariesUsed < 3 ? ` (${3-summariesUsed} free)` : ' (50 credits)'}`}
+          </button>
           <button onClick={()=>{ setVoiceCallActive(v=>!v); if(voiceCallActive){ window.speechSynthesis?.cancel(); setVoiceSpeaking(false); }}} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:`1.5px solid ${voiceCallActive?'rgba(110,231,183,.5)':'rgba(42,92,173,.35)'}`, background:voiceCallActive?'rgba(110,231,183,.12)':'rgba(42,92,173,.08)', color:voiceCallActive?'#6ee7b7':'rgba(168,196,240,.7)', fontFamily:"'DM Sans',sans-serif", transition:'all .2s' }}>
             {voiceCallActive ? '📞 On Call' : '📞 Call Lazuli'}
           </button>
