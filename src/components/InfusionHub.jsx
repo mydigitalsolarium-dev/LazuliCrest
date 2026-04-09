@@ -25,7 +25,7 @@ export default function InfusionHub({ data, upd }) {
   const [showCheckin, setShowCheckin] = useState(null);
   const [checkinForm, setCheckinForm] = useState({ mood:5, sideEffects:[], notes:'', timing:'during' });
 
-  const blank = { id:'', date:'', provider:'', drugName:'', type:'Infusion', isInfusion:true, preNotes:'', postNotes:'', followUp:'', prepChecked:[], checkins:[] };
+  const blank = { id:'', date:'', time:'', provider:'', drugName:'', type:'Infusion', isInfusion:true, preNotes:'', postNotes:'', followUp:'', prepChecked:[], checkins:[] };
   const [form, setForm] = useState(blank);
 
   const [proactiveShown, setProactiveShown] = useState(false);
@@ -102,6 +102,7 @@ export default function InfusionHub({ data, upd }) {
           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'#C9A84C', marginBottom:16 }}>New Infusion Appointment</div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }} className="two-col">
             <div><label>Date</label><input className="field" type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}/></div>
+            <div><label>Time</label><input className="field" type="time" value={form.time||''} onChange={e=>setForm(f=>({...f,time:e.target.value}))}/></div>
             <div><label>Infusion Center / Provider</label><input className="field" value={form.provider} onChange={e=>setForm(f=>({...f,provider:e.target.value}))} placeholder="e.g. MGH Infusion Center"/></div>
             <div><label>Drug / Treatment</label><input className="field" value={form.drugName||''} onChange={e=>setForm(f=>({...f,drugName:e.target.value}))} placeholder="e.g. Rituximab, IVIG, Remicade"/></div>
           </div>
@@ -129,8 +130,8 @@ export default function InfusionHub({ data, upd }) {
       )}
 
       {showCheckin && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.6)', backdropFilter:'blur(8px)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div className="glass-card-static" style={{ padding:28, maxWidth:480, width:'100%', borderRadius:20 }}>
+        <div style={{ position:'fixed', inset:0, background:'rgba(2,8,30,.72)', backdropFilter:'blur(14px)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          <div style={{ padding:28, maxWidth:480, width:'100%', borderRadius:20, background:'rgba(4,16,52,.82)', backdropFilter:'blur(32px) saturate(1.5)', border:'1.5px solid rgba(42,92,173,.5)', boxShadow:'0 16px 60px rgba(0,0,0,.6),inset 0 1px 0 rgba(168,196,240,.15),0 0 60px rgba(42,92,173,.1)' }}>
             <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'#C9A84C', marginBottom:16 }}>💉 Infusion Check-In</div>
             <div style={{ marginBottom:14 }}>
               <label>Timing</label>
@@ -152,11 +153,26 @@ export default function InfusionHub({ data, upd }) {
             <div style={{ marginBottom:14 }}>
               <label>Side effects (select any)</label>
               <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:6 }}>
-                {SIDE_EFFECTS.map(s=>(
-                  <button key={s} onClick={()=>setCheckinForm(f=>({...f,sideEffects:f.sideEffects.includes(s)?f.sideEffects.filter(x=>x!==s):[...f.sideEffects,s]}))}>
-                    <span style={{ padding:'4px 10px', borderRadius:20, fontSize:11, border:`1px solid ${checkinForm.sideEffects.includes(s)?'#f87171':'rgba(123,47,190,.25)'}`, background:checkinForm.sideEffects.includes(s)?'rgba(248,113,113,.12)':'rgba(255,255,255,.03)', color:checkinForm.sideEffects.includes(s)?'#f87171':'rgba(240,232,255,.4)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", display:'inline-block' }}>{s}</span>
-                  </button>
-                ))}
+                {SIDE_EFFECTS.map(s=>{
+                  const sel = checkinForm.sideEffects.includes(s);
+                  return (
+                  <button key={s}
+                    onClick={()=>setCheckinForm(f=>({...f,sideEffects:sel?f.sideEffects.filter(x=>x!==s):[...f.sideEffects,s]}))}
+                    style={{
+                      padding:'6px 13px', borderRadius:20, fontSize:12,
+                      border:`1px solid ${sel?'#f87171':'rgba(42,92,173,.5)'}`,
+                      background:sel?'rgba(248,113,113,.18)':'rgba(4,14,42,.75)',
+                      backdropFilter:'blur(12px)',
+                      color:sel?'#ffaaaa':'rgba(168,196,240,.9)',
+                      cursor:'pointer',
+                      fontFamily:"'DM Sans',sans-serif",
+                      fontWeight: sel?600:400,
+                      transition:'all .15s',
+                      boxShadow: sel?'0 0 10px rgba(248,113,113,.2)':'0 0 8px rgba(42,92,173,.15)',
+                    }}
+                  >{s}</button>
+                  );
+                })}
               </div>
             </div>
             <div style={{ marginBottom:18 }}>

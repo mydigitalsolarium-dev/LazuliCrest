@@ -10,7 +10,7 @@
 //   FIREBASE_PROJECT_ID    — "advyhealth"  (or set to match your project)
 // ─────────────────────────────────────────────────────────────
 
-const FREE_DAILY_LIMIT = 20;
+const FREE_DAILY_LIMIT = 50;
 
 // ── Discord ping ─────────────────────────────────────────────
 async function pingDiscord(message) {
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
   if (body.action === 'user_signup') {
     const { email = 'Unknown', name = 'Unknown' } = body;
     await pingDiscord(
-      `🎉 **New ADVY Health signup!**\n` +
+      `🎉 **New Lazuli Crest signup!**\n` +
       `👤 ${name}\n` +
       `📧 ${email}\n` +
       `🕐 ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST`
@@ -99,7 +99,7 @@ export default async function handler(req, res) {
   if (body.action === 'user_login') {
     const { email = 'Unknown' } = body;
     await pingDiscord(
-      `🔑 **User logged in**\n` +
+      `🔑 **Lazuli Crest — User logged in**\n` +
       `📧 ${email}\n` +
       `🕐 ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST`
     );
