@@ -1,0 +1,5 @@
+# Exclude large video files — too big for Vercel (100MB limit per file)
+# Host these on a CDN (Cloudflare R2, S3, etc.) and update the SOUNDSCAPES URLs
+public/sounds/Rain ASMR.mp4
+public/sounds/Rain 2 ASMR.mp4
+public/sounds/Lazuli Lofi with Rain.mkv
