@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import React from 'react';
+import HTMLFlipBook from 'react-pageflip';
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile,
@@ -39,7 +41,6 @@ const SYMS = [
   'Digestive issues','Fever','Chills','Burning sensation','Stiffness','Weakness','Tingling',
   'Blurred vision','Sensitivity to light','Sensitivity to sound','Memory issues','Confusion',
   'Chest tightness','Night sweats','Hot flashes','Dry eyes','Hair loss','Weight changes',
-  'Occipital Neuralgia','Cervicogenic Headache','Trigeminal Neuralgia','Allodynia','Central Sensitization',
 ];
 
 const ILLNESS_TYPES = [
@@ -119,7 +120,7 @@ const DIARY_FONTS = [
   { label:'Cormorant',         value:"'Cormorant Garamond',serif",    size:20 },
   { label:'EB Garamond',       value:"'EB Garamond',serif",           size:18 },
 ];
-const DIARY_MOODS = ['💜 Loved','✨ Hopeful','🌿 Calm','💪 Determined','🌧 Low','😴 Exhausted','🔥 Frustrated','🦋 Transforming','🌊 Overwhelmed','☀️ Grateful'];
+const DIARY_MOODS = ['💜 Loved','✨ Hopeful','🌿 Calm','💪 Determined','🌧 Low','😴 Exhausted','🔥 Frustrated','🦋 Transforming','🌊 Overwhelmed','☀️ Grateful']; // eslint-disable-line no-unused-vars
 // DIET_GOALS removed — replaced by DIET_PROTOCOLS in new AIDiet component
 
 const CHRONIC_ILLNESS_QUOTES = [
@@ -214,20 +215,34 @@ export default function App() {
     });
   }, [user]);
 
+  const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+
   if (!authReady) return <Splash/>;
-  if (!user)      return <AuthScreen/>;
 
   const go = t => { setTab(t); setSideOpen(false); };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#0A0520', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative' }}>
+    <div style={{ minHeight:'100vh', background:'#130828', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative' }}>
       <style>{GLOBAL_CSS}</style>
       <AnimatedBackground/>
 
+      {showAuth && !user && (
+        <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,.85)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          <div style={{ position:'relative', width:'100%', maxWidth:460 }}>
+            <button onClick={()=>setShowAuth(false)} style={{ position:'absolute', top:-14, right:-14, background:'rgba(42,92,173,.3)', border:'1px solid rgba(42,92,173,.4)', borderRadius:'50%', width:32, height:32, color:'rgba(240,232,255,.7)', fontSize:18, cursor:'pointer', zIndex:1 }}>✕</button>
+            <AuthScreen onSuccess={()=>setShowAuth(false)}/>
+          </div>
+        </div>
+      )}
+
       <div style={{ display:'flex', maxWidth:1280, margin:'0 auto', minHeight:'100vh', position:'relative', zIndex:1 }}>
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
-        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn}/>
+        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} onShowAuth={()=>setShowAuth(true)}/>
 
+        {privacyOn && (
+          <div style={{ position:'fixed', inset:0, zIndex:200, backdropFilter:'blur(18px) brightness(.4)', WebkitBackdropFilter:'blur(18px) brightness(.4)', pointerEvents:'none' }}/>
+        )}
         <main className={`main-content${privacyOn?' privacy-on':''}`}>
           <div className="mobile-topbar">
             <button className="hamburger" onClick={()=>setSideOpen(o=>!o)}>
@@ -244,6 +259,22 @@ export default function App() {
               </button>
             </div>
           </div>
+
+          {!user && !guestBannerDismissed && (
+            <div style={{
+              position:'sticky', top:0, zIndex:89, background:'linear-gradient(90deg,rgba(201,168,76,.15),rgba(42,92,173,.15))',
+              borderBottom:'1px solid rgba(201,168,76,.25)', padding:'10px 20px',
+              display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexShrink:0
+            }}>
+              <span style={{ fontSize:14, color:'rgba(240,232,255,.85)', fontFamily:"'DM Sans',sans-serif" }}>
+                ✨ You're exploring as a guest — <strong style={{color:'#C9A84C'}}>your data won't be saved.</strong>
+              </span>
+              <div style={{display:'flex',gap:8,flexShrink:0}}>
+                <button onClick={()=>setShowAuth(true)} style={{ padding:'6px 14px', borderRadius:10, border:'1.5px solid rgba(201,168,76,.5)', background:'rgba(201,168,76,.12)', color:'#C9A84C', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>Sign Up Free</button>
+                <button onClick={()=>setGuestBannerDismissed(true)} style={{ padding:'6px 10px', borderRadius:10, border:'1px solid rgba(240,232,255,.15)', background:'transparent', color:'rgba(240,232,255,.4)', fontSize:13, cursor:'pointer' }}>✕</button>
+              </div>
+            </div>
+          )}
 
           <div className="page-fade page-inner" key={tab}>
             <RotatingQuoteBanner/>
@@ -285,12 +316,12 @@ const FLOAT_ITEMS = [
   {sym:'⚕',  x:5,  size:44, delay:0,   dur:80},
   {sym:'∮',  x:14, size:38, delay:12,  dur:90},
   {sym:'∇',  x:24, size:36, delay:25,  dur:85},
-  {sym:'⚛',  x:36, size:42, delay:5,   dur:95},
+  {sym:'⚛︎',  x:36, size:42, delay:5,   dur:95},
   {sym:'∞',  x:48, size:40, delay:18,  dur:88},
   {sym:'∑',  x:58, size:38, delay:30,  dur:92},
   {sym:'Ψ',  x:68, size:40, delay:8,   dur:78},
   {sym:'∆',  x:78, size:36, delay:22,  dur:86},
-  {sym:'⊕',  x:88, size:38, delay:40,  dur:82},
+  {sym:'⚕',  x:88, size:38, delay:40,  dur:82},
   {sym:'ℏ',  x:10, size:34, delay:55,  dur:94},
   {sym:'∂',  x:42, size:36, delay:48,  dur:87},
   {sym:'⊗',  x:62, size:34, delay:62,  dur:91},
@@ -308,15 +339,16 @@ const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
 
 function AnimatedBackground() {
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:0, overflow:'hidden', pointerEvents:'none', willChange:'transform', backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:0, overflow:'hidden', pointerEvents:'none' }}>
       {/* Deep background */}
-      <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 25% 15%, rgba(42,92,173,.35) 0%, transparent 50%), radial-gradient(ellipse at 75% 85%, rgba(88,28,135,.4) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(20,8,50,.8) 0%, #0A0520 100%)' }}/>
+      <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 25% 15%, rgba(42,92,173,.22) 0%, transparent 50%), radial-gradient(ellipse at 75% 85%, rgba(88,28,135,.28) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(15,5,35,.85) 0%, #03000C 100%)' }}/>
       {/* Aurora orbs */}
-      <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.35) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.3) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
-      <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.25) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.28) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
-      <div style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.3) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.31) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.25) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
+      <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.14) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.17) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
+      <div style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.21) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
+      <div style={{ position:'absolute', width:'45vw', height:'35vh', bottom:'-5%', left:'-5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(140,60,200,.21) 0%,rgba(201,168,76,.1) 50%,transparent 70%)', filter:'blur(80px)', animation:'auroraFloat 36s 8s ease-in-out infinite alternate' }}/>
       {/* Rising scientific symbols — SVG outline with blue glow pulse */}
       {FLOAT_ITEMS.map((s,i) => (
         <div key={`sym-${i}`} style={{
@@ -324,7 +356,6 @@ function AnimatedBackground() {
           width:s.size, height:s.size, opacity:0,
           animation:`riseUp ${s.dur}s ${s.delay}s ease-in-out infinite`,
           userSelect:'none',
-          willChange:'transform,opacity',
         }}>
           <svg viewBox="0 0 40 40" width={s.size} height={s.size} style={{ overflow:'visible' }}>
             <defs>
@@ -489,13 +520,13 @@ const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
   html{font-size:20px}
-  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none;background:#0A0520}
+  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none;overscroll-behavior:contain}
   button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:18px}
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}
   ::-webkit-scrollbar-track{background:transparent}
 
-  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeOut{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
   @keyframes genieIn{0%{opacity:0;transform:scale(.1) translateY(60px) rotate(-8deg);filter:blur(12px)}40%{opacity:.8;transform:scale(1.06) translateY(-10px) rotate(2deg);filter:blur(2px)}70%{transform:scale(.97) translateY(4px) rotate(-1deg)}100%{opacity:1;transform:scale(1) translateY(0) rotate(0deg);filter:blur(0)}}
   @keyframes smokeRise{0%{opacity:0;transform:translateY(0) scaleX(1)}50%{opacity:.4;transform:translateY(-40px) scaleX(1.5)}100%{opacity:0;transform:translateY(-80px) scaleX(2)}}
@@ -531,11 +562,11 @@ const GLOBAL_CSS = `
 
   /* ── Luxury glass cards — lapis gem ─────────────────────── */
   .glass-card{
-    background:rgba(14,28,75,.86);
+    background:rgba(22,12,52,.82);
     backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
-    border:1px solid rgba(42,92,173,.4);
+    border:1.5px solid rgba(120,80,220,.22);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.55),inset 0 1px 0 rgba(168,196,240,.1),inset 0 0 40px rgba(42,92,173,.04);
+    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.3);
     transition:all .22s ease
   }
   .glass-card:hover{
@@ -544,11 +575,11 @@ const GLOBAL_CSS = `
     transform:translateY(-2px)
   }
   .glass-card-static{
-    background:rgba(14,28,75,.86);
+    background:rgba(22,12,52,.82);
     backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
-    border:1px solid rgba(42,92,173,.35);
+    border:1.5px solid rgba(120,80,220,.22);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(168,196,240,.08);
+    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
     transition:border-color .22s;will-change:auto;
   }
 
@@ -580,14 +611,14 @@ const GLOBAL_CSS = `
   .pill{display:inline-flex;align-items:center;gap:6px;background:rgba(42,92,173,.2);border:1.5px solid rgba(42,92,173,.45);color:#A8C4F0;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
   /* ── Sidebar — z-index fix for mobile ────────────────────── */
-  .sidebar{width:272px;background:rgba(10,5,32,.98);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(42,92,173,.22);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7);transition:transform .3s cubic-bezier(.22,1,.36,1)}
-  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.85);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative}
+  .sidebar{width:272px;background:rgba(16,8,40,.96);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(120,80,220,.2);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7),inset -1px 0 0 rgba(120,80,220,.15);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.95);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
   .nav-item:hover{background:rgba(42,92,173,.14);color:rgba(240,232,255,.9);border-color:rgba(42,92,173,.28)}
   .nav-item.active{background:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));color:#C9A84C;border-color:rgba(201,168,76,.3);font-weight:600}
 
   .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;overscroll-behavior:contain}
   .privacy-sensitive{transition:filter .3s ease}
-  .privacy-on .privacy-sensitive{filter:blur(7px) brightness(0.7);user-select:none}
+  .privacy-on .privacy-sensitive{filter:blur(8px)}
   .privacy-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;borderRadius:20px;border:1.5px solid rgba(42,92,173,.35);background:rgba(4,14,52,.8);color:rgba(168,196,240,.7);fontSize:14px;fontWeight:600;cursor:pointer;fontFamily:'DM Sans',sans-serif;transition:all .18s;backdropFilter:blur(8px)}
   .privacy-btn.active{border-color:rgba(201,168,76,.5);background:rgba(201,168,76,.1);color:#C9A84C}
   .privacy-btn:hover{border-color:rgba(42,92,173,.6);color:#F0E8FF}
@@ -598,8 +629,8 @@ const GLOBAL_CSS = `
   .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99;backdrop-filter:blur(4px)}
 
   /* ── Stat cards ──────────────────────────────────────────── */
-  .stat-card{background:rgba(8,3,22,.9);border:1.5px solid rgba(42,92,173,.25);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
-  .stat-card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.38);box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 36px rgba(42,92,173,.15)}
+  .stat-card{background:rgba(8,3,22,.9);border:1.5px solid rgba(201,168,76,.2);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:inset 0 2px 8px rgba(0,0,0,.4),inset 0 -1px 0 rgba(120,80,220,.15),0 4px 24px rgba(0,0,0,.5)}
+  .stat-card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.38);box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 36px rgba(42,92,173,.15),inset 0 2px 8px rgba(0,0,0,.4)}
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 
   /* ── Auth inputs ─────────────────────────────────────────── */
@@ -742,14 +773,23 @@ const GLOBAL_CSS = `
   @keyframes barBounce{0%{transform:scaleY(.5);}100%{transform:scaleY(1.2);}}
 
   @media(max-width:768px){
-    .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:100;overflow-y:scroll;-webkit-overflow-scrolling:touch}
-    .sidebar.open{transform:translateX(0)}
-    .main-content{margin-left:0}
-    .mobile-topbar{display:flex}
-    .page-inner{padding:16px 15px 40px}
+    .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:200;overflow-y:scroll;-webkit-overflow-scrolling:touch;width:82vw;max-width:300px;transform:translate3d(-100%,0,0)}
+    .sidebar.open{transform:translate3d(0,0,0)}
+    .mobile-overlay{z-index:199}
+    .main-content{margin-left:0;min-height:0 !important}
+    .mobile-topbar{display:flex;position:fixed !important;top:0;left:0;right:0;z-index:150;padding:12px 16px}
+    .page-inner{padding:10px 13px 80px !important;padding-top:68px !important}
     .two-col{grid-template-columns:1fr !important}
     .three-col{grid-template-columns:1fr !important}
     .stats-grid{grid-template-columns:repeat(2,1fr) !important}
+    .nav-item{padding:14px 16px;font-size:17px;min-height:52px}
+    .glass-card{border-radius:16px !important;padding:16px 14px !important}
+  }
+  @supports(padding-bottom:env(safe-area-inset-bottom)){
+    @media(max-width:768px){
+      .page-inner{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
+      .sidebar{padding-bottom:env(safe-area-inset-bottom)}
+    }
   }
 
   /* ── Diary book ruled lines ─── */
@@ -759,7 +799,7 @@ const GLOBAL_CSS = `
 // ─── Splash ───────────────────────────────────────────────────
 function Splash() {
   return (
-    <div style={{ minHeight:'100vh', background:'#0A0520', display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ minHeight:'100vh', background:'#0d0520', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <style>{GLOBAL_CSS}</style>
       <div style={{ textAlign:'center' }}>
         <div style={{ marginBottom:18, animation:'floatUp 2.5s ease-in-out infinite' }}><LogoImg size={80}/></div>
@@ -772,7 +812,7 @@ function Splash() {
 }
 
 // ─── Auth screen ──────────────────────────────────────────────
-function AuthScreen() {
+function AuthScreen({ onSuccess }) {
   const [mode, setMode]           = useState('signin');
   const [name, setName]           = useState('');
   const [email, setEmail]         = useState('');
@@ -791,6 +831,7 @@ function AuthScreen() {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
       fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'user_login', email }) }).catch(()=>{});
+      if (onSuccess) onSuccess();
     } catch(e) {
       setError(e.code==='auth/invalid-credential' ? 'Invalid email or password.' : 'Sign in failed. Please try again.');
     }
@@ -810,7 +851,8 @@ function AuthScreen() {
         ...BLANK_DATA,
         profile: { name:name.trim(), conditions:'', goal:'', accountType, careeName:careeName.trim() }
       });
-      fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'user_signup', email, name:name.trim(), userId:cred.user.uid }) }).catch(()=>{});
+      fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'user_signup', email, name:name.trim() }) }).catch(()=>{});
+      if (onSuccess) onSuccess();
     } catch(e) {
       setError(e.code==='auth/email-already-in-use' ? 'An account with this email already exists.' : 'Sign up failed.');
     }
@@ -828,7 +870,7 @@ function AuthScreen() {
   const hk = e => { if (e.key==='Enter') { if(mode==='signin')handleSignin(); else if(mode==='signup')handleSignup(); else handleReset(); } };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#0A0520', display:'flex', alignItems:'center', justifyContent:'center', padding:20, position:'relative' }}>
+    <div style={{ minHeight:'100vh', background:'#0d0520', display:'flex', alignItems:'center', justifyContent:'center', padding:20, position:'relative' }}>
       <style>{GLOBAL_CSS}</style>
       <AnimatedBackground/>
       <div style={{ width:'100%', maxWidth:480, position:'relative', zIndex:1 }}>
@@ -977,9 +1019,9 @@ function DailyQuoteSidebar() {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
-function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn }) {
+function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn, onShowAuth }) {
   const isCare      = data.profile?.accountType === 'caree';
-  const displayName = isCare ? data.profile?.careeName||'Your Caree' : (user.displayName||'Your Account');
+  const displayName = user ? (isCare ? data.profile?.careeName||'Your Caree' : (user.displayName||'Your Account')) : 'Guest';
   const [factIdx, setFactIdx] = useState(0);
 
   useEffect(() => {
@@ -1006,7 +1048,8 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontWeight:600, fontSize:16, color:'#F0E8FF', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{displayName}</div>
               {isCare && <div style={{ fontSize:9, color:'rgba(201,168,76,.6)', fontWeight:600, letterSpacing:1 }}>CARE MODE</div>}
-              {!isCare && <div style={{ fontSize:16, color:'rgba(168,196,240,.45)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</div>}
+              {!isCare && user && <div style={{ fontSize:16, color:'rgba(168,196,240,.45)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</div>}
+              {!user && <div style={{ fontSize:16, color:'rgba(168,196,240,.45)' }}>Browsing as guest</div>}
             </div>
           </div>
           {data.profile?.conditions && <div style={{ marginTop:7, fontSize:16, color:'rgba(168,196,240,.5)', fontWeight:500 }}>{data.profile.conditions.split(',')[0].trim()}{data.profile.conditions.includes(',')?' + more':''}</div>}
@@ -1017,7 +1060,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
           <div style={{ fontSize:16, color:'rgba(168,196,240,.75)', lineHeight:1.6, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", transition:'opacity .5s' }}>{LAZULI_FACTS[factIdx]}</div>
         </div>
       </div>
-      <nav style={{ padding:'4px 8px', overflowY:'auto', flex:1, WebkitOverflowScrolling:'touch' }}>
+      <nav style={{ padding:'4px 8px', overflowY:'auto' }}>
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
             <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.35)', textTransform:'uppercase', letterSpacing:1.8, padding:'10px 8px 4px', userSelect:'none' }}>{group.label}</div>
@@ -1026,7 +1069,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
               return (
                 <button key={n.id} onClick={()=>setTab(n.id)} className={`nav-item${active?' active':''}`} style={{ marginBottom:1 }}>
                   {active && <div style={{ position:'absolute', left:0, top:'18%', bottom:'18%', width:3, background:'linear-gradient(180deg,#2A5CAD,#C9A84C)', borderRadius:'0 3px 3px 0' }}/>}
-                  <span style={{ fontSize:15, width:20, textAlign:'center', lineHeight:1, color:active?'#C9A84C':'rgba(168,196,240,.5)' }}>{n.icon}</span>
+                  <span style={{ fontSize:15, width:20, textAlign:'center', lineHeight:1, color:active?'#C9A84C':'rgba(200,180,255,.65)' }}>{n.icon}</span>
                   <span style={{ flex:1, fontSize:14 }}>{n.label}</span>
                   {active && <span style={{ width:4, height:4, borderRadius:'50%', background:'#C9A84C', boxShadow:'0 0 6px #C9A84C' }}/>}
                 </button>
@@ -1035,12 +1078,15 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
           </div>
         ))}
       </nav>
-      <div style={{ padding:'10px 12px 34px', borderTop:'1px solid rgba(42,92,173,.15)', display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ padding:'10px 12px 14px', borderTop:'1px solid rgba(42,92,173,.15)', display:'flex', flexDirection:'column', gap:8, flex:1 }}>
         <DailyQuoteSidebar/>
         <button onClick={()=>setPrivacyOn(p=>!p)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:`1.5px solid ${privacyOn?'rgba(201,168,76,.5)':'rgba(42,92,173,.3)'}`, background:privacyOn?'rgba(201,168,76,.1)':'rgba(42,92,173,.08)', color:privacyOn?'#C9A84C':'rgba(168,196,240,.6)', fontWeight:600, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', marginBottom:6 }}>
           {privacyOn ? '🔓 Show Details' : '🔒 Privacy Screen'}
         </button>
-        <button onClick={()=>signOut(auth)} className="btn btn-subtle" style={{ width:'100%', justifyContent:'center', fontSize:16, padding:'9px' }}>Sign out</button>
+        {user
+          ? <button onClick={()=>signOut(auth)} className="btn btn-subtle" style={{ width:'100%', justifyContent:'center', fontSize:16, padding:'9px' }}>Sign out</button>
+          : <button onClick={onShowAuth} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:'1.5px solid rgba(201,168,76,.4)', background:'rgba(201,168,76,.1)', color:'#C9A84C', fontWeight:700, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>Sign In / Sign Up</button>
+        }
       </div>
     </aside>
   );
@@ -1055,7 +1101,7 @@ function PH({ emoji, title, sub, children }) {
           <span style={{ fontSize:22 }}>{emoji}</span>
           <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', letterSpacing:.5, lineHeight:1.1, textShadow:'0 0 20px rgba(201,168,76,.25)' }}>{title}</span>
         </div>
-        {sub && <div style={{ fontSize:16, color:'rgba(240,232,255,.45)', marginLeft:32 }}>{sub}</div>}
+        {sub && <div style={{ fontSize:16, color:'rgba(240,232,255,.6)', marginLeft:32 }}>{sub}</div>}
       </div>
       {children && <div style={{ flexShrink:0 }}>{children}</div>}
     </div>
@@ -1170,7 +1216,7 @@ function Dashboard({ data, setTab, upd, user }) {
       <div style={{ marginBottom:28 }}>
         <div style={{ fontSize:16, fontWeight:600, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase', marginBottom:5 }}>{greet()}</div>
         <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:34, fontWeight:700, color:'#C9A84C', marginBottom:3, lineHeight:1, textShadow:'0 0 24px rgba(201,168,76,.3)' }}>{displayName}</div>
-        <div style={{ color:'rgba(240,232,255,.3)', fontSize:15, marginBottom:18 }}>{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+        <div style={{ color:'rgba(240,232,255,.95)', fontSize:15, marginBottom:18 }}>{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
 
         {/* Lazuli says — prominent banner */}
         <div style={{ padding:'18px 22px', background:'linear-gradient(135deg,rgba(42,92,173,.14),rgba(201,168,76,.06))', border:'1px solid rgba(201,168,76,.2)', borderRadius:16, display:'flex', gap:14, alignItems:'flex-start', marginBottom:14 }}>
@@ -1309,19 +1355,9 @@ function Symptoms({ data, upd }) {
 
   const save = () => {
     if (!form.entries.length) { alert('Please add at least one symptom.'); return; }
-    const entry = {...form, id:uid(), timestamp: Date.now()};
-    // Allow multiple per day — each gets its own ID with timestamp suffix
-    const existing = data.symptoms.filter(s=>s.date===form.date);
-    if (existing.length > 0) {
-      // Create an update entry — merge new symptoms with today's, keep unique
-      const merged = { ...existing[0], ...entry, id: existing[0].id,
-        entries: [...existing[0].entries.filter(e=>!entry.entries.find(n=>n.symptom===e.symptom)), ...entry.entries],
-        updates: [...(existing[0].updates||[]), { time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), entries: entry.entries, pain:entry.pain, energy:entry.energy, mood:entry.mood, notes:entry.notes }]
-      };
-      upd('symptoms', data.symptoms.map(s=>s.id===existing[0].id ? merged : s));
-    } else {
-      upd('symptoms', [entry, ...data.symptoms]);
-    }
+    const entry = {...form, id:uid()};
+    const existing = data.symptoms.find(s=>s.date===form.date);
+    upd('symptoms', existing ? data.symptoms.map(s=>s.date===form.date?{...s,...entry,id:s.id}:s) : [entry,...data.symptoms]);
     setForm(blank); setOpen(false);
   };
   const all      = [...data.symptoms].sort((a,b)=>b.date.localeCompare(a.date));
@@ -1436,7 +1472,7 @@ function Symptoms({ data, upd }) {
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:11, flexWrap:'wrap', gap:7 }}>
               <div>
                 <div style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:600, fontSize:15, color:'#C9A84C', marginBottom:5 }}>
-                  {fmtDate(s.date)}{s.date===todayStr()&&<span style={{ fontSize:16, background:'rgba(201,168,76,.12)', color:'#C9A84C', padding:'2px 8px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>Today</span>}{(s.updates||[]).length > 0 && <span style={{ fontSize:13, background:'rgba(42,92,173,.18)', color:'rgba(168,196,240,.7)', padding:'2px 9px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>{(s.updates||[]).length} update{(s.updates||[]).length>1?'s':''}</span>}
+                  {fmtDate(s.date)}{s.date===todayStr()&&<span style={{ fontSize:16, background:'rgba(201,168,76,.12)', color:'#C9A84C', padding:'2px 8px', borderRadius:20, marginLeft:8, fontFamily:"'DM Sans',sans-serif" }}>Today</span>}
                 </div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>{s.entries?.map((e,i)=><span key={i} className="pill">{e.symptom} <SevDot v={e.severity}/></span>)}</div>
                 {(s.illnesses||[]).length>0 && <div style={{ marginTop:5, display:'flex', gap:4, flexWrap:'wrap' }}>{(s.illnesses||[]).map(ill=><span key={ill} style={{ fontSize:16,background:'rgba(248,113,113,.1)',color:'#f87171',padding:'2px 9px',borderRadius:20,border:'1px solid rgba(248,113,113,.25)' }}>{ill}</span>)}</div>}
@@ -1698,234 +1734,261 @@ function Appointments({ data, upd }) {
 }
 
 // ─── Diary (real notebook look) ───────────────────────────────
-function Diary({ data, upd }) {
-  const diary = data.diary||[];
-  const [open,setOpen]     = useState(false);
-  const [view,setView]     = useState(null);
-  const [font,setFont]     = useState(DIARY_FONTS[0].value);
-  const [fontSize,setFontSz] = useState(DIARY_FONTS[0].size);
-  const [mood,setMood]     = useState('');
-  const [title,setTitle]   = useState('');
-  const [body,setBody]     = useState('');
-  const [date,setDate]     = useState(todayStr());
-  const [editId,setEditId] = useState(null);
-  const [page,setPage]     = useState(0);
-  const [flipping,setFlipping] = useState(false);
+// ─── Diary page (forwarded ref required by react-pageflip) ─────
+const DiaryPage = React.forwardRef(({ children, isLeft, style }, ref) => (
+  <div ref={ref} style={{
+    background: isLeft
+      ? 'linear-gradient(175deg, #2a1640 0%, #1e0e30 40%, #180b28 100%)'
+      : 'linear-gradient(175deg, #f5f0e8 0%, #ede4d2 40%, #e0d5c0 100%)',
+    height: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+    ...style,
+  }}>
+    {children}
+  </div>
+));
 
-  const openNew  = () => { setEditId(null);setTitle('');setBody('');setDate(todayStr());setMood('');const f=DIARY_FONTS[0];setFont(f.value);setFontSz(f.size);setOpen(true);setView(null); };
-  const openEdit = e => { setEditId(e.id);setTitle(e.title||'');setBody(e.body||'');setDate(e.date||todayStr());setMood(e.mood||'');setFont(e.font||DIARY_FONTS[0].value);setFontSz(e.fontSize||DIARY_FONTS[0].size);setOpen(true);setView(null); };
+function Diary({ data, upd }) {
+  const bookRef = useRef(null);
+  const entries = data.diary || [];
+  const [editing, setEditing] = useState(null);
+  const [newEntry, setNewEntry] = useState({ title:'', text:'', font: DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const MOOD_OPTIONS = ['✍️','😊','😔','😤','🥺','😴','💪','🌸','🙏','❤️'];
 
   const save = () => {
-    if(!body.trim()){alert('Please write something.');return;}
-    const entry={id:editId||uid(),date,title:title.trim()||fmtDate(date),body,mood,font,fontSize};
-    upd('diary',editId?diary.map(d=>d.id===editId?entry:d):[entry,...diary]);
-    setOpen(false);setEditId(null);
-  };
-  const del = id => { if(window.confirm('Delete entry?')){upd('diary',diary.filter(d=>d.id!==id));setView(null);} };
-  const chFont = v => { const f=DIARY_FONTS.find(x=>x.value===v); setFont(v); setFontSz(f?.size||17); };
-
-  const sorted = [...diary].sort((a,b)=>b.date.localeCompare(a.date));
-  const maxPage = Math.max(0, sorted.length - 1);
-
-  const turnTo = (dir) => {
-    const next = page + dir;
-    if (next < 0 || next > maxPage) return;
-    setFlipping(true);
-    setTimeout(() => { setPage(next); setFlipping(false); }, 450);
+    if (!editing) {
+      if (!newEntry.text.trim() && !newEntry.title.trim()) return;
+      const e = { ...newEntry, date: new Date().toISOString() };
+      upd('diary', [...entries, e]);
+      setNewEntry({ title:'', text:'', font: DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
+      setTimeout(() => {
+        bookRef.current?.pageFlip().flipNext();
+      }, 100);
+    } else {
+      const updated = [...entries];
+      updated[editing.idx] = { ...updated[editing.idx], ...editing };
+      upd('diary', updated);
+      setEditing(null);
+    }
   };
 
-  // Binding holes on left margin
-  const BindingHoles = () => (
-    <div style={{ position:'absolute', left:10, top:0, bottom:0, display:'flex', flexDirection:'column', justifyContent:'space-around', pointerEvents:'none', zIndex:3, paddingTop:20, paddingBottom:20 }}>
-      {[...Array(8)].map((_,i)=>(
-        <div key={i} style={{ width:11, height:11, borderRadius:'50%', background:'rgba(0,0,0,.8)', border:'1px solid rgba(201,168,76,.15)', boxShadow:'inset 0 1px 3px rgba(0,0,0,.6)' }}/>
-      ))}
-    </div>
-  );
+  const deleteEntry = (idx) => {
+    upd('diary', entries.filter((_,i)=>i!==idx));
+  };
 
-  // Spine stitching
-  const SpineStitch = () => (
-    <div className="book-spine">
-      <div style={{ position:'absolute', top:0, bottom:0, left:3, width:1, background:'rgba(201,168,76,.12)' }}/>
-      <div style={{ position:'absolute', top:0, bottom:0, right:3, width:1, background:'rgba(201,168,76,.12)' }}/>
-      {[...Array(14)].map((_,i)=>(
-        <div key={i} style={{ position:'absolute', left:'50%', top:`${3+i*7}%`, transform:'translateX(-50%)', width:3, height:3, borderRadius:'50%', background:'rgba(201,168,76,.18)' }}/>
-      ))}
-    </div>
-  );
+  const WITNESSED_QUOTES = [
+    '"I witnessed myself today — in pain, in grace, in becoming."',
+    '"Every symptom is a message. Every day written is a day witnessed."',
+    '"This body carries ancient wisdom. These pages carry mine."',
+    '"I am more than my illness. I am the author of my story."',
+    '"In documenting the hard days, I honour them — and release them."',
+  ];
 
-  // TOC list for left page
-  const TocPage = ({ activeId }) => (
-    <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
-      <div style={{ fontFamily:"'Cinzel',serif", fontSize:11, color:'rgba(201,168,76,.45)', letterSpacing:3, textTransform:'uppercase', textAlign:'center', marginBottom:20 }}>Journal</div>
-      <div style={{ fontSize:11, color:'rgba(201,168,76,.3)', letterSpacing:1.5, textTransform:'uppercase', fontFamily:"'DM Sans',sans-serif", marginBottom:10 }}>Entries</div>
-      <div style={{ flex:1, overflow:'auto', display:'flex', flexDirection:'column', gap:2 }}>
-        {sorted.map((e,i)=>(
-          <button key={e.id} onClick={()=>{ setView(e.id); }}
-            style={{ display:'block', width:'100%', textAlign:'left', padding:'5px 7px', borderRadius:5, background:e.id===activeId?'rgba(201,168,76,.1)':'transparent', border:'none', cursor:'pointer', transition:'background .12s' }}>
-            <div style={{ fontSize:12, color:e.id===activeId?'#C9A84C':'rgba(240,232,255,.5)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'DM Sans',sans-serif" }}>
-              · {e.title||fmtDate(e.date)}
-            </div>
-            <div style={{ fontSize:10, color:'rgba(240,232,255,.22)', marginTop:1, fontFamily:"'DM Sans',sans-serif" }}>{fmtDate(e.date)}</div>
-          </button>
-        ))}
-      </div>
-      {/* Page rule lines as texture */}
-      {[...Array(16)].map((_,i)=>(
-        <div key={i} style={{ position:'absolute', left:36, right:0, top:`${55+i*2.5}%`, height:1, background:'rgba(42,92,173,.05)', pointerEvents:'none' }}/>
-      ))}
-    </div>
-  );
-
-  // Single entry right page
-  const EntryPage = ({ e }) => (
-    <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
-      {/* Ribbon bookmark */}
-      <div style={{ position:'absolute', top:0, right:32, width:14, height:70, background:'linear-gradient(180deg,#7B2FBE,#5B1F8E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0,100% 0,100% 88%,50% 100%,0 88%)', boxShadow:'0 4px 12px rgba(123,47,190,.4)', opacity:.75 }}/>
-      <div style={{ marginBottom:14, paddingBottom:12, borderBottom:'1px solid rgba(42,92,173,.12)', display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:8 }}>
-        <div>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:13, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase', marginBottom:3 }}>{fmtDate(e.date)}</div>
-          <div style={{ fontFamily:e.font||DIARY_FONTS[0].value, fontSize:(e.fontSize||18)+2, color:'#C9A84C', lineHeight:1.2 }}>{e.title}</div>
-          {e.mood && <div style={{ marginTop:3, fontSize:13, color:'rgba(168,196,240,.6)' }}>{e.mood}</div>}
-        </div>
-        <div style={{ display:'flex', gap:5 }}>
-          <button className="btn btn-ghost" style={{ fontSize:11, padding:'3px 9px' }} onClick={()=>openEdit(e)}>Edit</button>
-          <button className="btn btn-danger" style={{ fontSize:11, padding:'3px 9px' }} onClick={()=>del(e.id)}>Delete</button>
-        </div>
-      </div>
-      <div style={{ flex:1, overflow:'auto', fontFamily:e.font||DIARY_FONTS[0].value, fontSize:e.fontSize||18, color:'rgba(240,232,255,.88)', lineHeight:'36px', whiteSpace:'pre-wrap' }}>
-        {e.body}
-      </div>
-      <div style={{ textAlign:'right', fontSize:12, color:'rgba(240,232,255,.18)', fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', marginTop:8, paddingTop:8, borderTop:'1px solid rgba(42,92,173,.08)' }}>
-        — {sorted.findIndex(x=>x.id===e.id)+1} of {sorted.length} —
-      </div>
-    </div>
-  );
-
-  // === READING VIEW (single entry) ===
-  if (view) {
-    const e = diary.find(d=>d.id===view);
-    if (!e) { setView(null); return null; }
-    return (
-      <div className="slide-in">
-        <button onClick={()=>setView(null)} style={{ border:'none', background:'transparent', color:'rgba(201,168,76,.6)', fontWeight:600, fontSize:16, cursor:'pointer', marginBottom:16, fontFamily:"'DM Sans',sans-serif" }}>← All entries</button>
-        <div className="book-wrap">
-          <div className="book-left">
-            <BindingHoles/>
-            <TocPage activeId={e.id}/>
-          </div>
-          <SpineStitch/>
-          <div className="book-right book-ruled">
-            <EntryPage e={e}/>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // === WRITE VIEW ===
-  if (open) {
-    return (
-      <div className="slide-in">
-        <button onClick={()=>setOpen(false)} style={{ border:'none', background:'transparent', color:'rgba(201,168,76,.6)', fontWeight:600, fontSize:16, cursor:'pointer', marginBottom:16, fontFamily:"'DM Sans',sans-serif" }}>← Cancel</button>
-        <div className="book-wrap">
-          {/* Left page — controls */}
-          <div className="book-left">
-            <BindingHoles/>
-            <div style={{ height:'100%', display:'flex', flexDirection:'column', gap:12, justifyContent:'center' }}>
-              <div style={{ fontFamily:"'Cinzel',serif", fontSize:11, color:'rgba(201,168,76,.4)', letterSpacing:3, textTransform:'uppercase', textAlign:'center', marginBottom:8 }}>
-                {editId ? 'Editing Entry' : 'New Entry'}
-              </div>
-              <div>
-                <label style={{ fontSize:12, color:'rgba(240,232,255,.4)', display:'block', marginBottom:4 }}>Handwriting</label>
-                <select className="field" value={font} onChange={e=>chFont(e.target.value)} style={{ width:'100%', padding:'5px 8px', fontSize:13 }}>
-                  {DIARY_FONTS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize:12, color:'rgba(240,232,255,.4)', display:'block', marginBottom:4 }}>Mood</label>
-                <select className="field" value={mood} onChange={e=>setMood(e.target.value)} style={{ width:'100%', padding:'5px 8px', fontSize:13 }}>
-                  <option value="">—</option>
-                  {DIARY_MOODS.map(m=><option key={m}>{m}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize:12, color:'rgba(240,232,255,.4)', display:'block', marginBottom:4 }}>Date</label>
-                <input type="date" className="field" value={date} onChange={e=>setDate(e.target.value)} style={{ width:'100%', padding:'5px 8px', fontSize:14 }}/>
-              </div>
-              <button className="btn btn-gold" style={{ fontSize:15, width:'100%', marginTop:8 }} onClick={save}>Save Entry ✑</button>
-              {editId && <button className="btn btn-danger" style={{ fontSize:13, width:'100%' }} onClick={()=>del(editId)}>Delete Entry</button>}
-            </div>
-          </div>
-          <SpineStitch/>
-          {/* Right page — writing area */}
-          <div className="book-right book-ruled" style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {/* Ribbon */}
-            <div style={{ position:'absolute', top:0, right:32, width:14, height:60, background:'linear-gradient(180deg,#C9A84C,#A0782E)', zIndex:10, pointerEvents:'none', clipPath:'polygon(0 0,100% 0,100% 82%,50% 100%,0 82%)', opacity:.7 }}/>
-            <input className="field" value={title} onChange={e=>setTitle(e.target.value)}
-              placeholder="Entry title…"
-              style={{ fontFamily:font, fontSize:fontSize+2, background:'transparent', border:'none', borderBottom:'1px solid rgba(201,168,76,.2)', borderRadius:0, padding:'4px 0', color:'#C9A84C', outline:'none', width:'100%' }}/>
-            <textarea value={body} onChange={e=>setBody(e.target.value)}
-              placeholder="Write freely — this is your space. No judgment, no rules. Just you…"
-              autoFocus
-              className="diary-textarea"
-              style={{ flex:1, fontFamily:font, fontSize:fontSize, background:'transparent', border:'none', outline:'none', color:'rgba(240,232,255,.9)', lineHeight:'36px', resize:'none', caretColor:'#C9A84C', padding:0, width:'100%', minHeight:340 }}/>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // === MAIN LIST VIEW (open book with TOC + current entry) ===
   return (
-    <div>
-      <PH emoji="✑" title="My Diary" sub="Your private space — write freely, in your voice">
-        <button className="btn btn-gold" onClick={openNew}>+ New entry</button>
-      </PH>
-      <div style={{ marginBottom:18, padding:'12px 18px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.12)', borderRadius:14, fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'rgba(168,196,240,.6)', fontStyle:'italic', lineHeight:1.7 }}>
-        💜 The most healing act is to be truly witnessed. This diary sees you, exactly as you are.
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, perspective:'2000px' }}>
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center', textShadow:'0 0 20px rgba(201,168,76,.3)' }}>
+        📔 My Health Diary
+      </div>
+      <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', textAlign:'center' }}>
+        {entries.length} {entries.length===1?'entry':'entries'} • Click the pages or use arrows to navigate
       </div>
 
-      {diary.length === 0 && (
-        <Nil icon="✑" msg="Your diary is empty." sub="Write anything — how you feel, what you wish your doctor understood." cta="Write first entry" fn={openNew}/>
-      )}
-
-      {diary.length > 0 && (
-        <>
-          <div className={`book-wrap${flipping?' page-turning':''}`}>
-            {/* Left page — table of contents */}
-            <div className="book-left">
-              <BindingHoles/>
-              <TocPage activeId={sorted[page]?.id}/>
-            </div>
-            <SpineStitch/>
-            {/* Right page — current entry */}
-            <div className="book-right book-ruled">
-              {sorted[page] && <EntryPage e={sorted[page]}/>}
-            </div>
-          </div>
-
-          {/* Page turn controls */}
-          {sorted.length > 1 && (
-            <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:18, marginTop:18 }}>
-              <button
-                onClick={()=>turnTo(-1)}
-                disabled={page === 0 || flipping}
-                style={{ width:46, height:46, borderRadius:'50%', border:'1.5px solid rgba(42,92,173,.3)', background:'rgba(42,92,173,.08)', color:page===0?'rgba(240,232,255,.2)':'rgba(240,232,255,.75)', fontSize:22, cursor:page===0?'default':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s', boxShadow:page===0?'none':'0 4px 14px rgba(42,92,173,.2)' }}>
-                ‹
-              </button>
-              <div style={{ fontSize:14, color:'rgba(240,232,255,.35)', fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>
-                Entry {page+1} of {sorted.length}
+      <div style={{ width:'100%', maxWidth:780, position:'relative' }}>
+        <HTMLFlipBook
+          ref={bookRef}
+          width={370}
+          height={500}
+          size="stretch"
+          minWidth={280}
+          maxWidth={400}
+          minHeight={400}
+          maxHeight={600}
+          maxShadowOpacity={0.5}
+          showCover={true}
+          mobileScrollSupport={true}
+          onFlip={(e) => setCurrentPage(e.data)}
+          style={{ margin:'0 auto' }}
+        >
+          {/* Front cover — left (back of cover) */}
+          <DiaryPage isLeft={true}>
+            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:32, gap:16 }}>
+              <div style={{ fontSize:48, marginBottom:8 }}>💜</div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:700, color:'rgba(201,168,76,.9)', textAlign:'center', lineHeight:1.4 }}>
+                Health Diary
               </div>
-              <button
-                onClick={()=>turnTo(1)}
-                disabled={page >= maxPage || flipping}
-                style={{ width:46, height:46, borderRadius:'50%', border:'1.5px solid rgba(42,92,173,.3)', background:'rgba(42,92,173,.08)', color:page>=maxPage?'rgba(240,232,255,.2)':'rgba(240,232,255,.75)', fontSize:22, cursor:page>=maxPage?'default':'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s', boxShadow:page>=maxPage?'none':'0 4px 14px rgba(42,92,173,.2)' }}>
-                ›
+              <div style={{ width:40, height:2, background:'rgba(201,168,76,.4)', borderRadius:2 }}/>
+              <div style={{ fontSize:13, color:'rgba(240,232,255,.5)', textAlign:'center', lineHeight:1.7, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
+                "Witnessed. Honored. Released."
+              </div>
+              <div style={{ marginTop:'auto', fontSize:12, color:'rgba(240,232,255,.3)', textAlign:'center' }}>
+                {entries.length > 0 ? `${entries.length} entries` : 'Begin your first entry →'}
+              </div>
+            </div>
+          </DiaryPage>
+
+          {/* Front cover — right (title page) */}
+          <DiaryPage isLeft={false}>
+            <svg width="0" height="0" style={{position:'absolute'}}>
+              <defs>
+                <filter id="leather">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise"/>
+                  <feColorMatrix type="saturate" values="0" in="noise" result="grey"/>
+                  <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
+                </filter>
+              </defs>
+            </svg>
+            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:36, gap:12, background:'linear-gradient(135deg, #3d1a0a 0%, #5c2810 30%, #3d1a0a 60%, #2a0f05 100%)' }}>
+              <div style={{ fontSize:52 }}>📔</div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:20, fontWeight:700, color:'#C9A84C', textAlign:'center', letterSpacing:2, textShadow:'0 0 20px rgba(201,168,76,.4)' }}>
+                My Health Diary
+              </div>
+              <div style={{ width:60, height:2, background:'rgba(201,168,76,.5)', borderRadius:2 }}/>
+              <div style={{ fontSize:13, color:'rgba(201,168,76,.6)', textAlign:'center', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
+                A sacred record of my healing journey
+              </div>
+            </div>
+          </DiaryPage>
+
+          {/* Entry pages — each entry = 2 pages */}
+          {entries.map((e, idx) => [
+            <DiaryPage key={`L${idx}`} isLeft={true}>
+              <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'32px 24px', gap:16 }}>
+                {[80,200,320,420].map(y=>(
+                  <div key={y} style={{ position:'absolute', right:10, top:y, width:10, height:10, borderRadius:'50%', background:'rgba(0,0,0,.4)', boxShadow:'inset 0 1px 2px rgba(0,0,0,.6)' }}/>
+                ))}
+                <div style={{ fontSize:13, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase', fontFamily:"'DM Sans',sans-serif" }}>
+                  Entry {idx+1}
+                </div>
+                <div style={{ fontSize:16, fontWeight:700, color:'rgba(240,232,255,.85)', fontFamily:"'Cormorant Garamond',serif" }}>
+                  {e.title || 'Untitled Entry'}
+                </div>
+                <div style={{ fontSize:12, color:'rgba(240,232,255,.4)', fontFamily:"'DM Sans',sans-serif" }}>
+                  {e.date ? new Date(e.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : ''}
+                </div>
+                <div style={{ fontSize:22, marginTop:4 }}>{e.mood || '✍️'}</div>
+                <div style={{ flex:1, display:'flex', flexDirection:'column', justifyContent:'flex-end', gap:8 }}>
+                  <div style={{ height:1, background:'rgba(201,168,76,.15)' }}/>
+                  <div style={{ fontSize:13, color:'rgba(201,168,76,.35)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", lineHeight:1.6, textShadow:'0 0 15px rgba(201,168,76,.2)' }}>
+                    {WITNESSED_QUOTES[idx % WITNESSED_QUOTES.length]}
+                  </div>
+                </div>
+                <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                  <button onClick={()=>setEditing({idx, text:e.text||'', title:e.title||'', font:e.font||DIARY_FONTS[0].value, fontSize:e.fontSize||18, mood:e.mood||'✍️'})} style={{ padding:'4px 10px', borderRadius:8, border:'1px solid rgba(201,168,76,.3)', background:'transparent', color:'rgba(201,168,76,.6)', fontSize:12, cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>deleteEntry(idx)} style={{ padding:'4px 10px', borderRadius:8, border:'1px solid rgba(255,80,80,.2)', background:'transparent', color:'rgba(255,100,100,.5)', fontSize:12, cursor:'pointer' }}>Delete</button>
+                </div>
+              </div>
+            </DiaryPage>,
+
+            <DiaryPage key={`R${idx}`} isLeft={false}>
+              <div style={{ height:'100%', padding:'24px 20px', backgroundImage:'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(42,92,173,.1) 31px, rgba(42,92,173,.1) 32px)', backgroundSize:'100% 32px', backgroundPositionY:'28px', overflow:'hidden' }}>
+                {editing && editing.idx === idx ? (
+                  <div style={{ display:'flex', flexDirection:'column', gap:8, height:'100%' }}>
+                    <input value={editing.title} onChange={ev=>setEditing(p=>({...p,title:ev.target.value}))} placeholder="Entry title..." style={{ border:'none', borderBottom:'1.5px solid rgba(42,92,173,.3)', background:'transparent', fontSize:15, fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:'#1a0a2e', outline:'none', padding:'4px 0' }}/>
+                    <textarea value={editing.text} onChange={ev=>setEditing(p=>({...p,text:ev.target.value}))} style={{ flex:1, border:'none', background:'transparent', fontSize:editing.fontSize||18, fontFamily:editing.font||DIARY_FONTS[0].value, color:'#1a0a2e', lineHeight:'32px', outline:'none', resize:'none', padding:0 }}/>
+                    <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                      <button onClick={()=>setEditing(null)} style={{ padding:'6px 14px', borderRadius:10, border:'1px solid rgba(0,0,0,.15)', background:'transparent', color:'#666', fontSize:13, cursor:'pointer' }}>Cancel</button>
+                      <button onClick={save} style={{ padding:'6px 14px', borderRadius:10, background:'#2A5CAD', border:'none', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>Save</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontFamily:e.font||DIARY_FONTS[0].value, fontSize:e.fontSize||18, color:'#1a0a2e', lineHeight:'32px', whiteSpace:'pre-wrap', overflow:'hidden', height:'100%' }}>
+                    {e.text || <span style={{ color:'#999', fontStyle:'italic' }}>No content</span>}
+                  </div>
+                )}
+              </div>
+            </DiaryPage>,
+          ])}
+
+          {/* New entry pages — left decorative */}
+          <DiaryPage isLeft={true}>
+            <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'32px 24px', gap:16, justifyContent:'center', alignItems:'center' }}>
+              <div style={{ fontSize:36 }}>✨</div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'rgba(201,168,76,.7)', textAlign:'center', lineHeight:1.6, fontStyle:'italic' }}>
+                "A new day. A new page. A new witness to your story."
+              </div>
+              <div style={{ width:40, height:1, background:'rgba(201,168,76,.3)' }}/>
+              <div style={{ fontSize:13, color:'rgba(240,232,255,.35)', textAlign:'center' }}>
+                Write today's entry →
+              </div>
+            </div>
+          </DiaryPage>
+
+          {/* New entry pages — right input */}
+          <DiaryPage isLeft={false}>
+            <div style={{ height:'100%', padding:'24px 20px', backgroundImage:'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(42,92,173,.1) 31px, rgba(42,92,173,.1) 32px)', backgroundSize:'100% 32px', backgroundPositionY:'28px', display:'flex', flexDirection:'column', gap:10 }}>
+              <input
+                value={newEntry.title}
+                onChange={ev=>setNewEntry(p=>({...p,title:ev.target.value}))}
+                placeholder="Today's title..."
+                style={{ border:'none', borderBottom:'1.5px solid rgba(42,92,173,.25)', background:'transparent', fontSize:16, fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:'#1a0a2e', outline:'none', padding:'4px 0', lineHeight:'32px' }}
+              />
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                {MOOD_OPTIONS.map(m=>(
+                  <button key={m} onClick={()=>setNewEntry(p=>({...p,mood:m}))} style={{ fontSize:18, background:newEntry.mood===m?'rgba(42,92,173,.15)':'transparent', border:`1.5px solid ${newEntry.mood===m?'rgba(42,92,173,.4)':'transparent'}`, borderRadius:8, padding:'2px 6px', cursor:'pointer', lineHeight:1 }}>{m}</button>
+                ))}
+              </div>
+              <select value={newEntry.font} onChange={ev=>setNewEntry(p=>({...p,font:ev.target.value}))} style={{ border:'1px solid rgba(0,0,0,.1)', borderRadius:6, background:'transparent', fontSize:13, color:'#444', fontFamily:newEntry.font, padding:'2px 6px' }}>
+                {DIARY_FONTS.map(f=><option key={f.value} value={f.value} style={{fontFamily:f.value}}>{f.label}</option>)}
+              </select>
+              <textarea
+                value={newEntry.text}
+                onChange={ev=>setNewEntry(p=>({...p,text:ev.target.value}))}
+                placeholder="Write here..."
+                style={{ flex:1, border:'none', background:'transparent', fontSize:newEntry.fontSize, fontFamily:newEntry.font, color:'#1a0a2e', lineHeight:'32px', outline:'none', resize:'none', padding:0, minHeight:200 }}
+              />
+              <button onClick={save} style={{ padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#2A5CAD,#1e4080)', border:'none', color:'#fff', fontSize:15, fontWeight:700, cursor:'pointer', boxShadow:'0 4px 16px rgba(42,92,173,.35)' }}>
+                ✦ Save & Turn Page
               </button>
             </div>
-          )}
-        </>
+          </DiaryPage>
+
+          {/* Back cover pages */}
+          <DiaryPage isLeft={true}>
+            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:32, gap:12 }}>
+              <div style={{ fontSize:13, color:'rgba(240,232,255,.3)', textAlign:'center', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
+                End of diary
+              </div>
+            </div>
+          </DiaryPage>
+          <DiaryPage isLeft={false} style={{ background:'linear-gradient(135deg, #3d1a0a 0%, #5c2810 30%, #2a0f05 100%)' }}>
+            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:32, gap:12 }}>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'rgba(201,168,76,.6)', textAlign:'center', fontStyle:'italic' }}>
+                Lazuli Crest
+              </div>
+              <div style={{ fontSize:28 }}>💜</div>
+            </div>
+          </DiaryPage>
+        </HTMLFlipBook>
+
+        <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:20, marginTop:16 }}>
+          <button onClick={()=>bookRef.current?.pageFlip().flipPrev()} style={{ padding:'10px 22px', borderRadius:12, border:'1.5px solid rgba(42,92,173,.35)', background:'rgba(42,92,173,.1)', color:'rgba(168,196,240,.8)', fontSize:18, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+            ← Prev
+          </button>
+          <span style={{ fontSize:13, color:'rgba(240,232,255,.35)' }}>
+            Page {currentPage + 1} of {(entries.length + 2) * 2 + 4}
+          </span>
+          <button onClick={()=>bookRef.current?.pageFlip().flipNext()} style={{ padding:'10px 22px', borderRadius:12, border:'1.5px solid rgba(42,92,173,.35)', background:'rgba(42,92,173,.1)', color:'rgba(168,196,240,.8)', fontSize:18, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+            Next →
+          </button>
+        </div>
+      </div>
+
+      {entries.length > 0 && (
+        <div style={{ width:'100%', maxWidth:780 }}>
+          <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', marginBottom:10, fontFamily:"'DM Sans',sans-serif" }}>All Entries</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {entries.map((e,i)=>(
+              <button key={i} onClick={()=>{ bookRef.current?.pageFlip().flip(2 + i*2); }} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderRadius:12, border:'1px solid rgba(42,92,173,.2)', background:'rgba(42,92,173,.07)', color:'rgba(240,232,255,.75)', fontSize:14, cursor:'pointer', textAlign:'left', fontFamily:"'DM Sans',sans-serif" }}>
+                <span style={{ fontSize:20 }}>{e.mood||'✍️'}</span>
+                <span style={{ flex:1, fontWeight:600 }}>{e.title||'Untitled'}</span>
+                <span style={{ fontSize:12, color:'rgba(240,232,255,.35)' }}>{e.date?new Date(e.date).toLocaleDateString():''}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -2252,15 +2315,16 @@ const MINDFUL_QUOTES = [
 ];
 
 const SOUNDSCAPES = [
-  { id:'rain',      label:'Gentle Rain',       icon:'🌧', file:'/sounds/rain.mp3',        color:'#93c5fd', desc:'Soft rainfall on leaves' },
-  { id:'ocean',     label:'Ocean Waves',        icon:'🌊', file:'/sounds/ocean.mp3',       color:'#60a5fa', desc:'Rhythmic tides — nervous system reset' },
-  { id:'forest',    label:'Forest & Birds',     icon:'🌿', file:'/sounds/forest.mp3',      color:'#6ee7b7', desc:'Morning birdsong — awakening and alive' },
-  { id:'whitenoise',label:'White Noise / Fan',  icon:'〰', file:'/sounds/white-noise.mp3', color:'#a78bfa', desc:'Steady masking — focus and sleep' },
-  { id:'binaural40',label:'Gamma 40Hz Focus',   icon:'⚡', file:null,                      color:'#C9A84C', desc:'40Hz binaural (use headphones)' },
-  { id:'binaural10',label:'Alpha 10Hz Calm',    icon:'🧠', file:null,                      color:'#7B2FBE', desc:'10Hz alpha waves (headphones)' },
-  { id:'binaural4', label:'Theta 4Hz Rest',     icon:'💤', file:null,                      color:'#5B1F8E', desc:'4Hz deep rest (headphones)' },
-  { id:'tibetan',   label:'Tibetan Bowl 432Hz', icon:'🔔', file:null,                      color:'#f59e0b', desc:'Ancient healing frequency' },
-  { id:'heartbeat', label:'Calm Heartbeat',     icon:'💓', file:null,                      color:'#f87171', desc:'Steady rhythm — anxiety relief' },
+  { id:'rain',      label:'Gentle Rain',        icon:'🌧', desc:'Soft rainfall — grounding and calming',           color:'#93c5fd', file:'/sounds/Rain ASMR.mp4' },
+  { id:'ocean',     label:'Ocean Waves',        icon:'🌊', desc:'Rhythmic tides — nervous system reset',           color:'#60a5fa' },
+  { id:'birds',     label:'Birds Chirping',     icon:'🐦', desc:'Morning birdsong — peaceful awakening',           color:'#6ee7b7', file:'/sounds/Birds Chirping ASMR.mp3' },
+  { id:'river',     label:'River Flow',         icon:'💧', desc:'Flowing stream — calming and centering',          color:'#38bdf8', file:'/sounds/River Flow ASMR.mp3' },
+  { id:'whitenoise',label:'White Noise',        icon:'〰', desc:'Steady masking noise — focus and sleep',          color:'#a78bfa' },
+  { id:'binaural40',label:'Gamma Binaural 40Hz',icon:'⚡', desc:'Focus & clarity — 40Hz gamma waves (headphones)', color:'#C9A84C' },
+  { id:'binaural10',label:'Alpha Binaural 10Hz',icon:'🧠', desc:'Calm focus — 10Hz alpha waves (headphones)',      color:'#7B2FBE' },
+  { id:'binaural4', label:'Theta Binaural 4Hz', icon:'💤', desc:'Deep rest — 4Hz theta waves (headphones)',        color:'#5B1F8E' },
+  { id:'tibetan',   label:'Tibetan Bowl 432Hz', icon:'🔔', desc:'Ancient healing frequency — grounding',           color:'#f59e0b' },
+  { id:'heartbeat', label:'Calm Heartbeat',     icon:'💓', desc:'Steady rhythm — anxiety relief',                  color:'#f87171', file:'/sounds/Heart Beat ASMR.mp3' },
 ];
 
 // ─── Glass Arched Room Door ────────────────────────────────────
@@ -2377,265 +2441,6 @@ function RoomDoor({ tool, onEnter, index }) {
   );
 }
 
-// ─── Zen Garden Canvas ─────────────────────────────────────────
-function ZenGardenCanvas() {
-  const canvasRef = useRef(null);
-  const [activeTool, setActiveTool] = useState('rake');
-  const [accessories, setAccessories] = useState([
-    { id:1, type:'stone',    x:120, y:140, label:'Smooth Stone', emoji:'🪨' },
-    { id:2, type:'pebble',   x:360, y:180, label:'Dark Pebble',  emoji:'⬤'  },
-    { id:3, type:'succulent',x:250, y:80,  label:'Succulent',    emoji:'🌵' },
-  ]);
-  const [dragging, setDragging]   = useState(null);
-  const [dragOffset, setDragOffset] = useState({x:0,y:0});
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const isDrawing = useRef(false);
-  const lastPos   = useRef(null);
-  const audioCtxRef = useRef(null);
-  const rakeNodeRef = useRef(null); // eslint-disable-line no-unused-vars
-
-  // Draw the full canvas scene
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    // Sand base
-    const sandGrad = ctx.createLinearGradient(0,0,0,H);
-    sandGrad.addColorStop(0,   '#c8a96e');
-    sandGrad.addColorStop(0.4, '#b8944e');
-    sandGrad.addColorStop(1,   '#a07838');
-    ctx.fillStyle = sandGrad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Sand texture — subtle noise dots
-    ctx.save();
-    for(let i=0;i<1200;i++){
-      const x=Math.random()*W, y=Math.random()*H;
-      const a=Math.random()*.08+.03;
-      ctx.fillStyle=`rgba(${Math.random()>.5?'255,230,180':'100,60,20'},${a})`;
-      ctx.fillRect(x,y,1,1);
-    }
-    ctx.restore();
-
-    // Border frame
-    ctx.strokeStyle='rgba(201,168,76,.5)';
-    ctx.lineWidth=2;
-    ctx.strokeRect(2,2,W-4,H-4);
-
-    // Accessories
-    accessories.forEach(acc=>{
-      ctx.save();
-      ctx.font=`${acc.type==='stone'?32:acc.type==='pebble'?22:28}px serif`;
-      ctx.textAlign='center';
-      ctx.textBaseline='middle';
-      // Shadow
-      ctx.shadowColor='rgba(0,0,0,.4)';
-      ctx.shadowBlur=8;
-      ctx.shadowOffsetX=3;
-      ctx.shadowOffsetY=4;
-      if(acc.type==='pebble'){
-        ctx.fillStyle='#2a1a0a';
-        ctx.beginPath();
-        ctx.ellipse(acc.x,acc.y,14,10,0,0,Math.PI*2);
-        ctx.fill();
-        ctx.fillStyle='#4a3020';
-        ctx.beginPath();
-        ctx.ellipse(acc.x-3,acc.y-3,6,5,0,0,Math.PI*2);
-        ctx.fill();
-      } else {
-        ctx.fillText(acc.emoji,acc.x,acc.y);
-      }
-      ctx.restore();
-    });
-  }, [accessories]);
-
-  // Rake drawing
-  const rakeAt = useCallback((ctx, x, y, prevX, prevY) => {
-    const TINES = 5;
-    const SPACING = 6;
-    const dx = x - (prevX??x), dy = y - (prevY??y);
-    const len = Math.sqrt(dx*dx+dy*dy) || 1;
-    const nx = -dy/len, ny = dx/len; // perpendicular
-
-    for(let t=0;t<TINES;t++){
-      const offset=(t-(TINES-1)/2)*SPACING;
-      const ox=nx*offset, oy=ny*offset;
-      if(prevX!=null){
-        // Peak line (light sand)
-        ctx.beginPath();
-        ctx.moveTo(prevX+ox-nx*1.5, prevY+oy-ny*1.5);
-        ctx.lineTo(x+ox-nx*1.5,    y+oy-ny*1.5);
-        ctx.strokeStyle='rgba(220,185,100,.9)';
-        ctx.lineWidth=2.5;
-        ctx.lineCap='round';
-        ctx.stroke();
-        // Groove (dark shadow)
-        ctx.beginPath();
-        ctx.moveTo(prevX+ox+nx*1, prevY+oy+ny*1);
-        ctx.lineTo(x+ox+nx*1,    y+oy+ny*1);
-        ctx.strokeStyle='rgba(80,45,10,.55)';
-        ctx.lineWidth=1.2;
-        ctx.stroke();
-      }
-    }
-  }, []);
-
-  const smoothAt = useCallback((ctx, x, y, prevX, prevY) => {
-    if(prevX==null) return;
-    const R=18;
-    // Sample sand color and blend
-    ctx.save();
-    const sandGrad=ctx.createLinearGradient(0,0,0,ctx.canvas.height);
-    sandGrad.addColorStop(0,'#c8a96e');sandGrad.addColorStop(1,'#a07838');
-    ctx.fillStyle=sandGrad;
-    ctx.globalAlpha=0.35;
-    ctx.beginPath();
-    ctx.arc(x,y,R,0,Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-  }, []);
-
-  useEffect(() => { draw(); }, [draw]);
-
-  const getPos = (e, canvas) => {
-    const r=canvas.getBoundingClientRect();
-    const touch=e.touches?.[0]||e.changedTouches?.[0];
-    const cx=touch?touch.clientX:e.clientX;
-    const cy=touch?touch.clientY:e.clientY;
-    return { x:(cx-r.left)*(canvas.width/r.width), y:(cy-r.top)*(canvas.height/r.height) };
-  };
-
-  const playRakeSound = () => {
-    if(!soundEnabled) return;
-    try{
-      if(!audioCtxRef.current) audioCtxRef.current=new(window.AudioContext||window.webkitAudioContext)();
-      const ctx=audioCtxRef.current;
-      if(ctx.state==='suspended') ctx.resume();
-      const buf=ctx.createBuffer(1,ctx.sampleRate*.15,ctx.sampleRate);
-      const d=buf.getChannelData(0);
-      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*.12;
-      const src=ctx.createBufferSource();
-      const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2400;f.Q.value=0.8;
-      const g=ctx.createGain();g.gain.setValueAtTime(.25,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.15);
-      src.buffer=buf;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
-    }catch(e){}
-  };
-
-  const onStart = (e) => {
-    e.preventDefault();
-    const canvas=canvasRef.current;
-    const {x,y}=getPos(e,canvas);
-    // Check if clicking an accessory
-    const hit=accessories.find(a=>Math.hypot(a.x-x,a.y-y)<28);
-    if(hit){
-      setDragging(hit.id);
-      setDragOffset({x:x-hit.x,y:y-hit.y});
-      return;
-    }
-    if(activeTool==='rake'||activeTool==='smooth'){
-      isDrawing.current=true;
-      lastPos.current={x,y};
-    }
-  };
-
-  const onMove = (e) => {
-    e.preventDefault();
-    const canvas=canvasRef.current;
-    const {x,y}=getPos(e,canvas);
-    if(dragging){
-      setAccessories(prev=>prev.map(a=>a.id===dragging?{...a,x:x-dragOffset.x,y:y-dragOffset.y}:a));
-      return;
-    }
-    if(!isDrawing.current) return;
-    const ctx=canvas.getContext('2d');
-    const prev=lastPos.current;
-    if(activeTool==='rake'){ rakeAt(ctx,x,y,prev?.x,prev?.y); playRakeSound(); }
-    else if(activeTool==='smooth'){ smoothAt(ctx,x,y,prev?.x,prev?.y); }
-    // Redraw accessories on top
-    accessories.forEach(acc=>{
-      ctx.save();
-      ctx.font=`${acc.type==='stone'?32:acc.type==='pebble'?22:28}px serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=8; ctx.shadowOffsetX=3; ctx.shadowOffsetY=4;
-      if(acc.type==='pebble'){
-        ctx.fillStyle='#2a1a0a'; ctx.beginPath(); ctx.ellipse(acc.x,acc.y,14,10,0,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#4a3020'; ctx.beginPath(); ctx.ellipse(acc.x-3,acc.y-3,6,5,0,0,Math.PI*2); ctx.fill();
-      } else { ctx.fillText(acc.emoji,acc.x,acc.y); }
-      ctx.restore();
-    });
-    lastPos.current={x,y};
-  };
-
-  const onEnd = () => {
-    isDrawing.current=false;
-    lastPos.current=null;
-    setDragging(null);
-  };
-
-  const clearGarden = () => {
-    const canvas=canvasRef.current;
-    if(!canvas) return;
-    const ctx=canvas.getContext('2d');
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    setAccessories([
-      {id:1,type:'stone',x:120,y:140,label:'Smooth Stone',emoji:'🪨'},
-      {id:2,type:'pebble',x:360,y:180,label:'Dark Pebble',emoji:'⬤'},
-      {id:3,type:'succulent',x:250,y:80,label:'Succulent',emoji:'🌵'},
-    ]);
-    draw();
-  };
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
-      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.7)', textAlign:'center' }}>
-        Rake the sand. Breathe. Find stillness.
-      </div>
-
-      {/* Toolbar */}
-      <div style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center' }}>
-        {[
-          { id:'rake',   label:'🖊 Rake',    desc:'3-tine rake pattern' },
-          { id:'smooth', label:'✋ Smooth',  desc:'Blend & erase marks' },
-        ].map(t=>(
-          <button key={t.id} onClick={()=>setActiveTool(t.id)} title={t.desc}
-            style={{ padding:'8px 20px', borderRadius:20, border:`1.5px solid ${activeTool===t.id?'rgba(201,168,76,.6)':'rgba(42,92,173,.25)'}`, background:activeTool===t.id?'rgba(201,168,76,.12)':'rgba(42,92,173,.07)', color:activeTool===t.id?'#C9A84C':'rgba(240,232,255,.55)', fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", fontWeight:activeTool===t.id?700:400 }}>
-            {t.label}
-          </button>
-        ))}
-        <button onClick={()=>setSoundEnabled(s=>!s)}
-          style={{ padding:'8px 16px', borderRadius:20, border:'1px solid rgba(42,92,173,.2)', background:'rgba(42,92,173,.06)', color:'rgba(240,232,255,.5)', fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
-          {soundEnabled?'🔊 Sand sounds':'🔇 Sound off'}
-        </button>
-        <button onClick={clearGarden} className="btn btn-ghost" style={{ fontSize:14 }}>Reset Garden</button>
-      </div>
-
-      {/* Accessories info */}
-      <div style={{ fontSize:14, color:'rgba(240,232,255,.35)', fontFamily:"'DM Sans',sans-serif", fontStyle:'italic' }}>
-        Drag 🪨 🌵 stones & succulents anywhere in the garden
-      </div>
-
-      {/* Canvas */}
-      <div style={{ borderRadius:16, overflow:'hidden', border:'2px solid rgba(201,168,76,.3)', boxShadow:'0 12px 50px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,220,100,.15)', width:'100%', maxWidth:580, cursor:activeTool==='rake'?`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='20' font-size='18'%3E🖊%3C/text%3E%3C/svg%3E") 4 20, crosshair`:activeTool==='smooth'?'grab':'crosshair' }}>
-        <canvas
-          ref={canvasRef}
-          width={580}
-          height={320}
-          onMouseDown={onStart}
-          onMouseMove={onMove}
-          onMouseUp={onEnd}
-          onMouseLeave={onEnd}
-          onTouchStart={onStart}
-          onTouchMove={onMove}
-          onTouchEnd={onEnd}
-          style={{ display:'block', width:'100%', height:'auto', touchAction:'none' }}
-        />
-      </div>
-    </div>
-  );
-}
-
 function Mindfulness() {
   const TOOLS = [
     { id:'breathing',  icon:'🫁', label:'Box Breathing'    },
@@ -2669,23 +2474,20 @@ function Mindfulness() {
   const [gratLidOpen, setGratLidOpen] = useState(false);
   const [gratBurst, setGratBurst]     = useState(false);
 
-  // Worry stone rubs
+  // Worry stone tap
   const [rubs, setRubs]           = useState(0);
   const [rubGlow, setRubGlow]     = useState(false);
   const [stoneMuted, setStoneMuted] = useState(false);
   const stoneAudioCtxRef = useRef(null);
 
   // Zen garden
-  const [zenLines, setZenLines]   = useState([]); // eslint-disable-line no-unused-vars
-  const [zenTool, setZenTool]     = useState('rake'); // eslint-disable-line no-unused-vars
+  const [zenLines, setZenLines]   = useState([]);
+  const [zenTool, setZenTool]     = useState('rake');
 
   // Soundscape
   const [playingSound, setPlayingSound] = useState(null);
-  const [soundVolumes, setSoundVolumes] = useState({});
   const soundNodesRef = useRef(null);
   const soundCtxRef   = useRef(null);
-  const audioElsRef   = useRef({});
-  const fadeTimersRef = useRef({});
 
   // Fountain wishes
   const [wishText, setWishText]   = useState('');
@@ -2696,11 +2498,6 @@ function Mindfulness() {
   const [imageryScene, setImageryScene]               = useState(null);
   const [imageryStep, setImageryStep]                 = useState(0);
   const [imageryVoicePlaying, setImageryVoicePlaying] = useState(false);
-  const [imageryAutoPlay, setImageryAutoPlay]         = useState(false);
-  const [imageryVoiceIdx, setImageryVoiceIdx]         = useState(0);
-  const [imageryRate, setImageryRate]                 = useState(0.72);
-  const [availableVoices, setAvailableVoices]         = useState([]);
-  const imageryAutoRef = useRef(null);
 
   const timerRef = useRef(null);
 
@@ -2723,17 +2520,6 @@ function Mindfulness() {
   }, [active, phaseIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const loadVoices = () => {
-      const v = window.speechSynthesis?.getVoices() || [];
-      const english = v.filter(x=>x.lang.startsWith('en'));
-      setAvailableVoices(english.length ? english : v);
-    };
-    loadVoices();
-    window.speechSynthesis?.addEventListener('voiceschanged', loadVoices);
-    return () => window.speechSynthesis?.removeEventListener('voiceschanged', loadVoices);
-  }, []);
-
-  useEffect(() => {
     const t = setInterval(() => {
       setQuoteFade(false);
       setTimeout(() => { setQuoteIdx(i=>(i+1)%MINDFUL_QUOTES.length); setQuoteFade(true); }, 600);
@@ -2743,15 +2529,6 @@ function Mindfulness() {
 
   useEffect(()=>{
     return ()=>{ try{ soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});soundCtxRef.current?.close();}catch(e){} };
-  },[]);
-
-  useEffect(()=>{
-    const audioEls = audioElsRef.current;
-    const fadeTimers = fadeTimersRef.current;
-    return ()=>{
-      Object.values(audioEls).forEach(el=>{ try{el.pause();el.src='';}catch(e){} });
-      clearInterval(Object.values(fadeTimers||{}));
-    };
   },[]);
 
   const phase = PHASES[phaseIdx];
@@ -2788,6 +2565,12 @@ function Mindfulness() {
     setWishText('');
     setWishRipple(true);
     setTimeout(()=>setWishRipple(false), 1200);
+    // Play fountain wish sound
+    try {
+      const wishSound = new Audio('/sounds/Fountain wish .mp3');
+      wishSound.volume = 0.6;
+      wishSound.play().catch(()=>{});
+    } catch(e) {}
   };
 
   const addGratitude = () => {
@@ -2800,135 +2583,121 @@ function Mindfulness() {
     setTimeout(()=>setGratBurst(false), 800);
   };
 
-  const drawZen = (e) => { // eslint-disable-line no-unused-vars
+  const drawZen = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left)/rect.width*100).toFixed(1);
     const y = ((e.clientY - rect.top)/rect.height*100).toFixed(1);
     setZenLines(l=>[...l, {x,y,id:Date.now()}].slice(-80));
   };
 
+  const audioElsRef = useRef([]);
+
   const toggleSound = (id) => {
-    if (!id) {
-      // Stop all
-      Object.entries(audioElsRef.current).forEach(([k,el])=>{ fadeOut(el,()=>{ el.pause(); el.currentTime=0; }); });
-      try { soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}}); soundNodesRef.current=[]; soundCtxRef.current?.close(); soundCtxRef.current=null; } catch(e){}
-      setPlayingSound(null); return;
-    }
-
-    if (playingSound === id) {
-      const el=audioElsRef.current[id];
-      if(el){ fadeOut(el,()=>{ el.pause(); el.currentTime=0; }); }
-      else { try{ soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});soundNodesRef.current=[];} catch(e){} }
-      setPlayingSound(null); return;
-    }
-
-    // Stop previous
-    if(playingSound){
-      const prev=audioElsRef.current[playingSound];
-      if(prev){ fadeOut(prev,()=>{ prev.pause(); prev.currentTime=0; }); }
-      try{ soundNodesRef.current?.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});soundNodesRef.current=[]; } catch(e){}
-    }
+    // Stop current
+    try { soundNodesRef.current?.forEach(n=>{ try{n.stop?.();n.disconnect?.();}catch(e){} }); } catch(e){}
+    soundNodesRef.current = [];
+    // Stop any HTML audio elements
+    audioElsRef.current.forEach(a=>{ try{a.pause();a.src='';}catch(e){} });
+    audioElsRef.current = [];
+    if (playingSound === id || !id) { setPlayingSound(null); return; }
 
     setPlayingSound(id);
-    const sc = SOUNDSCAPES.find(s=>s.id===id);
 
-    if (sc?.file) {
-      // Use HTML audio element for real files
-      let el = audioElsRef.current[id];
-      if (!el) {
-        el = new Audio(sc.file);
-        el.loop = true;
-        el.volume = 0;
-        audioElsRef.current[id] = el;
-      }
-      el.volume = 0;
-      el.play().then(()=>fadeIn(el, soundVolumes[id]??0.7)).catch(()=>{});
-    } else {
-      // Web Audio fallback for binaural/generated sounds
-      playGeneratedSound(id);
+    // Check if this soundscape has a file
+    const scape = SOUNDSCAPES.find(s=>s.id===id);
+    if (scape?.file) {
+      try {
+        const audio = new Audio(scape.file);
+        audio.loop = true;
+        audio.volume = 0.7;
+        audio.play().catch(()=>{});
+        audioElsRef.current = [audio];
+      } catch(e) { console.warn('Audio file error:', e); }
+      return;
     }
-  };
 
-  const fadeIn = (el, targetVol=0.7) => {
-    clearInterval(fadeTimersRef.current[el.src]);
-    el.volume=0;
-    let v=0;
-    const t=setInterval(()=>{
-      v=Math.min(targetVol,v+0.04);
-      el.volume=v;
-      if(v>=targetVol) clearInterval(t);
-    },80);
-    fadeTimersRef.current[el.src]=t;
-  };
-
-  const fadeOut = (el, onDone) => {
-    clearInterval(fadeTimersRef.current[el.src]);
-    let v=el.volume;
-    const t=setInterval(()=>{
-      v=Math.max(0,v-0.05);
-      el.volume=v;
-      if(v<=0){ clearInterval(t); onDone?.(); }
-    },60);
-    fadeTimersRef.current[el.src]=t;
-  };
-
-  const playGeneratedSound = (id) => {
     try {
-      if(!soundCtxRef.current||soundCtxRef.current.state==='closed') soundCtxRef.current=new(window.AudioContext||window.webkitAudioContext)();
-      const ctx=soundCtxRef.current;
-      if(ctx.state==='suspended') ctx.resume();
-      const nodes=[];
-      if(id==='tibetan'){
+      if (!soundCtxRef.current || soundCtxRef.current.state === 'closed') {
+        soundCtxRef.current = new (window.AudioContext||window.webkitAudioContext)();
+      }
+      const ctx = soundCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+      const nodes = [];
+
+      const mkNoise = (color='white') => {
+        const buf = ctx.createBuffer(1, ctx.sampleRate*4, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+        for(let i=0;i<d.length;i++){
+          const w=Math.random()*2-1;
+          if(color==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.96900*b2+w*.1538520;b3=.86650*b3+w*.3104856;b4=.55000*b4+w*.5329522;b5=-.7616*b5-w*.0168980;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*0.11;b6=w*.115926;}
+          else d[i]=w;
+        }
+        const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;return src;
+      };
+
+      if (id==='whitenoise') {
+        const src=mkNoise();const g=ctx.createGain();g.gain.value=0.18;src.connect(g);g.connect(ctx.destination);src.start();nodes.push(src);
+      } else if (id==='rain') {
+        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=900;f.Q.value=0.6;const g=ctx.createGain();g.gain.value=0.35;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
+        const src2=mkNoise('pink');const f2=ctx.createBiquadFilter();f2.type='highpass';f2.frequency.value=3000;const g2=ctx.createGain();g2.gain.value=0.08;src2.connect(f2);f2.connect(g2);g2.connect(ctx.destination);src2.start();
+        nodes.push(src,src2);
+      } else if (id==='ocean') {
+        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=500;const g=ctx.createGain();g.gain.value=0.5;
+        const lfo=ctx.createOscillator();lfo.frequency.value=0.15;const lfoG=ctx.createGain();lfoG.gain.value=0.3;lfo.connect(lfoG);lfoG.connect(g.gain);lfo.start();
+        src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src,lfo);
+      } else if (id==='forest') {
+        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2200;f.Q.value=0.4;const g=ctx.createGain();g.gain.value=0.2;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src);
+      } else if (id==='tibetan') {
         [432,864,1296].forEach((freq,i)=>{
-          const o=ctx.createOscillator(),g=ctx.createGain();
+          const o=ctx.createOscillator();const g=ctx.createGain();
           o.type='sine';o.frequency.value=freq;
           g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(0.08/(i+1),ctx.currentTime+2);
           o.connect(g);g.connect(ctx.destination);o.start();nodes.push(o);
         });
-      } else if(id==='heartbeat'){
-        const play=()=>{ [0,.15].forEach(off=>{ const o=ctx.createOscillator(),g=ctx.createGain(); o.type='sine';o.frequency.value=80+off*20; g.gain.setValueAtTime(0,ctx.currentTime+off);g.gain.linearRampToValueAtTime(.35,ctx.currentTime+off+.04);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+off+.25); o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+off);o.stop(ctx.currentTime+off+.3); }); };
-        play(); const iv=setInterval(play,900); nodes.push({stop:()=>clearInterval(iv)});
-      } else if(id.startsWith('binaural')){
-        const beat=id==='binaural40'?40:id==='binaural10'?10:4,base=200;
+      } else if (id==='heartbeat') {
+        const playBeat = () => {
+          [0,0.15].forEach(offset=>{
+            const o=ctx.createOscillator();const g=ctx.createGain();
+            o.type='sine';o.frequency.value=80+offset*20;
+            g.gain.setValueAtTime(0,ctx.currentTime+offset);g.gain.linearRampToValueAtTime(0.35,ctx.currentTime+offset+0.04);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+offset+0.25);
+            o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+offset);o.stop(ctx.currentTime+offset+0.3);
+          });
+        };
+        playBeat();
+        const interval=setInterval(playBeat,900);nodes.push({stop:()=>clearInterval(interval)});
+      } else if (id.startsWith('binaural')) {
+        const beatHz = id==='binaural40'?40:id==='binaural10'?10:4;
+        const base=200;
         const merger=ctx.createChannelMerger(2);merger.connect(ctx.destination);
-        const oL=ctx.createOscillator(),oR=ctx.createOscillator(),gL=ctx.createGain(),gR=ctx.createGain();
-        oL.frequency.value=base;oR.frequency.value=base+beat;gL.gain.value=.18;gR.gain.value=.18;
+        const oL=ctx.createOscillator(),oR=ctx.createOscillator();
+        const gL=ctx.createGain(),gR=ctx.createGain();
+        oL.frequency.value=base;oR.frequency.value=base+beatHz;
+        gL.gain.value=0.18;gR.gain.value=0.18;
         oL.connect(gL);oR.connect(gR);gL.connect(merger,0,0);gR.connect(merger,0,1);
         oL.start();oR.start();nodes.push(oL,oR);
       }
       soundNodesRef.current=nodes;
-    } catch(e){console.warn('Audio error:',e);}
+    } catch(e){ console.warn('Audio error:',e); }
   };
 
-  const speakImagery = (text, onDone) => {
-    if (!window.speechSynthesis) { onDone?.(); return; }
+  const speakImagery = (text) => {
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    // Split text into natural pause segments at sentence boundaries
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    let idx = 0;
-    const speakNext = () => {
-      if (idx >= sentences.length) { setImageryVoicePlaying(false); onDone?.(); return; }
-      const utt = new SpeechSynthesisUtterance(sentences[idx].trim());
-      // Pick voice
-      const voices = window.speechSynthesis.getVoices();
-      const chosen = availableVoices[imageryVoiceIdx] ||
-        voices.find(v=>v.lang==='en-GB') ||
-        voices.find(v=>v.lang.startsWith('en')&&(v.name.toLowerCase().includes('female')||v.name.toLowerCase().includes('samantha'))) ||
-        voices[0];
-      if (chosen) utt.voice = chosen;
-      utt.rate = imageryRate;
-      utt.pitch = 1.02;
-      utt.volume = 0.92;
-      if (idx === 0) utt.onstart = () => setImageryVoicePlaying(true);
-      utt.onend = () => {
-        idx++;
-        // Natural pause between sentences: 800ms-1400ms
-        setTimeout(speakNext, 900 + Math.random()*500);
-      };
-      utt.onerror = () => { setImageryVoicePlaying(false); onDone?.(); };
-      window.speechSynthesis.speak(utt);
-    };
-    speakNext();
+    const utt = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const brit = voices.find(v=>v.lang==='en-GB'&&v.name.toLowerCase().includes('female'))
+      || voices.find(v=>v.lang==='en-GB')
+      || voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))
+      || voices[0];
+    if (brit) utt.voice = brit;
+    utt.rate = 0.82;
+    utt.pitch = 1.05;
+    utt.volume = 0.9;
+    utt.onstart = () => setImageryVoicePlaying(true);
+    utt.onend = () => setImageryVoicePlaying(false);
+    utt.onerror = () => setImageryVoicePlaying(false);
+    window.speechSynthesis.speak(utt);
   };
 
   const stopImageryVoice = () => {
@@ -3029,172 +2798,121 @@ function Mindfulness() {
 
       {/* ── Guided Imagery ── */}
       {tool==='imagery' && (
-        <div style={{ maxWidth:600, margin:'0 auto', display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.9)', textAlign:'center' }}>Where would you like to go?</div>
+  <div style={{ maxWidth:580, margin:'0 auto', display:'flex', flexDirection:'column', gap:16 }}>
+    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.9)', textAlign:'center' }}>Where would you like to go?</div>
 
-          {!imageryScene && (
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginTop:8 }}>
-              {[
-                { id:'ocean',   label:'Ocean Shore',   emoji:'🌊', bg:'rgba(37,99,235,.15)',   border:'rgba(37,99,235,.35)'  },
-                { id:'mountain',label:'Mountain Peaks', emoji:'🏔', bg:'rgba(100,116,139,.15)', border:'rgba(100,116,139,.35)'},
-                { id:'forest',  label:'Forest Path',   emoji:'🌲', bg:'rgba(22,163,74,.12)',   border:'rgba(22,163,74,.3)'  },
-                { id:'cabin',   label:'Cozy Cabin',    emoji:'🏡', bg:'rgba(180,83,9,.12)',    border:'rgba(180,83,9,.3)'   },
-                { id:'garden',  label:'Healing Garden', emoji:'🌸', bg:'rgba(236,72,153,.1)',   border:'rgba(236,72,153,.3)' },
-                { id:'stars',   label:'Night Stars',   emoji:'✨', bg:'rgba(109,40,217,.12)',  border:'rgba(109,40,217,.3)' },
-              ].map(s=>(
-                <button key={s.id} onClick={()=>{ setImageryScene(s.id); setImageryStep(0); setImageryVoicePlaying(false); }}
-                  style={{ padding:'22px 16px', borderRadius:18, border:`1.5px solid ${s.border}`, background:s.bg, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:10, transition:'all .2s', fontFamily:"'DM Sans',sans-serif" }}
-                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px) scale(1.02)';}}
-                  onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
-                  <div style={{ fontSize:38 }}>{s.emoji}</div>
-                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.85)', fontWeight:600 }}>{s.label}</div>
-                </button>
-              ))}
+    {/* Scene selector */}
+    {!imageryScene && (
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginTop:8 }}>
+        {[
+          { id:'ocean',   label:'Ocean Shore',    emoji:'🌊', bg:'rgba(37,99,235,.15)', border:'rgba(37,99,235,.35)' },
+          { id:'mountain',label:'Mountain Peaks',  emoji:'🏔', bg:'rgba(100,116,139,.15)',border:'rgba(100,116,139,.35)'},
+          { id:'forest',  label:'Forest Path',     emoji:'🌲', bg:'rgba(22,163,74,.12)',  border:'rgba(22,163,74,.3)' },
+          { id:'cabin',   label:'Cozy Cabin',      emoji:'🏡', bg:'rgba(180,83,9,.12)',   border:'rgba(180,83,9,.3)'  },
+          { id:'garden',  label:'Healing Garden',  emoji:'🌸', bg:'rgba(236,72,153,.1)',  border:'rgba(236,72,153,.3)'},
+          { id:'stars',   label:'Night Stars',     emoji:'✨', bg:'rgba(109,40,217,.12)', border:'rgba(109,40,217,.3)'},
+        ].map(s=>(
+          <button key={s.id} onClick={()=>{ setImageryScene(s.id); setImageryStep(0); }} style={{ padding:'22px 16px', borderRadius:18, border:`1.5px solid ${s.border}`, background:s.bg, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:10, transition:'all .2s', fontFamily:"'DM Sans',sans-serif" }}>
+            <div style={{ fontSize:40 }}>{s.emoji}</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.85)', fontWeight:600 }}>{s.label}</div>
+          </button>
+        ))}
+      </div>
+    )}
+
+    {imageryScene && (() => {
+      const SCENES = {
+        ocean: [
+          "Close your eyes and take a slow, deep breath. You are standing at the edge of a warm, sun-kissed beach. The sky above you is a soft rose and gold — it's the golden hour.",
+          "Feel the cool, silky sand beneath your bare feet. Each grain is smooth and cool. The earth holds you completely. Your body is fully supported.",
+          "Hear the waves rolling in. Each one brings a whisper: you are safe. As the water retreats, it carries away whatever tension your body has been holding.",
+          "A warm, salty breeze moves across your face and neck. The sound of the ocean fills your mind, pushing all thoughts to the edges until they disappear completely.",
+          "You are here. Whole. Safe. The horizon stretches endlessly before you — and in this moment, you have everything you need.",
+        ],
+        mountain: [
+          "You are standing on a mountain path, surrounded by towering pines. The air is crisp and clean — cold enough to feel alive in your lungs.",
+          "Look up. The sky above the peaks is the deepest, most impossible blue you've ever seen. A few clouds drift slowly, unhurried. Like you can be right now.",
+          "Feel the solid rock beneath your boots. These mountains have stood for millions of years. Their stillness is available to you. Breathe it in.",
+          "A hawk circles lazily overhead. You watch it ride the thermals — effortless, unhurried. For a moment, you see yourself from above. Small, and somehow perfectly placed.",
+          "The mountain asks nothing of you. You belong here, among these ancient stones. You are as worthy of this peace as anything that has ever lived.",
+        ],
+        forest: [
+          "You're walking a soft forest path. Moss carpets the ground on either side. Each step is quiet — absorbed by the earth beneath you.",
+          "Sunlight filters through the canopy above in long, golden shafts. Dust motes float in the light like tiny stars. The world moves slowly here.",
+          "The forest hums — insects, a distant woodpecker, wind moving through the high branches. You are held inside a living sound, vast and gentle.",
+          "Stop. Place your hand on the bark of a great oak. Feel its texture. It has stood here longer than you've been alive. Breathe in its steadiness.",
+          "The forest does not worry. It simply grows, and rests, and grows again. You are allowed to simply be, right now, exactly as you are.",
+        ],
+        cabin: [
+          "Imagine a small cabin at the edge of a snow-dusted wood. Inside, a fire crackles in the hearth — amber light dancing on the walls. You are warm and completely safe.",
+          "You are wrapped in the softest blanket. A cup of something warm is in your hands. Outside, snowflakes drift silently. In here, time has stopped.",
+          "The fire speaks in pops and hisses — a private language. Your body sinks deeper into the chair. Your shoulders drop. Your jaw unclenches.",
+          "There is nowhere to be. No one expects anything. This moment belongs entirely to you. The cabin holds you like an embrace that asks for nothing in return.",
+          "Breathe out slowly. The fire breathes with you. You are safe, warm, held. Whatever you've been carrying — you can set it down right here.",
+        ],
+        garden: [
+          "You step through a gate into a healing garden — fragrant with lavender and jasmine, warm with afternoon light.",
+          "Butterflies move between blossoms. A fountain murmurs nearby. Bees hum their ancient, contented song. Everything here tends toward healing.",
+          "You sit on a bench beneath a wisteria arch. The blossoms hang like purple clouds above you. A petal drifts down and lands on your arm.",
+          "This garden was made for you. Every flower is a message: you deserve beauty. Every stone path says: you are allowed to walk slowly.",
+          "In this garden, your body remembers how to rest. Your nervous system unwinds like a vine finding sunlight. You are blooming, in your own time.",
+        ],
+        stars: [
+          "You are lying on warm grass on a clear summer night. Above you, the Milky Way arcs across the sky like a river of light — impossibly vast and impossibly beautiful.",
+          "You watch a star shift slightly and realize you are seeing a satellite — someone's creation, orbiting this small, precious world. You are on that world. How remarkable.",
+          "The silence up here is different. It has depth. The stars don't rush. They simply burn, steady and ancient, and in doing so, they light everything.",
+          "Feel how small you are. Let this feel like relief, not smallness. Your worries are tiny against this sky — and you are part of something enormous and alive.",
+          "One by one, release each worry into the stars. Watch them float upward and dissolve into light. You are lighter now. You are made of stardust, returned to itself.",
+        ],
+      };
+      const steps = SCENES[imageryScene] || SCENES.ocean;
+      const currentStep = steps[imageryStep] || steps[0];
+      const sceneMeta = { ocean:{emoji:'🌊',label:'Ocean Shore'}, mountain:{emoji:'🏔',label:'Mountain Peaks'}, forest:{emoji:'🌲',label:'Forest Path'}, cabin:{emoji:'🏡',label:'Cozy Cabin'}, garden:{emoji:'🌸',label:'Healing Garden'}, stars:{emoji:'✨',label:'Night Stars'} }[imageryScene];
+
+      return (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <button onClick={()=>{ setImageryScene(null); stopImageryVoice(); }} style={{ fontSize:15, color:'rgba(201,168,76,.6)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>← Choose different scene</button>
+            <div style={{ fontSize:20 }}>{sceneMeta.emoji} {sceneMeta.label}</div>
+          </div>
+
+          {/* Step dots */}
+          <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+            {steps.map((_,i)=>(
+              <div key={i} onClick={()=>setImageryStep(i)} style={{ width:i===imageryStep?24:8, height:8, borderRadius:4, background:i===imageryStep?'#C9A84C':i<imageryStep?'rgba(201,168,76,.4)':'rgba(42,92,173,.3)', transition:'all .3s', cursor:'pointer' }}/>
+            ))}
+          </div>
+
+          {/* Narration card */}
+          <div style={{ padding:'28px 32px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:20, fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.88)', lineHeight:1.9, fontStyle:'italic', textAlign:'center', minHeight:180, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+            {imageryVoicePlaying && <div style={{ position:'absolute', top:14, right:16, display:'flex', gap:3, alignItems:'flex-end', height:16 }}>
+              {[1,2,3,2,1].map((h,i)=><div key={i} style={{ width:3, background:'rgba(201,168,76,.6)', borderRadius:2, height:`${h*4}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}
+            </div>}
+            "{currentStep}"
+          </div>
+
+          {/* Controls */}
+          <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+            <button className="btn btn-lapis" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>speakImagery(currentStep)}>
+              {imageryVoicePlaying ? '🔊 Speaking...' : "🎙 Hear Lazuli's Voice"}
+            </button>
+            {imageryVoicePlaying && (
+              <button className="btn btn-ghost" style={{ fontSize:16 }} onClick={stopImageryVoice}>■ Stop</button>
+            )}
+            {imageryStep < steps.length-1 && (
+              <button className="btn btn-gold" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>{ stopImageryVoice(); setImageryStep(s=>s+1); }}>Next →</button>
+            )}
+          </div>
+          {imageryStep === steps.length-1 && (
+            <div style={{ textAlign:'center', fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', marginTop:8 }}>
+              💜 Take your time returning. You can come back here anytime.
             </div>
           )}
-
-          {imageryScene && (() => {
-            const SCENES = {
-              ocean: [
-                "Close your eyes... and take a slow, deep breath. You are standing at the edge of a warm, sun-kissed beach. The sky above is a soft rose and gold. It's the golden hour.",
-                "Feel the cool, silky sand beneath your bare feet. Each grain is smooth. The earth holds you completely. Your body is fully supported here.",
-                "Hear the waves rolling in... Each one brings a quiet whisper — you are safe. As the water retreats, it carries away whatever tension your body has been holding.",
-                "A warm, salty breeze moves across your face. The sound of the ocean fills your mind... pushing all thoughts to the edges... until they gently... dissolve.",
-                "You are here. Whole. Safe. The horizon stretches endlessly before you — and in this moment, you have everything you need.",
-              ],
-              mountain: [
-                "You are standing on a mountain path, surrounded by towering pines. The air is crisp and clean... cold enough to feel alive in your lungs.",
-                "Look up. The sky above the peaks is the deepest, most impossible blue you have ever seen. A few clouds drift slowly... unhurried. Like you can be... right now.",
-                "Feel the solid rock beneath your feet. These mountains have stood for millions of years. Their stillness is available to you. Breathe it in.",
-                "A hawk circles lazily overhead. You watch it ride the thermals — effortless, unhurried. For a moment... you see yourself from above. Small... and somehow perfectly placed.",
-                "The mountain asks nothing of you. You belong here, among these ancient stones. You are as worthy of this peace... as anything that has ever lived.",
-              ],
-              forest: [
-                "You are walking a soft forest path. Moss carpets the ground on either side. Each step is quiet... absorbed by the earth beneath you.",
-                "Sunlight filters through the canopy above in long, golden shafts. Dust motes float in the light like tiny stars. The world moves slowly here.",
-                "The forest hums — insects, a distant woodpecker, wind moving through the high branches. You are held inside a living sound... vast... and gentle.",
-                "Stop. Place your hand on the bark of a great oak. Feel its texture. It has stood here longer than you have been alive. Breathe in its steadiness.",
-                "The forest does not worry. It simply grows... and rests... and grows again. You are allowed to simply be, right now, exactly as you are.",
-              ],
-              cabin: [
-                "Imagine a small cabin at the edge of a snow-dusted wood. Inside, a fire crackles in the hearth. Amber light dances on the walls. You are warm... and completely safe.",
-                "You are wrapped in the softest blanket. A cup of something warm is in your hands. Outside, snowflakes drift silently. In here... time has stopped.",
-                "The fire speaks in pops and hisses. Your body sinks deeper into the chair. Your shoulders drop. Your jaw... unclenches.",
-                "There is nowhere to be. No one expects anything. This moment belongs entirely to you. The cabin holds you like an embrace that asks for nothing in return.",
-                "Breathe out... slowly. The fire breathes with you. You are safe, warm, held. Whatever you have been carrying — you can set it down... right here.",
-              ],
-              garden: [
-                "You step through a gate into a healing garden — fragrant with lavender and jasmine... warm with afternoon light.",
-                "Butterflies move between blossoms. A fountain murmurs nearby. Bees hum their ancient, contented song. Everything here... tends toward healing.",
-                "You sit on a bench beneath a wisteria arch. The blossoms hang like purple clouds above you. A petal drifts down... and lands softly... on your arm.",
-                "This garden was made for you. Every flower is a message — you deserve beauty. Every stone path says — you are allowed to walk slowly.",
-                "In this garden, your body remembers how to rest. Your nervous system unwinds like a vine finding sunlight. You are blooming... in your own time.",
-              ],
-              stars: [
-                "You are lying on warm grass on a clear summer night. Above you, the Milky Way arcs across the sky like a river of light... impossibly vast... and impossibly beautiful.",
-                "You watch a star shift and realize you are seeing a satellite — someone's creation, orbiting this small, precious world. You are on that world. How remarkable.",
-                "The silence up here is different. It has depth. The stars don't rush. They simply burn, steady and ancient, and in doing so... they light everything.",
-                "Feel how small you are. Let this feel like relief, not smallness. Your worries are tiny against this sky — and you are part of something enormous... and alive.",
-                "One by one... release each worry into the stars. Watch them float upward and dissolve into light. You are lighter now. You are made of stardust... returned to itself.",
-              ],
-            };
-            const steps = SCENES[imageryScene] || SCENES.ocean;
-            const currentStep = steps[imageryStep];
-            const sceneMeta = {
-              ocean:{emoji:'🌊',label:'Ocean Shore'}, mountain:{emoji:'🏔',label:'Mountain Peaks'},
-              forest:{emoji:'🌲',label:'Forest Path'}, cabin:{emoji:'🏡',label:'Cozy Cabin'},
-              garden:{emoji:'🌸',label:'Healing Garden'}, stars:{emoji:'✨',label:'Night Stars'}
-            }[imageryScene];
-
-            // Auto-advance: when voice ends, wait 3s then go next
-            const handleStartJourney = () => {
-              setImageryAutoPlay(true);
-              const doStep = (stepIdx) => {
-                if (stepIdx >= steps.length) { setImageryAutoPlay(false); return; }
-                setImageryStep(stepIdx);
-                speakImagery(steps[stepIdx], () => {
-                  // 3 second reflection pause then advance
-                  imageryAutoRef.current = setTimeout(() => doStep(stepIdx + 1), 3000);
-                });
-              };
-              doStep(imageryStep);
-            };
-
-            return (
-              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                {/* Header */}
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <button onClick={()=>{ setImageryScene(null); stopImageryVoice(); setImageryAutoPlay(false); clearTimeout(imageryAutoRef.current); }}
-                    style={{ fontSize:15, color:'rgba(201,168,76,.6)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
-                    ← Choose scene
-                  </button>
-                  <div style={{ fontSize:22 }}>{sceneMeta.emoji} <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'rgba(240,232,255,.7)' }}>{sceneMeta.label}</span></div>
-                </div>
-
-                {/* Voice & Speed controls */}
-                <div style={{ padding:'14px 16px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', borderRadius:14, display:'flex', flexWrap:'wrap', gap:14, alignItems:'center' }}>
-                  <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:160 }}>
-                    <label style={{ fontSize:13, color:'rgba(240,232,255,.45)', fontFamily:"'DM Sans',sans-serif" }}>Voice</label>
-                    <select value={imageryVoiceIdx} onChange={e=>setImageryVoiceIdx(+e.target.value)}
-                      style={{ padding:'5px 8px', borderRadius:8, background:'rgba(0,0,0,.4)', border:'1px solid rgba(42,92,173,.3)', color:'rgba(240,232,255,.8)', fontSize:14, fontFamily:"'DM Sans',sans-serif" }}>
-                      {availableVoices.length ? availableVoices.map((v,i)=>(
-                        <option key={i} value={i}>{v.name} ({v.lang})</option>
-                      )) : <option>Loading voices...</option>}
-                    </select>
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                    <label style={{ fontSize:13, color:'rgba(240,232,255,.45)', fontFamily:"'DM Sans',sans-serif" }}>Speed: {imageryRate.toFixed(2)}x</label>
-                    <input type="range" min="0.5" max="1.2" step="0.05" value={imageryRate}
-                      onChange={e=>setImageryRate(+e.target.value)}
-                      style={{ width:120, accentColor:'#C9A84C' }}/>
-                  </div>
-                </div>
-
-                {/* Step dots */}
-                <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
-                  {steps.map((_,i)=>(
-                    <div key={i} style={{ width:i===imageryStep?24:8, height:8, borderRadius:4, background:i===imageryStep?'#C9A84C':i<imageryStep?'rgba(201,168,76,.4)':'rgba(42,92,173,.25)', transition:'all .35s', cursor:'pointer' }} onClick={()=>{ if(!imageryAutoPlay){ stopImageryVoice(); setImageryStep(i); }}}/>
-                  ))}
-                </div>
-
-                {/* Narration card */}
-                <div style={{ padding:'30px 34px', background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.18)', borderRadius:20, fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.88)', lineHeight:2.0, fontStyle:'italic', textAlign:'center', minHeight:180, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
-                  {imageryVoicePlaying && (
-                    <div style={{ position:'absolute', top:14, right:16, display:'flex', gap:3, alignItems:'flex-end', height:18 }}>
-                      {[1,2,3,2,1].map((h,i)=><div key={i} style={{ width:3, background:'rgba(201,168,76,.6)', borderRadius:2, height:`${h*4}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}
-                    </div>
-                  )}
-                  "{currentStep}"
-                </div>
-
-                {/* Controls */}
-                <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
-                  {!imageryAutoPlay ? (
-                    <button className="btn btn-lapis" style={{ fontSize:16, padding:'12px 28px' }} onClick={handleStartJourney}>
-                      🎙 Begin Journey
-                    </button>
-                  ) : (
-                    <button className="btn btn-ghost" style={{ fontSize:16 }} onClick={()=>{ stopImageryVoice(); setImageryAutoPlay(false); clearTimeout(imageryAutoRef.current); }}>
-                      ■ Pause Journey
-                    </button>
-                  )}
-                  {!imageryAutoPlay && (
-                    <button className="btn btn-gold" style={{ fontSize:15 }} onClick={()=>speakImagery(currentStep)}>
-                      {imageryVoicePlaying ? '🔊 Speaking...' : '🔊 Hear This Step'}
-                    </button>
-                  )}
-                </div>
-
-                {imageryStep === steps.length-1 && !imageryAutoPlay && (
-                  <div style={{ textAlign:'center', fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', marginTop:4 }}>
-                    💜 Take your time returning. You can come back here anytime.
-                  </div>
-                )}
-              </div>
-            );
-          })()}
         </div>
-      )}
+      );
+    })()}
+  </div>
+)}
 
       {/* ── Gratitude Jar ── */}
       {tool==='gratitude' && (
@@ -3375,61 +3093,69 @@ function Mindfulness() {
 )}
 
       {/* ── Zen Garden ── */}
-      {tool==='zen' && <ZenGardenCanvas/>}
+      {tool==='zen' && (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.7)', textAlign:'center' }}>Draw in the sand. Breathe.</div>
+          <div style={{ display:'flex', gap:10, marginBottom:4 }}>
+            {['rake','smooth','circle'].map(t=>(
+              <button key={t} onClick={()=>setZenTool(t)} style={{ padding:'8px 18px', borderRadius:20, border:`1.5px solid ${zenTool===t?'rgba(201,168,76,.5)':'rgba(42,92,173,.25)'}`, background:zenTool===t?'rgba(201,168,76,.1)':'transparent', color:zenTool===t?'#C9A84C':'rgba(240,232,255,.5)', fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{t}</button>
+            ))}
+          </div>
+          <div
+            onMouseMove={e=>{ if(e.buttons===1) drawZen(e); }}
+            onClick={drawZen}
+            style={{ width:'100%', maxWidth:560, height:280, background:'rgba(201,168,76,.04)', border:'1.5px solid rgba(201,168,76,.15)', borderRadius:16, position:'relative', cursor:'crosshair', overflow:'hidden' }}>
+            {/* Sand texture lines */}
+            {[...Array(12)].map((_,i)=>(
+              <div key={i} style={{ position:'absolute', left:0, right:0, top:`${8+i*22}px`, height:'1px', background:'rgba(201,168,76,.06)' }}/>
+            ))}
+            {zenLines.map((l,i)=>(
+              <div key={l.id} style={{ position:'absolute', left:`${l.x}%`, top:`${l.y}%`, width:zenTool==='circle'?20:4, height:zenTool==='circle'?20:zenTool==='rake'?12:4, borderRadius:zenTool==='circle'?'50%':'2px', background:'rgba(201,168,76,.3)', transform:'translate(-50%,-50%)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>
+            ))}
+            {zenLines.length===0 && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(240,232,255,.15)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Drag to draw in the sand</div>}
+          </div>
+          <button className="btn btn-ghost" onClick={()=>setZenLines([])} style={{ fontSize:16 }}>Clear Garden</button>
+        </div>
+      )}
 
       {/* ── Soundscapes ── */}
       {tool==='soundscapes' && (
-        <div style={{ display:'flex', flexDirection:'column', gap:14, maxWidth:560, margin:'0 auto' }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.85)', textAlign:'center', marginBottom:4 }}>
-            Healing Soundscapes
-          </div>
-          <div style={{ fontSize:15, color:'rgba(240,232,255,.38)', textAlign:'center', marginBottom:8, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
-            Add your audio files to the <code style={{ fontSize:13, color:'rgba(201,168,76,.6)' }}>/public/sounds/</code> folder.<br/>
-            Use headphones for binaural beats.
-          </div>
-          {SOUNDSCAPES.map(s=>{
-            const isPlaying = playingSound===s.id;
-            const vol = soundVolumes[s.id] ?? 0.7;
-            return (
-              <div key={s.id} style={{ padding:'16px 18px', background:isPlaying?`${s.color}12`:'rgba(14,28,75,.5)', border:`1.5px solid ${isPlaying?s.color+'55':'rgba(42,92,173,.2)'}`, borderRadius:18, transition:'all .22s', position:'relative', overflow:'hidden' }}>
-                {isPlaying && <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 20% 50%, ${s.color}08 0%, transparent 60%)`, animation:'pulseGlow 2s ease-in-out infinite', pointerEvents:'none' }}/>}
-                <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative' }}>
-                  {/* Play button */}
-                  <button onClick={()=>toggleSound(s.id)}
-                    style={{ width:48, height:48, borderRadius:'50%', border:`2px solid ${isPlaying?s.color:'rgba(42,92,173,.35)'}`, background:isPlaying?`${s.color}22`:'rgba(42,92,173,.1)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', transition:'all .2s', flexShrink:0 }}>
-                    {isPlaying ? (
-                      <span style={{ display:'flex', gap:2, alignItems:'flex-end', height:16 }}>
-                        {[1,2,3,2,1].map((h,i)=><span key={i} style={{ width:3, background:s.color, borderRadius:2, height:`${h*3}px`, animation:`barBounce .5s ${i*.08}s ease-in-out infinite alternate` }}/>)}
-                      </span>
-                    ) : <span style={{ fontSize:16 }}>▶</span>}
-                  </button>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:18, fontWeight:700, color:isPlaying?s.color:'rgba(240,232,255,.82)', marginBottom:2, display:'flex', alignItems:'center', gap:8 }}>
-                      <span>{s.icon}</span> {s.label}
-                    </div>
-                    <div style={{ fontSize:14, color:'rgba(240,232,255,.4)' }}>{s.desc}</div>
-                    {/* Volume slider */}
-                    {isPlaying && (
-                      <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8 }}>
-                        <span style={{ fontSize:13, color:'rgba(240,232,255,.4)' }}>🔈</span>
-                        <input type="range" min="0" max="1" step="0.05" value={vol}
-                          onChange={e=>{
-                            const v=+e.target.value;
-                            setSoundVolumes(sv=>({...sv,[s.id]:v}));
-                            const el=audioElsRef.current[s.id];
-                            if(el) el.volume=v;
-                          }}
-                          style={{ flex:1, accentColor:s.color, height:4 }}/>
-                        <span style={{ fontSize:13, color:'rgba(240,232,255,.4)' }}>🔊</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+  <div style={{ display:'flex', flexDirection:'column', gap:12, maxWidth:540, margin:'0 auto' }}>
+    <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, color:'rgba(240,232,255,.85)', textAlign:'center', marginBottom:4 }}>Healing Frequencies & Soundscapes</div>
+    <div style={{ fontSize:16, color:'rgba(240,232,255,.38)', textAlign:'center', marginBottom:12, fontStyle:'italic' }}>All sounds generated live in your browser — no downloads needed.<br/>Use headphones for binaural beats.</div>
+
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+      {SOUNDSCAPES.map(s=>{
+        const isPlaying = playingSound===s.id;
+        return (
+          <div key={s.id} onClick={()=>toggleSound(s.id)}
+            style={{ display:'flex', flexDirection:'column', gap:6, padding:'16px', background:isPlaying?`${s.color}15`:'rgba(42,92,173,.06)', border:`1.5px solid ${isPlaying?s.color+'55':'rgba(42,92,173,.15)'}`, borderRadius:16, cursor:'pointer', transition:'all .22s', position:'relative', overflow:'hidden' }}>
+            {isPlaying && <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 50%, ${s.color}10 0%, transparent 70%)`, animation:'pulseGlow 2s ease-in-out infinite', pointerEvents:'none' }}/>}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div style={{ fontSize:26 }}>{s.icon}</div>
+              <div style={{ width:32, height:32, borderRadius:'50%', border:`2px solid ${isPlaying?s.color:'rgba(42,92,173,.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', color:isPlaying?s.color:'rgba(240,232,255,.4)', fontSize:14, transition:'all .2s', background:isPlaying?`${s.color}18`:'transparent' }}>
+                {isPlaying ? (
+                  <span style={{ display:'flex', gap:2, alignItems:'flex-end', height:14 }}>
+                    {[1,2,3].map(i=><span key={i} style={{ width:3, background:s.color, borderRadius:2, height:`${8+i*3}px`, animation:`barBounce .6s ${i*.1}s ease-in-out infinite alternate` }}/>)}
+                  </span>
+                ) : '▶'}
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+            <div style={{ fontWeight:700, color:isPlaying?s.color:'rgba(240,232,255,.82)', fontSize:16 }}>{s.label}</div>
+            <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', lineHeight:1.5 }}>{s.desc}</div>
+          </div>
+        );
+      })}
+    </div>
+
+    {playingSound && (
+      <div style={{ textAlign:'center', padding:'14px 20px', background:'rgba(42,92,173,.1)', borderRadius:14, border:'1px solid rgba(42,92,173,.25)', fontSize:16, color:'rgba(168,196,240,.7)' }}>
+        ♪ Playing: <strong style={{ color:'#C9A84C' }}>{SOUNDSCAPES.find(s=>s.id===playingSound)?.label}</strong>
+        <button onClick={()=>toggleSound(null)} style={{ marginLeft:14, fontSize:14, color:'rgba(240,232,255,.4)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>■ Stop</button>
+      </div>
+    )}
+  </div>
+)}
 
       {/* ── Fountain Wishes ── */}
       {tool==='fountain' && (
@@ -3641,9 +3367,7 @@ function Advocate({ data, user }) {
   const [loading,setLoading]   = useState(false);
   const [error,setError]       = useState('');
   const [limitHit,setLimitHit] = useState(false);
-  const [creditsLeft,setCreditsLeft] = useState(null);
-  const [summariesUsed,setSummariesUsed] = useState(0);
-  const [summaryLoading,setSummaryLoading] = useState(false);
+  const [dailyCount,setDailyCount] = useState(0);
   const [aiTyping,setAiTyping] = useState(false);
   const [shareStatus,setShareStatus] = useState('idle');
   const [voiceCallActive, setVoiceCallActive] = useState(false);
@@ -3661,42 +3385,6 @@ function Advocate({ data, user }) {
     const ok = await share({ title:'My Lazuli AI Session', text, url: window.location.href });
     setShareStatus(ok?'copied':'idle');
     if (ok) setTimeout(()=>setShareStatus('idle'), 2500);
-  };
-
-  const generateSummary = async () => {
-    if (summaryLoading || loading) return;
-    setSummaryLoading(true); setError('');
-    const summaryPrompt = `Please generate a comprehensive full health summary for me. Include:
-1. My chronic conditions and diagnoses
-2. Current medications and supplements
-3. Recent symptom patterns and severity trends
-4. Upcoming appointments and care team
-5. Key health goals and progress
-6. Important notes for my medical team
-Format it clearly with sections, as if written for a doctor's handoff. Be thorough and compassionate.`;
-    const summaryMsgs = [...msgs, {role:'user', content:summaryPrompt}];
-    setMsgs(summaryMsgs);
-    try {
-      const res = await fetch('/api/chat', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          messages: summaryMsgs,
-          system: SYS_LAZULI(data),
-          userId: user?.uid,
-          requestType: 'summary',
-        }),
-      });
-      const json = await res.json();
-      if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'Not enough credits for a full summary.'); setSummaryLoading(false); return; }
-      if (!res.ok) { setError(json.error||'Summary failed.'); setSummaryLoading(false); return; }
-      const reply = json.content?.[0]?.text || json.text || '';
-      const cl = res.headers?.get?.('X-Credits-Left'); if (cl !== null && cl !== undefined) setCreditsLeft(+cl);
-      const su = res.headers?.get?.('X-Summaries-Used'); if (su !== null && su !== undefined) setSummariesUsed(+su);
-      setMsgs([...summaryMsgs, {role:'assistant', content:reply}]);
-      if (voiceCallActive) speakLazuli(reply);
-    } catch { setError('Connection error — please try again.'); }
-    setSummaryLoading(false);
   };
 
   const speakLazuli = (text) => {
@@ -3732,15 +3420,13 @@ Format it clearly with sections, as if written for a doctor's handoff. Be thorou
           messages: newMsgs,
           system: SYS_LAZULI(data),
           userId: user?.uid,
-          requestType: 'chat',
         }),
       });
       const json = await res.json();
-      if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'No credits remaining.'); setLoading(false); return; }
+      if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'Daily limit reached.'); setLoading(false); return; }
       if (!res.ok) { setError(json.error||'Something went wrong.'); setLoading(false); return; }
       const reply = json.content?.[0]?.text || json.text || '';
-      const cl = res.headers?.get?.('X-Credits-Left'); if (cl !== null && cl !== undefined) setCreditsLeft(+cl);
-      const su = res.headers?.get?.('X-Summaries-Used'); if (su !== null && su !== undefined) setSummariesUsed(+su);
+      if (json['x-daily-count']) setDailyCount(+json['x-daily-count']);
       setMsgs([...newMsgs, {role:'assistant', content:reply}]);
       // Speak response if voice call active
       if (voiceCallActive) {
@@ -3761,11 +3447,7 @@ Format it clearly with sections, as if written for a doctor's handoff. Be thorou
           <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 Lazuli AI</div>
           <div style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
-        <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center', flexWrap:'wrap' }}>
-          {/* Full Health Summary button */}
-          <button onClick={generateSummary} disabled={summaryLoading||loading} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:'1.5px solid rgba(160,100,240,.45)', background:'rgba(160,100,240,.1)', color:'#c084fc', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', opacity:summaryLoading||loading?.6:1, flexShrink:0 }}>
-            {summaryLoading ? '⏳ Generating…' : `📊 Full Health Summary${summariesUsed < 3 ? ` (${3-summariesUsed} free)` : ' (50 credits)'}`}
-          </button>
+        <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
           <button onClick={()=>{ setVoiceCallActive(v=>!v); if(voiceCallActive){ window.speechSynthesis?.cancel(); setVoiceSpeaking(false); }}} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:`1.5px solid ${voiceCallActive?'rgba(110,231,183,.5)':'rgba(42,92,173,.35)'}`, background:voiceCallActive?'rgba(110,231,183,.12)':'rgba(42,92,173,.08)', color:voiceCallActive?'#6ee7b7':'rgba(168,196,240,.7)', fontFamily:"'DM Sans',sans-serif", transition:'all .2s' }}>
             {voiceCallActive ? '📞 On Call' : '📞 Call Lazuli'}
           </button>
@@ -3778,8 +3460,8 @@ Format it clearly with sections, as if written for a doctor's handoff. Be thorou
       </div>
 
       {/* Limit / error banners */}
-      {limitHit && <div style={{ padding:'12px 16px', background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, fontSize:16, color:'rgba(201,168,76,.85)', lineHeight:1.6, flexShrink:0 }}>💙 You've used all your Lazuli AI credits. You'll receive {FREE_CHAT_LIMIT} new credits at midnight. Your full health log is still here for you.</div>}
-      {!limitHit && creditsLeft !== null && <div style={{ fontSize:14, color:'rgba(240,232,255,.25)', textAlign:'right', flexShrink:0 }}>💜 {creditsLeft} AI credits remaining</div>}
+      {limitHit && <div style={{ padding:'12px 16px', background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, fontSize:16, color:'rgba(201,168,76,.85)', lineHeight:1.6, flexShrink:0 }}>💙 You've used your {FREE_CHAT_LIMIT} free messages today. Limit resets at midnight. Your full health log is still here for you.</div>}
+      {!limitHit && dailyCount>0 && <div style={{ fontSize:14, color:'rgba(240,232,255,.25)', textAlign:'right', flexShrink:0 }}>{dailyCount}/{FREE_CHAT_LIMIT} messages used today</div>}
       {error && !limitHit && <div style={{ padding:'10px 16px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.25)', borderRadius:12, fontSize:15, color:'#ff8080', lineHeight:1.6, flexShrink:0 }}>⚠ {error}</div>}
 
       {/* GEL PC SHELL */}
@@ -3901,37 +3583,7 @@ function Updates() {
       <div style={{ textAlign:'center', padding:'40px 20px 32px', position:'relative' }}>
         <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 30%, rgba(42,92,173,.2) 0%, transparent 65%)', pointerEvents:'none' }}/>
         <div style={{ display:'inline-block', marginBottom:16, animation:'floatUp 3s ease-in-out infinite' }}>
-          <svg width="90" height="90" viewBox="0 0 90 90" style={{ filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}>
-            {/* Outer lotus petals */}
-            {[0,45,90,135,180,225,270,315].map((deg,i)=>(
-              <ellipse key={i} cx="45" cy="45" rx="14" ry="24"
-                fill={`rgba(${i%2===0?'42,92,173':'60,30,140'},.75)`}
-                stroke="rgba(168,196,240,.4)" strokeWidth=".8"
-                transform={`rotate(${deg},45,45) translate(0,-16)`}/>
-            ))}
-            {/* Inner lotus petals */}
-            {[22.5,67.5,112.5,157.5,202.5,247.5,292.5,337.5].map((deg,i)=>(
-              <ellipse key={i} cx="45" cy="45" rx="9" ry="17"
-                fill="rgba(30,60,140,.9)"
-                stroke="rgba(168,196,240,.3)" strokeWidth=".6"
-                transform={`rotate(${deg},45,45) translate(0,-12)`}/>
-            ))}
-            {/* Center circle */}
-            <circle cx="45" cy="45" r="18" fill="rgba(8,20,60,.95)" stroke="rgba(201,168,76,.6)" strokeWidth="1.5"/>
-            {/* Caduceus staff */}
-            <line x1="45" y1="33" x2="45" y2="57" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round"/>
-            {/* Wings */}
-            <path d="M45,35 Q36,31 32,34 Q36,38 45,36" fill="rgba(201,168,76,.9)"/>
-            <path d="M45,35 Q54,31 58,34 Q54,38 45,36" fill="rgba(201,168,76,.9)"/>
-            {/* Snake coils */}
-            <path d="M43,56 Q39,50 43,46 Q47,42 43,38" fill="none" stroke="rgba(201,168,76,.8)" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M47,56 Q51,50 47,46 Q43,42 47,38" fill="none" stroke="rgba(201,168,76,.8)" strokeWidth="1.5" strokeLinecap="round"/>
-            {/* Gem sparkles */}
-            {[0,72,144,216,288].map((deg,i)=>(
-              <circle key={i} cx={45+22*Math.cos(deg*Math.PI/180)} cy={45+22*Math.sin(deg*Math.PI/180)} r="2"
-                fill="rgba(168,218,255,.7)" style={{ animation:`breathePulse ${2+i*.3}s ease-in-out infinite` }}/>
-            ))}
-          </svg>
+          <img src="/icons/icon-192.png" alt="Lazuli Crest" style={{ width:80, height:80, borderRadius:18, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}/>
         </div>
         <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:6, textShadow:'0 0 30px rgba(201,168,76,.4)', letterSpacing:2 }}>Lazuli Crest</div>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'rgba(168,196,240,.7)', letterSpacing:4, textTransform:'uppercase', marginBottom:18 }}>The Gold Standard in Health Advocacy</div>

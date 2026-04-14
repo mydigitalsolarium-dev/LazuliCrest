@@ -7,24 +7,35 @@
     "framer-motion": "^11.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-pageflip": "^2.0.3",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "node node_modules/react-scripts/bin/react-scripts.js build",
-    "test":  "react-scripts test",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": ["react-app"]
+    "extends": [
+      "react-app"
+    ]
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "overrides": {
     "nth-check": "^2.1.1",
-    "postcss":   "^8.4.31"
+    "postcss": "^8.4.31"
   }
 }
