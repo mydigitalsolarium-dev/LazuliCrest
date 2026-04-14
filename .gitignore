@@ -4,3 +4,7 @@ node_modules/
 build/
 .claude/
 chat.js
+
+# Large video files — audio extracted as MP3, originals kept locally only
+public/sounds/*.mp4
+public/sounds/*.mkv
