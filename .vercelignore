@@ -1,5 +1,13 @@
-# Exclude large video files — too big for Vercel (100MB limit per file)
-# Host these on a CDN (Cloudflare R2, S3, etc.) and update the SOUNDSCAPES URLs
-public/sounds/Rain ASMR.mp4
-public/sounds/Rain 2 ASMR.mp4
-public/sounds/Lazuli Lofi with Rain.mkv
+# Build output — Vercel builds its own, no need to upload
+build/
+
+# Large video files — audio extracted as MP3s in public/sounds/
+public/sounds/*.mp4
+public/sounds/*.mkv
+
+# Accidental project copies inside project folder
+Desktop/
+AppData/
+
+# Node modules (Vercel installs its own)
+node_modules/
