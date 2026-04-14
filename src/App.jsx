@@ -164,6 +164,30 @@ const LAZULI_FACTS = [
   '✦ In Ayurveda, lapis lazuli is associated with the throat chakra — giving voice to the unheard.',
 ];
 
+// ─── Error Boundary ──────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, info) { console.error('[Lazuli Crest] Runtime error:', error, info); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight:'100vh', background:'#0d0520', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+          <div style={{ textAlign:'center', maxWidth:480 }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>💜</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', marginBottom:12 }}>Something went wrong</div>
+            <div style={{ fontSize:14, color:'rgba(240,232,255,.5)', marginBottom:24, lineHeight:1.6 }}>Lazuli Crest encountered an unexpected error. Your data is safe — please refresh to continue.</div>
+            <button onClick={()=>window.location.reload()} style={{ padding:'12px 28px', borderRadius:12, background:'linear-gradient(135deg,rgba(42,92,173,.3),rgba(201,168,76,.15))', border:'1.5px solid rgba(201,168,76,.4)', color:'#C9A84C', fontSize:15, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+              Refresh App
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ─── Root ─────────────────────────────────────────────────────
 export default function App() {
   const [user, setUser]           = useState(null);
@@ -223,6 +247,7 @@ export default function App() {
   const go = t => { setTab(t); setSideOpen(false); };
 
   return (
+    <ErrorBoundary>
     <div style={{ minHeight:'100vh', background:'#130828', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative' }}>
       <style>{GLOBAL_CSS}</style>
       <AnimatedBackground/>
@@ -300,6 +325,7 @@ export default function App() {
         </main>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
 
@@ -1198,7 +1224,7 @@ function Dashboard({ data, setTab, upd, user }) {
   const upcoming    = data.appointments.filter(a=>a.date>=today&&!a.isInfusion).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
   const todaySym    = data.symptoms.filter(s=>s.date===today);
   const isCare      = data.profile?.accountType==='caree';
-  const displayName = isCare ? data.profile?.careeName||'Your loved one' : (user.displayName||'Welcome');
+  const displayName = isCare ? data.profile?.careeName||'Your loved one' : (user?.displayName||data.profile?.name||'Welcome');
   const proactive   = getProactiveGreeting(data.profile?.name, data.appointments);
 
   const toggleTaken = id => {
