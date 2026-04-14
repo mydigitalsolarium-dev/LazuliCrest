@@ -2318,7 +2318,9 @@ const MINDFUL_QUOTES = [
 ];
 
 const SOUNDSCAPES = [
-  { id:'rain',      label:'Gentle Rain',        icon:'🌧', desc:'Soft rainfall — grounding and calming',           color:'#93c5fd' /* file too large for Vercel — use Web Audio fallback */ },
+  { id:'rain',      label:'Gentle Rain',        icon:'🌧', desc:'Soft rainfall — grounding and calming',           color:'#93c5fd', file:'/sounds/Rain ASMR.mp3' },
+  { id:'rain2',     label:'Heavy Rain',         icon:'🌨', desc:'Deeper rainfall — total immersion',               color:'#60a5fa', file:'/sounds/Rain 2 ASMR.mp3' },
+  { id:'lofi',      label:'Lofi Rain Ambience', icon:'🎵', desc:'Lazuli lo-fi music with rain — focus & calm',     color:'#a78bfa', file:'/sounds/Lazuli Lofi with Rain.mp3' },
   { id:'ocean',     label:'Ocean Waves',        icon:'🌊', desc:'Rhythmic tides — nervous system reset',           color:'#60a5fa' },
   { id:'birds',     label:'Birds Chirping',     icon:'🐦', desc:'Morning birdsong — peaceful awakening',           color:'#6ee7b7', file:'/sounds/Birds Chirping ASMR.mp3' },
   { id:'river',     label:'River Flow',         icon:'💧', desc:'Flowing stream — calming and centering',          color:'#38bdf8', file:'/sounds/River Flow ASMR.mp3' },
