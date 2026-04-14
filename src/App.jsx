@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import React from 'react';
-import HTMLFlipBook from 'react-pageflip';
+// react-pageflip removed — using custom 3D flip implementation
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile,
@@ -1588,7 +1588,7 @@ function Medications({ data, upd }) {
 // ─── Appointments (with types, physician, time, auto-past) ─────
 function Appointments({ data, upd }) {
   const today = todayStr();
-  const blank = { id:'', date:'', time:'', provider:'', physicianType:'', customPhysician:'', type:'', notes:'', preNotes:'', postNotes:'', followUp:'', isInfusion:false };
+  const blank = { id:'', date:'', time:'', provider:'', physicianType:'', customPhysician:'', type:'', address:'', suite:'', city:'', state:'', zip:'', phone:'', notes:'', preNotes:'', postNotes:'', followUp:'', isInfusion:false };
   const [form, setForm] = useState(blank);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState(null);
@@ -1627,6 +1627,16 @@ function Appointments({ data, upd }) {
               {a.physicianType && <div style={{ fontSize:16,color:'rgba(168,196,240,.6)',marginTop:3 }}>{a.physicianType==='Custom…'?a.customPhysician:a.physicianType}</div>}
               <div style={{ fontSize:16,color:'rgba(240,232,255,.32)',marginTop:4 }}>{fmtDate(a.date)}{a.time?' · '+a.time:''} · {a.type||'Appointment'}</div>
               {isPast && <span style={{ marginTop:6,display:'inline-block',fontSize:16,background:'rgba(42,92,173,.12)',color:'#A8C4F0',padding:'2px 9px',borderRadius:20,fontWeight:600 }}>Past appointment</span>}
+              {(a.address||a.city) && (
+                <div style={{ marginTop:8, display:'flex', alignItems:'flex-start', gap:6 }}>
+                  <span style={{ fontSize:16 }}>📍</span>
+                  <div style={{ fontSize:15, color:'rgba(240,232,255,.65)', lineHeight:1.5 }}>
+                    {[a.address, a.suite].filter(Boolean).join(', ')}{(a.city||a.state||a.zip)?<br/>:''}{[a.city, a.state, a.zip].filter(Boolean).join(' ')}
+                    {a.phone && <><br/><span style={{ color:'rgba(168,196,240,.5)' }}>📞 {a.phone}</span></>}
+                  </div>
+                  {a.address && <a href={`https://maps.google.com/?q=${encodeURIComponent([a.address,a.suite,a.city,a.state,a.zip].filter(Boolean).join(', '))}`} target="_blank" rel="noopener noreferrer" style={{ marginLeft:4, fontSize:13, color:'#60a5fa', textDecoration:'none', border:'1px solid rgba(96,165,250,.3)', borderRadius:8, padding:'2px 8px', whiteSpace:'nowrap' }}>🗺 Map</a>}
+                </div>
+              )}
             </div>
             <div style={{ display:'flex',gap:7,flexWrap:'wrap' }}>
               <button className="btn btn-lapis" style={{ fontSize:16,padding:'6px 12px' }} onClick={()=>share(a)}>📤 Share</button>
@@ -1675,6 +1685,20 @@ function Appointments({ data, upd }) {
             <div style={{ display:'flex',alignItems:'center',gap:8,paddingTop:24 }}>
               <input type="checkbox" id="isinf" checked={form.isInfusion} onChange={e=>setForm(f=>({...f,isInfusion:e.target.checked}))}/>
               <label htmlFor="isinf" style={{ margin:0,textTransform:'none',fontSize:16,letterSpacing:0 }}>💉 This is an infusion</label>
+            </div>
+          </div>
+          {/* Address section */}
+          <div style={{ marginBottom:13 }}>
+            <label style={{ color:'rgba(168,196,240,.7)', fontSize:13 }}>📍 Location</label>
+            <div className="two-col" style={{ gap:8 }}>
+              <div style={{ gridColumn:'1/-1' }}><input className="field" value={form.address} onChange={e=>setForm(f=>({...f,address:e.target.value}))} placeholder="Street address"/></div>
+              <input className="field" value={form.suite} onChange={e=>setForm(f=>({...f,suite:e.target.value}))} placeholder="Suite / Floor (optional)"/>
+              <input className="field" value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="Office phone"/>
+              <input className="field" value={form.city} onChange={e=>setForm(f=>({...f,city:e.target.value}))} placeholder="City"/>
+              <div style={{ display:'flex', gap:6 }}>
+                <input className="field" value={form.state} onChange={e=>setForm(f=>({...f,state:e.target.value}))} placeholder="State" style={{ width:'30%' }}/>
+                <input className="field" value={form.zip} onChange={e=>setForm(f=>({...f,zip:e.target.value}))} placeholder="ZIP" style={{ flex:1 }}/>
+              </div>
             </div>
           </div>
           <div style={{ marginBottom:13 }}><label>Pre-appointment notes</label><textarea className="field" rows={2} value={form.preNotes} onChange={e=>setForm(f=>({...f,preNotes:e.target.value}))} placeholder="Questions to ask, how you're feeling beforehand…" style={{ resize:'vertical' }}/></div>
@@ -1733,53 +1757,18 @@ function Appointments({ data, upd }) {
   );
 }
 
-// ─── Diary (real notebook look) ───────────────────────────────
-// ─── Diary page (forwarded ref required by react-pageflip) ─────
-const DiaryPage = React.forwardRef(({ children, isLeft, style }, ref) => (
-  <div ref={ref} style={{
-    background: isLeft
-      ? 'linear-gradient(175deg, #2a1640 0%, #1e0e30 40%, #180b28 100%)'
-      : 'linear-gradient(175deg, #f5f0e8 0%, #ede4d2 40%, #e0d5c0 100%)',
-    height: '100%',
-    position: 'relative',
-    overflow: 'hidden',
-    ...style,
-  }}>
-    {children}
-  </div>
-));
+// ─── Diary ────────────────────────────────────────────────────
 
 function Diary({ data, upd }) {
-  const bookRef = useRef(null);
+  console.log('Diary mounted');
   const entries = data.diary || [];
+  const [view, setView]       = useState('list');   // 'list' | 'write' | number(idx)
   const [editing, setEditing] = useState(null);
-  const [newEntry, setNewEntry] = useState({ title:'', text:'', font: DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
-  const [currentPage, setCurrentPage] = useState(0);
+  const [newEntry, setNewEntry] = useState({ title:'', text:'', font:DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
+  const [flipping, setFlipping] = useState(false);
 
   const MOOD_OPTIONS = ['✍️','😊','😔','😤','🥺','😴','💪','🌸','🙏','❤️'];
-
-  const save = () => {
-    if (!editing) {
-      if (!newEntry.text.trim() && !newEntry.title.trim()) return;
-      const e = { ...newEntry, date: new Date().toISOString() };
-      upd('diary', [...entries, e]);
-      setNewEntry({ title:'', text:'', font: DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
-      setTimeout(() => {
-        bookRef.current?.pageFlip().flipNext();
-      }, 100);
-    } else {
-      const updated = [...entries];
-      updated[editing.idx] = { ...updated[editing.idx], ...editing };
-      upd('diary', updated);
-      setEditing(null);
-    }
-  };
-
-  const deleteEntry = (idx) => {
-    upd('diary', entries.filter((_,i)=>i!==idx));
-  };
-
-  const WITNESSED_QUOTES = [
+  const WITNESSED = [
     '"I witnessed myself today — in pain, in grace, in becoming."',
     '"Every symptom is a message. Every day written is a day witnessed."',
     '"This body carries ancient wisdom. These pages carry mine."',
@@ -1787,209 +1776,197 @@ function Diary({ data, upd }) {
     '"In documenting the hard days, I honour them — and release them."',
   ];
 
-  return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, perspective:'2000px' }}>
-      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center', textShadow:'0 0 20px rgba(201,168,76,.3)' }}>
-        📔 My Health Diary
-      </div>
-      <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', textAlign:'center' }}>
-        {entries.length} {entries.length===1?'entry':'entries'} • Click the pages or use arrows to navigate
-      </div>
+  const flipTo = (target) => {
+    setFlipping(true);
+    setTimeout(() => { setView(target); setFlipping(false); }, 420);
+  };
 
-      <div style={{ width:'100%', maxWidth:780, position:'relative' }}>
-        <HTMLFlipBook
-          ref={bookRef}
-          width={370}
-          height={500}
-          size="stretch"
-          minWidth={280}
-          maxWidth={400}
-          minHeight={400}
-          maxHeight={600}
-          maxShadowOpacity={0.5}
-          showCover={true}
-          mobileScrollSupport={true}
-          onFlip={(e) => setCurrentPage(e.data)}
-          style={{ margin:'0 auto' }}
-        >
-          {/* Front cover — left (back of cover) */}
-          <DiaryPage isLeft={true}>
-            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:32, gap:16 }}>
-              <div style={{ fontSize:48, marginBottom:8 }}>💜</div>
-              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:700, color:'rgba(201,168,76,.9)', textAlign:'center', lineHeight:1.4 }}>
-                Health Diary
-              </div>
-              <div style={{ width:40, height:2, background:'rgba(201,168,76,.4)', borderRadius:2 }}/>
-              <div style={{ fontSize:13, color:'rgba(240,232,255,.5)', textAlign:'center', lineHeight:1.7, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
-                "Witnessed. Honored. Released."
-              </div>
-              <div style={{ marginTop:'auto', fontSize:12, color:'rgba(240,232,255,.3)', textAlign:'center' }}>
-                {entries.length > 0 ? `${entries.length} entries` : 'Begin your first entry →'}
-              </div>
-            </div>
-          </DiaryPage>
+  const save = () => {
+    if (editing !== null) {
+      const updated = [...entries];
+      updated[editing.idx] = { ...updated[editing.idx], title:editing.title, text:editing.text, mood:editing.mood, font:editing.font };
+      upd('diary', updated);
+      setEditing(null);
+    } else {
+      if (!newEntry.text.trim() && !newEntry.title.trim()) return;
+      upd('diary', [...entries, { ...newEntry, date:new Date().toISOString() }]);
+      setNewEntry({ title:'', text:'', font:DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
+      flipTo('list');
+    }
+  };
 
-          {/* Front cover — right (title page) */}
-          <DiaryPage isLeft={false}>
-            <svg width="0" height="0" style={{position:'absolute'}}>
-              <defs>
-                <filter id="leather">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise"/>
-                  <feColorMatrix type="saturate" values="0" in="noise" result="grey"/>
-                  <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
-                </filter>
-              </defs>
-            </svg>
-            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:36, gap:12, background:'linear-gradient(135deg, #3d1a0a 0%, #5c2810 30%, #3d1a0a 60%, #2a0f05 100%)' }}>
-              <div style={{ fontSize:52 }}>📔</div>
-              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:20, fontWeight:700, color:'#C9A84C', textAlign:'center', letterSpacing:2, textShadow:'0 0 20px rgba(201,168,76,.4)' }}>
-                My Health Diary
-              </div>
-              <div style={{ width:60, height:2, background:'rgba(201,168,76,.5)', borderRadius:2 }}/>
-              <div style={{ fontSize:13, color:'rgba(201,168,76,.6)', textAlign:'center', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
-                A sacred record of my healing journey
-              </div>
-            </div>
-          </DiaryPage>
+  const del = (idx) => { if(window.confirm('Delete this entry?')) upd('diary', entries.filter((_,i)=>i!==idx)); setView('list'); };
 
-          {/* Entry pages — each entry = 2 pages */}
-          {entries.map((e, idx) => [
-            <DiaryPage key={`L${idx}`} isLeft={true}>
-              <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'32px 24px', gap:16 }}>
-                {[80,200,320,420].map(y=>(
-                  <div key={y} style={{ position:'absolute', right:10, top:y, width:10, height:10, borderRadius:'50%', background:'rgba(0,0,0,.4)', boxShadow:'inset 0 1px 2px rgba(0,0,0,.6)' }}/>
-                ))}
-                <div style={{ fontSize:13, color:'rgba(201,168,76,.5)', letterSpacing:2, textTransform:'uppercase', fontFamily:"'DM Sans',sans-serif" }}>
-                  Entry {idx+1}
-                </div>
-                <div style={{ fontSize:16, fontWeight:700, color:'rgba(240,232,255,.85)', fontFamily:"'Cormorant Garamond',serif" }}>
-                  {e.title || 'Untitled Entry'}
-                </div>
-                <div style={{ fontSize:12, color:'rgba(240,232,255,.4)', fontFamily:"'DM Sans',sans-serif" }}>
-                  {e.date ? new Date(e.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : ''}
-                </div>
-                <div style={{ fontSize:22, marginTop:4 }}>{e.mood || '✍️'}</div>
-                <div style={{ flex:1, display:'flex', flexDirection:'column', justifyContent:'flex-end', gap:8 }}>
-                  <div style={{ height:1, background:'rgba(201,168,76,.15)' }}/>
-                  <div style={{ fontSize:13, color:'rgba(201,168,76,.35)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", lineHeight:1.6, textShadow:'0 0 15px rgba(201,168,76,.2)' }}>
-                    {WITNESSED_QUOTES[idx % WITNESSED_QUOTES.length]}
-                  </div>
-                </div>
-                <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
-                  <button onClick={()=>setEditing({idx, text:e.text||'', title:e.title||'', font:e.font||DIARY_FONTS[0].value, fontSize:e.fontSize||18, mood:e.mood||'✍️'})} style={{ padding:'4px 10px', borderRadius:8, border:'1px solid rgba(201,168,76,.3)', background:'transparent', color:'rgba(201,168,76,.6)', fontSize:12, cursor:'pointer' }}>Edit</button>
-                  <button onClick={()=>deleteEntry(idx)} style={{ padding:'4px 10px', borderRadius:8, border:'1px solid rgba(255,80,80,.2)', background:'transparent', color:'rgba(255,100,100,.5)', fontSize:12, cursor:'pointer' }}>Delete</button>
-                </div>
-              </div>
-            </DiaryPage>,
+  // ── Book spread layout (two-page spread at all times) ─────────
+  const pageStyle = (side, isCover) => ({
+    flex:1,
+    minHeight:480,
+    background: isCover
+      ? 'linear-gradient(135deg,#3d1a0a 0%,#5c2810 35%,#3d1a0a 65%,#2a0f05 100%)'
+      : side==='left' ? '#1a0e30' : '#f5f0e4',
+    position:'relative',
+    overflow:'hidden',
+    willChange:'transform',
+    transform:'translateZ(0)',
+    backfaceVisibility:'hidden',
+    boxShadow: side==='left'
+      ? 'inset -12px 0 24px rgba(0,0,0,.4), inset 4px 0 8px rgba(0,0,0,.2)'
+      : 'inset 12px 0 24px rgba(0,0,0,.15), inset -4px 0 8px rgba(0,0,0,.05)',
+  });
 
-            <DiaryPage key={`R${idx}`} isLeft={false}>
-              <div style={{ height:'100%', padding:'24px 20px', backgroundImage:'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(42,92,173,.1) 31px, rgba(42,92,173,.1) 32px)', backgroundSize:'100% 32px', backgroundPositionY:'28px', overflow:'hidden' }}>
-                {editing && editing.idx === idx ? (
-                  <div style={{ display:'flex', flexDirection:'column', gap:8, height:'100%' }}>
-                    <input value={editing.title} onChange={ev=>setEditing(p=>({...p,title:ev.target.value}))} placeholder="Entry title..." style={{ border:'none', borderBottom:'1.5px solid rgba(42,92,173,.3)', background:'transparent', fontSize:15, fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:'#1a0a2e', outline:'none', padding:'4px 0' }}/>
-                    <textarea value={editing.text} onChange={ev=>setEditing(p=>({...p,text:ev.target.value}))} style={{ flex:1, border:'none', background:'transparent', fontSize:editing.fontSize||18, fontFamily:editing.font||DIARY_FONTS[0].value, color:'#1a0a2e', lineHeight:'32px', outline:'none', resize:'none', padding:0 }}/>
-                    <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
-                      <button onClick={()=>setEditing(null)} style={{ padding:'6px 14px', borderRadius:10, border:'1px solid rgba(0,0,0,.15)', background:'transparent', color:'#666', fontSize:13, cursor:'pointer' }}>Cancel</button>
-                      <button onClick={save} style={{ padding:'6px 14px', borderRadius:10, background:'#2A5CAD', border:'none', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>Save</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ fontFamily:e.font||DIARY_FONTS[0].value, fontSize:e.fontSize||18, color:'#1a0a2e', lineHeight:'32px', whiteSpace:'pre-wrap', overflow:'hidden', height:'100%' }}>
-                    {e.text || <span style={{ color:'#999', fontStyle:'italic' }}>No content</span>}
-                  </div>
-                )}
-              </div>
-            </DiaryPage>,
-          ])}
+  const bookWrap = {
+    display:'flex',
+    maxWidth:780,
+    width:'100%',
+    margin:'0 auto',
+    borderRadius:4,
+    overflow:'hidden',
+    boxShadow:'0 0 0 2px rgba(201,168,76,.2), -10px 0 0 rgba(20,8,40,.9), -8px 0 0 rgba(30,12,55,.9), -5px 0 0 rgba(40,18,70,.8), 0 20px 60px rgba(0,0,0,.8)',
+    filter:'drop-shadow(0 0 20px rgba(212,175,55,.2))',
+    opacity: flipping ? 0.6 : 1,
+    transition:'opacity .2s',
+    transformStyle:'preserve-3d',
+    perspective:2000,
+  };
 
-          {/* New entry pages — left decorative */}
-          <DiaryPage isLeft={true}>
-            <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'32px 24px', gap:16, justifyContent:'center', alignItems:'center' }}>
-              <div style={{ fontSize:36 }}>✨</div>
-              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'rgba(201,168,76,.7)', textAlign:'center', lineHeight:1.6, fontStyle:'italic' }}>
-                "A new day. A new page. A new witness to your story."
-              </div>
-              <div style={{ width:40, height:1, background:'rgba(201,168,76,.3)' }}/>
-              <div style={{ fontSize:13, color:'rgba(240,232,255,.35)', textAlign:'center' }}>
-                Write today's entry →
-              </div>
-            </div>
-          </DiaryPage>
-
-          {/* New entry pages — right input */}
-          <DiaryPage isLeft={false}>
-            <div style={{ height:'100%', padding:'24px 20px', backgroundImage:'repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(42,92,173,.1) 31px, rgba(42,92,173,.1) 32px)', backgroundSize:'100% 32px', backgroundPositionY:'28px', display:'flex', flexDirection:'column', gap:10 }}>
-              <input
-                value={newEntry.title}
-                onChange={ev=>setNewEntry(p=>({...p,title:ev.target.value}))}
-                placeholder="Today's title..."
-                style={{ border:'none', borderBottom:'1.5px solid rgba(42,92,173,.25)', background:'transparent', fontSize:16, fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:'#1a0a2e', outline:'none', padding:'4px 0', lineHeight:'32px' }}
-              />
-              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                {MOOD_OPTIONS.map(m=>(
-                  <button key={m} onClick={()=>setNewEntry(p=>({...p,mood:m}))} style={{ fontSize:18, background:newEntry.mood===m?'rgba(42,92,173,.15)':'transparent', border:`1.5px solid ${newEntry.mood===m?'rgba(42,92,173,.4)':'transparent'}`, borderRadius:8, padding:'2px 6px', cursor:'pointer', lineHeight:1 }}>{m}</button>
+  // ── Cover view ────────────────────────────────────────────────
+  if (view === 'list') return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center' }}>📔 My Health Diary</div>
+      <div style={bookWrap}>
+        {/* Left — entry list / TOC */}
+        <div style={pageStyle('left',false)}>
+          {/* Spine stitch marks */}
+          {[60,130,200,270,340,410].map(y=>(
+            <div key={y} style={{ position:'absolute', right:8, top:y, width:8, height:8, borderRadius:'50%', background:'rgba(0,0,0,.45)', boxShadow:'inset 0 1px 2px rgba(0,0,0,.7)' }}/>
+          ))}
+          <div style={{ padding:'28px 22px 22px 24px' }}>
+            <div style={{ fontSize:11, color:'rgba(201,168,76,.5)', letterSpacing:3, textTransform:'uppercase', marginBottom:16, fontFamily:"'DM Sans',sans-serif" }}>Entries</div>
+            {entries.length === 0 ? (
+              <div style={{ color:'rgba(240,232,255,.3)', fontSize:14, fontStyle:'italic', lineHeight:1.8 }}>No entries yet.<br/>Write your first on the right →</div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {entries.map((e,i)=>(
+                  <button key={i} onClick={()=>flipTo(i)} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:8, border:'1px solid rgba(201,168,76,.15)', background:'rgba(201,168,76,.06)', color:'rgba(240,232,255,.8)', fontSize:13, cursor:'pointer', textAlign:'left', fontFamily:"'DM Sans',sans-serif" }}>
+                    <span>{e.mood||'✍️'}</span>
+                    <span style={{ flex:1, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{e.title||'Untitled'}</span>
+                    <span style={{ fontSize:11, color:'rgba(240,232,255,.3)', flexShrink:0 }}>{e.date?new Date(e.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—'}</span>
+                  </button>
                 ))}
               </div>
-              <select value={newEntry.font} onChange={ev=>setNewEntry(p=>({...p,font:ev.target.value}))} style={{ border:'1px solid rgba(0,0,0,.1)', borderRadius:6, background:'transparent', fontSize:13, color:'#444', fontFamily:newEntry.font, padding:'2px 6px' }}>
-                {DIARY_FONTS.map(f=><option key={f.value} value={f.value} style={{fontFamily:f.value}}>{f.label}</option>)}
-              </select>
-              <textarea
-                value={newEntry.text}
-                onChange={ev=>setNewEntry(p=>({...p,text:ev.target.value}))}
-                placeholder="Write here..."
-                style={{ flex:1, border:'none', background:'transparent', fontSize:newEntry.fontSize, fontFamily:newEntry.font, color:'#1a0a2e', lineHeight:'32px', outline:'none', resize:'none', padding:0, minHeight:200 }}
-              />
-              <button onClick={save} style={{ padding:'10px', borderRadius:12, background:'linear-gradient(135deg,#2A5CAD,#1e4080)', border:'none', color:'#fff', fontSize:15, fontWeight:700, cursor:'pointer', boxShadow:'0 4px 16px rgba(42,92,173,.35)' }}>
-                ✦ Save & Turn Page
-              </button>
-            </div>
-          </DiaryPage>
-
-          {/* Back cover pages */}
-          <DiaryPage isLeft={true}>
-            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:32, gap:12 }}>
-              <div style={{ fontSize:13, color:'rgba(240,232,255,.3)', textAlign:'center', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
-                End of diary
-              </div>
-            </div>
-          </DiaryPage>
-          <DiaryPage isLeft={false} style={{ background:'linear-gradient(135deg, #3d1a0a 0%, #5c2810 30%, #2a0f05 100%)' }}>
-            <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:32, gap:12 }}>
-              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'rgba(201,168,76,.6)', textAlign:'center', fontStyle:'italic' }}>
-                Lazuli Crest
-              </div>
-              <div style={{ fontSize:28 }}>💜</div>
-            </div>
-          </DiaryPage>
-        </HTMLFlipBook>
-
-        <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:20, marginTop:16 }}>
-          <button onClick={()=>bookRef.current?.pageFlip().flipPrev()} style={{ padding:'10px 22px', borderRadius:12, border:'1.5px solid rgba(42,92,173,.35)', background:'rgba(42,92,173,.1)', color:'rgba(168,196,240,.8)', fontSize:18, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
-            ← Prev
-          </button>
-          <span style={{ fontSize:13, color:'rgba(240,232,255,.35)' }}>
-            Page {currentPage + 1} of {(entries.length + 2) * 2 + 4}
-          </span>
-          <button onClick={()=>bookRef.current?.pageFlip().flipNext()} style={{ padding:'10px 22px', borderRadius:12, border:'1.5px solid rgba(42,92,173,.35)', background:'rgba(42,92,173,.1)', color:'rgba(168,196,240,.8)', fontSize:18, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
-            Next →
-          </button>
-        </div>
-      </div>
-
-      {entries.length > 0 && (
-        <div style={{ width:'100%', maxWidth:780 }}>
-          <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', marginBottom:10, fontFamily:"'DM Sans',sans-serif" }}>All Entries</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-            {entries.map((e,i)=>(
-              <button key={i} onClick={()=>{ bookRef.current?.pageFlip().flip(2 + i*2); }} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderRadius:12, border:'1px solid rgba(42,92,173,.2)', background:'rgba(42,92,173,.07)', color:'rgba(240,232,255,.75)', fontSize:14, cursor:'pointer', textAlign:'left', fontFamily:"'DM Sans',sans-serif" }}>
-                <span style={{ fontSize:20 }}>{e.mood||'✍️'}</span>
-                <span style={{ flex:1, fontWeight:600 }}>{e.title||'Untitled'}</span>
-                <span style={{ fontSize:12, color:'rgba(240,232,255,.35)' }}>{e.date?new Date(e.date).toLocaleDateString():''}</span>
-              </button>
-            ))}
+            )}
           </div>
         </div>
-      )}
+        {/* Right — leather cover */}
+        <div style={pageStyle('right',true)}>
+          <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', gap:14, padding:32 }}>
+            <div style={{ fontSize:52 }}>📔</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:19, color:'#C9A84C', textAlign:'center', letterSpacing:2, textShadow:'0 0 20px rgba(201,168,76,.35)' }}>My Health Diary</div>
+            <div style={{ width:50, height:2, background:'rgba(201,168,76,.5)', borderRadius:2 }}/>
+            <div style={{ fontSize:13, color:'rgba(201,168,76,.55)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", textAlign:'center', lineHeight:1.6 }}>A sacred record of my healing journey</div>
+            <button onClick={()=>flipTo('write')} style={{ marginTop:16, padding:'10px 26px', borderRadius:12, background:'rgba(201,168,76,.15)', border:'1.5px solid rgba(201,168,76,.4)', color:'#C9A84C', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+              + New Entry
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Write new entry view ──────────────────────────────────────
+  if (view === 'write') return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center' }}>📔 My Health Diary</div>
+      <div style={bookWrap}>
+        {/* Left — witnessed quote */}
+        <div style={pageStyle('left',false)}>
+          {[60,130,200,270,340,410].map(y=>(
+            <div key={y} style={{ position:'absolute', right:8, top:y, width:8, height:8, borderRadius:'50%', background:'rgba(0,0,0,.45)', boxShadow:'inset 0 1px 2px rgba(0,0,0,.7)' }}/>
+          ))}
+          <div style={{ padding:'32px 22px', height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', gap:16 }}>
+            <div style={{ fontSize:32, textAlign:'center' }}>✨</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'rgba(201,168,76,.6)', lineHeight:1.8, fontStyle:'italic', textAlign:'center', textShadow:'0 0 12px rgba(201,168,76,.2)' }}>
+              "A new day. A new page.<br/>A new witness to your story."
+            </div>
+            <div style={{ height:1, background:'rgba(201,168,76,.15)' }}/>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6, justifyContent:'center' }}>
+              {MOOD_OPTIONS.map(m=>(
+                <button key={m} onClick={()=>setNewEntry(p=>({...p,mood:m}))} style={{ fontSize:20, padding:'4px 8px', borderRadius:8, border:`1.5px solid ${newEntry.mood===m?'rgba(201,168,76,.5)':'transparent'}`, background:newEntry.mood===m?'rgba(201,168,76,.12)':'transparent', cursor:'pointer' }}>{m}</button>
+              ))}
+            </div>
+            <select value={newEntry.font} onChange={ev=>setNewEntry(p=>({...p,font:ev.target.value}))} style={{ background:'rgba(255,255,255,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:8, color:'rgba(240,232,255,.7)', padding:'6px 10px', fontSize:13, fontFamily:newEntry.font }}>
+              {DIARY_FONTS.map(f=><option key={f.value} value={f.value} style={{background:'#1a0e30'}}>{f.label}</option>)}
+            </select>
+            <button onClick={()=>flipTo('list')} style={{ padding:'8px', borderRadius:10, border:'1px solid rgba(240,232,255,.1)', background:'transparent', color:'rgba(240,232,255,.4)', fontSize:13, cursor:'pointer' }}>← Back to entries</button>
+          </div>
+        </div>
+        {/* Right — ruled writing page */}
+        <div style={{ ...pageStyle('right',false), backgroundImage:'repeating-linear-gradient(to bottom,transparent,transparent 31px,rgba(42,92,173,.12) 31px,rgba(42,92,173,.12) 32px)', backgroundSize:'100% 32px', backgroundPositionY:'52px' }}>
+          <div style={{ padding:'24px 22px', display:'flex', flexDirection:'column', gap:10, height:'100%' }}>
+            <input value={newEntry.title} onChange={ev=>setNewEntry(p=>({...p,title:ev.target.value}))} placeholder="Today's title…" style={{ border:'none', borderBottom:'2px solid rgba(42,92,173,.25)', background:'transparent', fontSize:17, fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:'#1a0a2e', outline:'none', padding:'4px 0 8px', lineHeight:'32px' }}/>
+            <textarea value={newEntry.text} onChange={ev=>setNewEntry(p=>({...p,text:ev.target.value}))} placeholder="Write here…" style={{ flex:1, border:'none', background:'transparent', fontSize:newEntry.fontSize, fontFamily:newEntry.font, color:'#1a0a2e', lineHeight:'32px', outline:'none', resize:'none', padding:0, minHeight:280 }}/>
+            <button onClick={save} style={{ padding:'11px', borderRadius:12, background:'linear-gradient(135deg,#2A5CAD,#1e4080)', border:'none', color:'#fff', fontSize:15, fontWeight:700, cursor:'pointer', boxShadow:'0 4px 16px rgba(42,92,173,.35)', willChange:'transform' }}>
+              ✦ Save Entry
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Read/edit existing entry ──────────────────────────────────
+  const idx = view;
+  const e   = entries[idx];
+  if (!e) { setView('list'); return null; }
+  const isEditing = editing && editing.idx === idx;
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center' }}>📔 My Health Diary</div>
+      <div style={bookWrap}>
+        {/* Left — metadata & witnessed quote */}
+        <div style={pageStyle('left',false)}>
+          {[60,130,200,270,340,410].map(y=>(
+            <div key={y} style={{ position:'absolute', right:8, top:y, width:8, height:8, borderRadius:'50%', background:'rgba(0,0,0,.45)', boxShadow:'inset 0 1px 2px rgba(0,0,0,.7)' }}/>
+          ))}
+          <div style={{ padding:'28px 22px', height:'100%', display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ fontSize:11, color:'rgba(201,168,76,.5)', letterSpacing:3, textTransform:'uppercase', fontFamily:"'DM Sans',sans-serif" }}>Entry {idx+1} of {entries.length}</div>
+            <div style={{ fontSize:18, fontWeight:700, color:'rgba(240,232,255,.9)', fontFamily:"'Cormorant Garamond',serif" }}>{e.title||'Untitled Entry'}</div>
+            <div style={{ fontSize:12, color:'rgba(240,232,255,.4)' }}>{e.date?new Date(e.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}):''}</div>
+            <div style={{ fontSize:26 }}>{e.mood||'✍️'}</div>
+            <div style={{ flex:1 }}/>
+            <div style={{ height:1, background:'rgba(201,168,76,.12)' }}/>
+            <div style={{ fontSize:13, color:'rgba(201,168,76,.4)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", lineHeight:1.7, textShadow:'0 0 10px rgba(201,168,76,.15)' }}>
+              {WITNESSED[idx % WITNESSED.length]}
+            </div>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:4 }}>
+              <button onClick={()=>flipTo('list')} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(240,232,255,.12)', background:'transparent', color:'rgba(240,232,255,.4)', fontSize:12, cursor:'pointer' }}>← All Entries</button>
+              {idx>0 && <button onClick={()=>flipTo(idx-1)} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(42,92,173,.25)', background:'transparent', color:'#A8C4F0', fontSize:12, cursor:'pointer' }}>‹ Prev</button>}
+              {idx<entries.length-1 && <button onClick={()=>flipTo(idx+1)} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(42,92,173,.25)', background:'transparent', color:'#A8C4F0', fontSize:12, cursor:'pointer' }}>Next ›</button>}
+              <button onClick={()=>setEditing({idx,text:e.text||'',title:e.title||'',mood:e.mood||'✍️',font:e.font||DIARY_FONTS[0].value})} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(201,168,76,.25)', background:'transparent', color:'rgba(201,168,76,.6)', fontSize:12, cursor:'pointer' }}>Edit</button>
+              <button onClick={()=>del(idx)} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(255,80,80,.2)', background:'transparent', color:'rgba(255,100,100,.4)', fontSize:12, cursor:'pointer' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+        {/* Right — content */}
+        <div style={{ ...pageStyle('right',false), backgroundImage:'repeating-linear-gradient(to bottom,transparent,transparent 31px,rgba(42,92,173,.1) 31px,rgba(42,92,173,.1) 32px)', backgroundSize:'100% 32px', backgroundPositionY:'52px' }}>
+          <div style={{ padding:'24px 22px', height:'100%', display:'flex', flexDirection:'column', gap:10 }}>
+            {isEditing ? (
+              <>
+                <input value={editing.title} onChange={ev=>setEditing(p=>({...p,title:ev.target.value}))} style={{ border:'none', borderBottom:'2px solid rgba(42,92,173,.25)', background:'transparent', fontSize:17, fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:'#1a0a2e', outline:'none', padding:'4px 0 8px' }}/>
+                <textarea value={editing.text} onChange={ev=>setEditing(p=>({...p,text:ev.target.value}))} style={{ flex:1, border:'none', background:'transparent', fontSize:e.fontSize||18, fontFamily:e.font||DIARY_FONTS[0].value, color:'#1a0a2e', lineHeight:'32px', outline:'none', resize:'none', padding:0 }}/>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={()=>setEditing(null)} style={{ flex:1, padding:'9px', borderRadius:10, border:'1px solid rgba(0,0,0,.1)', background:'transparent', color:'#666', fontSize:13, cursor:'pointer' }}>Cancel</button>
+                  <button onClick={save} style={{ flex:2, padding:'9px', borderRadius:10, background:'#2A5CAD', border:'none', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>Save Changes</button>
+                </div>
+              </>
+            ) : (
+              <div style={{ fontFamily:e.font||DIARY_FONTS[0].value, fontSize:e.fontSize||18, color:'#1a0a2e', lineHeight:'32px', whiteSpace:'pre-wrap', overflow:'auto', flex:1 }}>
+                {e.text || <span style={{ color:'#aaa', fontStyle:'italic' }}>No content — click Edit to add.</span>}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
