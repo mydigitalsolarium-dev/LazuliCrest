@@ -3409,7 +3409,7 @@ const STARTERS = [
   "Help me explain my condition to someone who doesn't understand",
 ];
 
-const FREE_CHAT_LIMIT = 50;
+const FREE_CHAT_LIMIT = 50; // eslint-disable-line no-unused-vars
 
 // ─── Gel Keyboard ─────────────────────────────────────────────
 const KB_ROWS = [
