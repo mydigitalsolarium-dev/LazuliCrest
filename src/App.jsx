@@ -241,6 +241,7 @@ export default function App() {
 
   const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const { insight: bgInsight, reflecting } = useBackgroundAnalysis(data, user?.uid);
 
   if (!authReady) return <Splash/>;
 
@@ -286,24 +287,25 @@ export default function App() {
           </div>
 
           {!user && !guestBannerDismissed && (
-            <div style={{
-              position:'sticky', top:0, zIndex:89, background:'linear-gradient(90deg,rgba(201,168,76,.15),rgba(42,92,173,.15))',
-              borderBottom:'1px solid rgba(201,168,76,.25)', padding:'10px 20px',
-              display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexShrink:0
+            <div className="guest-banner" style={{
+              position:'sticky', top:0, zIndex:89,
+              background:'linear-gradient(90deg,rgba(201,168,76,.15),rgba(42,92,173,.15))',
+              borderBottom:'1px solid rgba(201,168,76,.25)', padding:'10px 16px',
+              display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, flexShrink:0,
             }}>
-              <span style={{ fontSize:14, color:'rgba(240,232,255,.85)', fontFamily:"'DM Sans',sans-serif" }}>
-                ✨ You're exploring as a guest — <strong style={{color:'#C9A84C'}}>your data won't be saved.</strong>
+              <span className="guest-text" style={{ fontSize:13, color:'rgba(240,232,255,.9)', fontFamily:"'DM Sans',sans-serif", lineHeight:1.4 }}>
+                ✨ Exploring as guest — <strong style={{color:'#C9A84C'}}>sign up to save your data</strong>
               </span>
-              <div style={{display:'flex',gap:8,flexShrink:0}}>
-                <button onClick={()=>setShowAuth(true)} style={{ padding:'6px 14px', borderRadius:10, border:'1.5px solid rgba(201,168,76,.5)', background:'rgba(201,168,76,.12)', color:'#C9A84C', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>Sign Up Free</button>
-                <button onClick={()=>setGuestBannerDismissed(true)} style={{ padding:'6px 10px', borderRadius:10, border:'1px solid rgba(240,232,255,.15)', background:'transparent', color:'rgba(240,232,255,.4)', fontSize:13, cursor:'pointer' }}>✕</button>
+              <div className="guest-btns" style={{display:'flex',gap:6,flexShrink:0}}>
+                <button onClick={()=>setShowAuth(true)} style={{ padding:'6px 14px', borderRadius:10, border:'1.5px solid rgba(201,168,76,.5)', background:'rgba(201,168,76,.12)', color:'#C9A84C', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", whiteSpace:'nowrap' }}>Sign Up Free</button>
+                <button onClick={()=>setGuestBannerDismissed(true)} style={{ padding:'6px 10px', borderRadius:10, border:'1px solid rgba(240,232,255,.15)', background:'transparent', color:'rgba(240,232,255,.4)', fontSize:13, cursor:'pointer', flexShrink:0 }}>✕</button>
               </div>
             </div>
           )}
 
           <div className="page-fade page-inner" key={tab}>
             <RotatingQuoteBanner/>
-            {tab==='dashboard'    && <Dashboard    data={data} setTab={go} upd={upd} user={user}/>}
+            {tab==='dashboard'    && <Dashboard    data={data} setTab={go} upd={upd} user={user} bgInsight={bgInsight}/>}
             {tab==='symptoms'     && <Symptoms     data={data} upd={upd}/>}
             {tab==='bodymap'      && <BodyMap      data={data} upd={upd}/>}
             {tab==='brain'        && <BrainSection data={data} upd={upd}/>}
@@ -324,6 +326,7 @@ export default function App() {
           </div>
         </main>
       </div>
+      <ReflectingPill reflecting={reflecting}/>
     </div>
     </ErrorBoundary>
   );
@@ -368,16 +371,16 @@ function AnimatedBackground() {
     <div style={{ position:'fixed', inset:0, zIndex:0, overflow:'hidden', pointerEvents:'none' }}>
       {/* Deep background */}
       <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 25% 15%, rgba(42,92,173,.22) 0%, transparent 50%), radial-gradient(ellipse at 75% 85%, rgba(88,28,135,.28) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(15,5,35,.85) 0%, #03000C 100%)' }}/>
-      {/* Aurora orbs */}
-      <div style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.31) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.25) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
-      <div style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.14) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.17) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
-      <div style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.21) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
-      <div style={{ position:'absolute', width:'45vw', height:'35vh', bottom:'-5%', left:'-5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(140,60,200,.21) 0%,rgba(201,168,76,.1) 50%,transparent 70%)', filter:'blur(80px)', animation:'auroraFloat 36s 8s ease-in-out infinite alternate' }}/>
-      {/* Rising scientific symbols — SVG outline with blue glow pulse */}
+      {/* Aurora orbs — hidden on mobile via CSS (.aurora-orb) */}
+      <div className="aurora-orb" style={{ position:'absolute', width:'70vw', height:'50vh', top:'-15%', left:'-15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.31) 0%,transparent 65%)', filter:'blur(60px)', animation:'auroraFloat 22s ease-in-out infinite alternate' }}/>
+      <div className="aurora-orb" style={{ position:'absolute', width:'60vw', height:'45vh', bottom:'-10%', right:'-10%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.25) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 28s ease-in-out infinite alternate-reverse' }}/>
+      <div className="aurora-orb" style={{ position:'absolute', width:'40vw', height:'35vh', top:'30%', left:'35%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(201,168,76,.14) 0%,transparent 65%)', filter:'blur(80px)', animation:'auroraFloat 18s ease-in-out infinite alternate' }}/>
+      <div className="aurora-orb" style={{ position:'absolute', width:'30vw', height:'25vh', top:'55%', left:'15%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(123,47,190,.17) 0%,transparent 65%)', filter:'blur(90px)', animation:'auroraFloat 32s ease-in-out infinite alternate-reverse' }}/>
+      <div className="aurora-orb" style={{ position:'absolute', width:'25vw', height:'20vh', top:'20%', right:'5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(42,92,173,.21) 0%,transparent 65%)', filter:'blur(70px)', animation:'auroraFloat 24s 4s ease-in-out infinite alternate' }}/>
+      <div className="aurora-orb" style={{ position:'absolute', width:'45vw', height:'35vh', bottom:'-5%', left:'-5%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(140,60,200,.21) 0%,rgba(201,168,76,.1) 50%,transparent 70%)', filter:'blur(80px)', animation:'auroraFloat 36s 8s ease-in-out infinite alternate' }}/>
+      {/* Rising scientific symbols — hidden on mobile via CSS (.float-sym) */}
       {FLOAT_ITEMS.map((s,i) => (
-        <div key={`sym-${i}`} style={{
+        <div key={`sym-${i}`} className="float-sym" style={{
           position:'absolute', left:`${s.x}%`, bottom:'-10%',
           width:s.size, height:s.size, opacity:0,
           animation:`riseUp ${s.dur}s ${s.delay}s ease-in-out infinite`,
@@ -403,7 +406,7 @@ function AnimatedBackground() {
       ))}
       {/* Floating chronic illness quotes — larger, spaced out */}
       {FLOAT_QUOTES.map((q,i) => (
-        <div key={`quote-${i}`} style={{
+        <div key={`quote-${i}`} className="float-quote" style={{
           position:'absolute', left:`${q.x}%`, bottom:'-5%',
           fontSize:18, opacity:0, color:'rgba(201,168,76,.38)',
           fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
@@ -799,23 +802,31 @@ const GLOBAL_CSS = `
   @keyframes barBounce{0%{transform:scaleY(.5);}100%{transform:scaleY(1.2);}}
 
   @media(max-width:768px){
-    .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:200;overflow-y:scroll;-webkit-overflow-scrolling:touch;width:82vw;max-width:300px;transform:translate3d(-100%,0,0)}
+    .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translate3d(-100%,0,0);z-index:200;overflow-y:scroll;-webkit-overflow-scrolling:touch;width:82vw;max-width:300px;will-change:transform;backface-visibility:hidden}
     .sidebar.open{transform:translate3d(0,0,0)}
     .mobile-overlay{z-index:199}
-    .main-content{margin-left:0;min-height:0 !important}
-    .mobile-topbar{display:flex;position:fixed !important;top:0;left:0;right:0;z-index:150;padding:12px 16px}
+    .main-content{margin-left:0;min-height:0 !important;will-change:auto}
+    .mobile-topbar{display:flex !important;position:fixed !important;top:0;left:0;right:0;z-index:150;padding:12px 16px;will-change:transform;transform:translateZ(0)}
     .page-inner{padding:10px 13px 80px !important;padding-top:68px !important}
     .two-col{grid-template-columns:1fr !important}
     .three-col{grid-template-columns:1fr !important}
     .stats-grid{grid-template-columns:repeat(2,1fr) !important}
     .nav-item{padding:14px 16px;font-size:17px;min-height:52px}
     .glass-card{border-radius:16px !important;padding:16px 14px !important}
+    .page-fade{animation:none !important}
+    .guest-banner{flex-wrap:wrap;gap:8px !important}
+    .guest-banner .guest-text{font-size:12px !important;flex:1 1 100%}
+    .guest-banner .guest-btns{flex-shrink:0;display:flex;gap:6px;width:100%}
   }
   @supports(padding-bottom:env(safe-area-inset-bottom)){
     @media(max-width:768px){
       .page-inner{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
       .sidebar{padding-bottom:env(safe-area-inset-bottom)}
     }
+  }
+  /* Stop aurora/floating animations from causing repaints on mobile */
+  @media(max-width:768px){
+    .aurora-orb,.float-sym,.float-quote{display:none !important}
   }
 
   /* ── Diary book ruled lines ─── */
@@ -1199,6 +1210,77 @@ function usePatternDetection(data) {
   return pattern;
 }
 
+// ─── Intelligent Background Analysis ─────────────────────────
+// Debounced, cached, quota-safe AI insight that runs silently
+const BG_CACHE_KEY = 'lazuli_bg_insight';
+function useBackgroundAnalysis(data, userId) {
+  const [insight, setInsight] = useState(() => {
+    try { const c = localStorage.getItem(BG_CACHE_KEY); return c ? JSON.parse(c) : null; } catch { return null; }
+  });
+  const [reflecting, setReflecting] = useState(false);
+  const debounceRef  = useRef(null);
+  const retryRef     = useRef(null);
+  const lastHashRef  = useRef('');
+
+  const dataHash = JSON.stringify({
+    symCount: (data?.symptoms||[]).length,
+    medCount: (data?.medications||[]).length,
+    diaryCount: (data?.diary||[]).length,
+    lastSym: (data?.symptoms||[])[0]?.date,
+    lastDiary: (data?.diary||[])?.slice(-1)[0]?.date,
+  });
+
+  const runAnalysis = useCallback(async () => {
+    if (!data?.symptoms?.length && !data?.diary?.length) return;
+    setReflecting(true);
+    try {
+      const sys = `You are Lazuli, a compassionate chronic illness health analyst. Review this patient's health data and give ONE short (2-3 sentence) warm, actionable insight. Focus on patterns, trends, or encouragement. Be specific to their actual data. Do not start with "I" or "As Lazuli".`;
+      const prompt = `Symptoms logged: ${(data?.symptoms||[]).length}. Recent: ${(data?.symptoms||[]).slice(0,3).map(s=>`${s.date}: pain ${s.pain}/10, energy ${s.energy}/10`).join('; ')||'none'}. Diary entries: ${(data?.diary||[]).length}. Active medications: ${(data?.medications||[]).filter(m=>m.active).map(m=>m.name).join(', ')||'none'}. Conditions: ${data?.profile?.conditions||'not specified'}.`;
+      const res = await fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ messages:[{role:'user',content:prompt}], system:sys, userId }),
+      });
+      if (!res.ok) { setReflecting(false); return; } // silent fail
+      const json = await res.json();
+      if (json?.limitReached || json?.error) {
+        // Quota error — retry in 60s, don't show error to user
+        retryRef.current = setTimeout(runAnalysis, 60000);
+        setReflecting(false); return;
+      }
+      const text = json?.content?.[0]?.text || json?.text || '';
+      if (text) {
+        const result = { text, ts: Date.now() };
+        setInsight(result);
+        try { localStorage.setItem(BG_CACHE_KEY, JSON.stringify(result)); } catch {}
+      }
+    } catch { /* silent fail */ }
+    setReflecting(false);
+  }, [data, userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    // Only run if data actually changed
+    if (dataHash === lastHashRef.current) return;
+    lastHashRef.current = dataHash;
+    // Debounce 3s
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(runAnalysis, 3000);
+    return () => { clearTimeout(debounceRef.current); clearTimeout(retryRef.current); };
+  }, [dataHash]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { insight, reflecting };
+}
+
+// ─── Subtle "reflecting" pill shown during background analysis ──
+function ReflectingPill({ reflecting }) {
+  if (!reflecting) return null;
+  return (
+    <div style={{ position:'fixed', bottom:24, right:20, zIndex:998, display:'flex', alignItems:'center', gap:7, padding:'7px 14px', borderRadius:20, background:'rgba(4,14,52,.92)', border:'1px solid rgba(42,92,173,.3)', backdropFilter:'blur(12px)', fontSize:12, color:'rgba(168,196,240,.6)', fontFamily:"'DM Sans',sans-serif", animation:'fadeUp .3s ease', pointerEvents:'none' }}>
+      <span style={{ width:6, height:6, borderRadius:'50%', background:'#2A5CAD', animation:'pulseGlow 1.2s ease-in-out infinite', display:'inline-block' }}/>
+      Lazuli is reflecting…
+    </div>
+  );
+}
+
 // ─── Pattern Detection AI ─────────────────────────────────────
 function PatternAlert({ data, setTab }) {
   const pattern = usePatternDetection(data);
@@ -1216,7 +1298,7 @@ function PatternAlert({ data, setTab }) {
 }
 
 // ─── Dashboard ────────────────────────────────────────────────
-function Dashboard({ data, setTab, upd, user }) {
+function Dashboard({ data, setTab, upd, user, bgInsight }) {
   const today       = todayStr();
   const activeMeds  = data.medications.filter(m=>m.active);
   const totalTaken  = activeMeds.filter(m=>(m.takenDates||[]).includes(today)).length;
@@ -1257,6 +1339,18 @@ function Dashboard({ data, setTab, upd, user }) {
 
         {/* Pattern Detection Banner */}
         <PatternAlert data={data} setTab={setTab}/>
+
+        {/* Background AI Insight — shows cached analysis, updates silently */}
+        {bgInsight?.text && (
+          <div style={{ marginBottom:14, padding:'14px 18px', background:'linear-gradient(135deg,rgba(42,92,173,.08),rgba(201,168,76,.05))', border:'1px solid rgba(42,92,173,.2)', borderRadius:14, display:'flex', gap:12, alignItems:'flex-start' }}>
+            <span style={{ fontSize:18, flexShrink:0, opacity:.7 }}>💙</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'rgba(168,196,240,.4)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:5 }}>Lazuli's Latest Insight</div>
+              <div style={{ fontSize:15, color:'rgba(240,232,255,.75)', lineHeight:1.7, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>{bgInsight.text}</div>
+              <div style={{ fontSize:11, color:'rgba(240,232,255,.2)', marginTop:4 }}>{bgInsight.ts ? new Date(bgInsight.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}</div>
+            </div>
+          </div>
+        )}
 
       {/* Stat cards */}
       <div className="stats-grid">
@@ -3464,10 +3558,12 @@ function Advocate({ data, user }) {
         </div>
       </div>
 
-      {/* Limit / error banners */}
-      {limitHit && <div style={{ padding:'12px 16px', background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, fontSize:16, color:'rgba(201,168,76,.85)', lineHeight:1.6, flexShrink:0 }}>💙 You've used your {FREE_CHAT_LIMIT} free messages today. Limit resets at midnight. Your full health log is still here for you.</div>}
-      {!limitHit && dailyCount>0 && <div style={{ fontSize:14, color:'rgba(240,232,255,.25)', textAlign:'right', flexShrink:0 }}>{dailyCount}/{FREE_CHAT_LIMIT} messages used today</div>}
-      {error && !limitHit && <div style={{ padding:'10px 16px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.25)', borderRadius:12, fontSize:15, color:'#ff8080', lineHeight:1.6, flexShrink:0 }}>⚠ {error}</div>}
+      {/* Status pills — subtle, not alarming */}
+      {limitHit && <div style={{ padding:'10px 14px', background:'rgba(201,168,76,.06)', border:'1px solid rgba(201,168,76,.18)', borderRadius:12, fontSize:14, color:'rgba(201,168,76,.75)', lineHeight:1.6, flexShrink:0, display:'flex', gap:8, alignItems:'center' }}>💙 <span>Daily credits used — limit resets at midnight.</span></div>}
+      {!limitHit && dailyCount>0 && <div style={{ fontSize:12, color:'rgba(240,232,255,.18)', textAlign:'right', flexShrink:0 }}>{dailyCount} msgs today</div>}
+      {error && !limitHit && <div style={{ padding:'8px 14px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.15)', borderRadius:10, fontSize:13, color:'rgba(168,196,240,.5)', lineHeight:1.5, flexShrink:0, display:'flex', gap:6, alignItems:'center' }}>
+        <span style={{ opacity:.5 }}>◌</span> <span>Lazuli had trouble connecting — please try again.</span>
+      </div>}
 
       {/* GEL PC SHELL */}
       <div style={{ flex:1, position:'relative', background:'rgba(4,12,38,.88)', backdropFilter:'blur(32px) saturate(1.4)', borderRadius:24, border:'1.5px solid rgba(42,92,173,.4)', boxShadow:'0 0 60px rgba(42,92,173,.12),0 20px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(168,196,240,.1)', overflow:'hidden', display:'flex', flexDirection:'column', minHeight:0 }}>
