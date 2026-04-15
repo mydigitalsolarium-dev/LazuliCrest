@@ -70,9 +70,10 @@ const NAV_GROUPS = [
   {
     label: 'Overview',
     items: [
-      { id:'dashboard',   icon:'⌂',   label:'Home'         },
-      { id:'updates',     icon:'✦',   label:"What's New"   },
-      { id:'profile',     icon:'◈',   label:'My Profile'   },
+      { id:'dashboard',   icon:'⌂',   label:'Home'              },
+      { id:'updates',     icon:'✦',   label:"What's New"        },
+      { id:'profile',     icon:'◈',   label:'My Profile'        },
+      { id:'library',     icon:'📚',  label:'Lazuli Library'    },
     ]
   },
   {
@@ -101,7 +102,6 @@ const NAV_GROUPS = [
     items: [
       { id:'diary',       icon:'▣',   label:'My Diary'          },
       { id:'documents',   icon:'▤',   label:'Documents'         },
-      { id:'library',     icon:'📚',  label:'Research Library'  },
       { id:'pets',        icon:'🐾',  label:'Pet Health'        },
     ]
   },
@@ -5225,7 +5225,7 @@ function ResearchLibrary() {
   if (!isDark) {
     return (
       <div>
-        <PH emoji="📚" title="Research Library" sub="Curated medical research — click any card to open the source" />
+        <PH emoji="📚" title="Lazuli Library" sub="Curated medical research — click any card to open the source" />
         {LIBRARY_SHELVES.map(shelf => (
           <div key={shelf.id} style={{ marginBottom: 32 }}>
             <div style={{
@@ -5265,7 +5265,7 @@ function ResearchLibrary() {
   // ── Dark mode: 3D skeuomorphic bookshelf ──────────────────────
   return (
     <div style={{ perspective: '1200px' }}>
-      <PH emoji="📚" title="Research Library" sub="Gilded research — pull a spine to open the source" />
+      <PH emoji="📚" title="Lazuli Library" sub="Gilded research — pull a spine to open the source" />
 
       <div style={{ position: 'relative', marginBottom: 8 }}>
         {LIBRARY_SHELVES.map((shelf) => (
