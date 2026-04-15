@@ -27,6 +27,7 @@ const BLANK_DATA = {
   appointments:  [],
   documents:     [],
   diary:         [],
+  pets:          [],
   diet:          [],
   dietLogs:      [],
   bodyMap:       [],
@@ -101,6 +102,7 @@ const NAV_GROUPS = [
       { id:'diary',       icon:'▣',   label:'My Diary'          },
       { id:'documents',   icon:'▤',   label:'Documents'         },
       { id:'library',     icon:'📚',  label:'Research Library'  },
+      { id:'pets',        icon:'🐾',  label:'Pet Health'        },
     ]
   },
   {
@@ -568,6 +570,7 @@ export default function App() {
             {tab==='updates'      && <Updates/>}
             {tab==='gym'          && <LazuliGym data={data}/>}
             {tab==='library'      && <ResearchLibrary/>}
+            {tab==='pets'         && <PetHealthLog data={data} upd={upd}/>}
           </div>
         </main>
       </div>
@@ -656,6 +659,76 @@ const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
   delay: i * 8,
   dur: 45 + (i % 5) * 8,
 }));
+
+// ─── DNA Helix Background ─────────────────────────────────────
+function DNAHelixBg() {
+  const instances = [
+    { left:'5%',  top:'8%',  scale:0.75, opacity:0.11, duration:28, delay:0,  anim:'dnaFloat',    c1:'#2A5CAD', c2:'#D4A843' },
+    { left:'87%', top:'4%',  scale:1.05, opacity:0.09, duration:36, delay:6,  anim:'dnaFloatAlt', c1:'#D4A843', c2:'#7B5EA7' },
+    { left:'46%', top:'62%', scale:0.6,  opacity:0.08, duration:24, delay:13, anim:'dnaFloat',    c1:'#27AE60', c2:'#2A5CAD' },
+    { left:'70%', top:'32%', scale:0.88, opacity:0.10, duration:40, delay:3,  anim:'dnaFloatAlt', c1:'#7B5EA7', c2:'#D4A843' },
+    { left:'16%', top:'72%', scale:0.65, opacity:0.09, duration:32, delay:18, anim:'dnaFloat',    c1:'#2A5CAD', c2:'#27AE60' },
+    { left:'58%', top:'20%', scale:0.50, opacity:0.07, duration:20, delay:9,  anim:'dnaFloatAlt', c1:'#D4A843', c2:'#2A5CAD' },
+  ];
+
+  // Generate double-helix SVG path data (3 turns, 220px tall)
+  const STEPS = 52, H = 220, AMP = 12, CX = 16;
+  const pts1 = [], pts2 = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const t = i / STEPS;
+    const y = t * H;
+    pts1.push(`${(CX + AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1)},${y.toFixed(1)}`);
+    pts2.push(`${(CX - AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1)},${y.toFixed(1)}`);
+  }
+  const d1 = 'M ' + pts1.join(' L ');
+  const d2 = 'M ' + pts2.join(' L ');
+
+  // Rungs every quarter-turn
+  const rungEvery = Math.floor(STEPS / 12);
+  const rungs = [];
+  for (let i = 0; i <= STEPS; i += rungEvery) {
+    const t = i / STEPS, y = (t * H).toFixed(1);
+    rungs.push({
+      x1: (CX + AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1),
+      x2: (CX - AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1),
+      y,
+    });
+  }
+
+  return (
+    <div style={{ position:'absolute', inset:0, pointerEvents:'none', overflow:'hidden', zIndex:0 }}>
+      {instances.map((inst, i) => (
+        <div key={i} style={{
+          position:'absolute', left:inst.left, top:inst.top,
+          animation:`${inst.anim} ${inst.duration}s ease-in-out ${inst.delay}s infinite`,
+          opacity: inst.opacity,
+        }}>
+          <div style={{ transform:`scale(${inst.scale})`, transformOrigin:'top center' }}>
+            <svg width="32" height={H} viewBox={`0 0 32 ${H}`} style={{ overflow:'visible' }}>
+              <defs>
+                <filter id={`hglow${i}`} x="-60%" y="-60%" width="220%" height="220%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <path d={d1} fill="none" stroke={inst.c1} strokeWidth="1.8" strokeLinecap="round" filter={`url(#hglow${i})`}/>
+              <path d={d2} fill="none" stroke={inst.c2} strokeWidth="1.8" strokeLinecap="round" filter={`url(#hglow${i})`}/>
+              {rungs.map((r, ri) => (
+                <g key={ri}>
+                  <line x1={r.x1} y1={r.y} x2={r.x2} y2={r.y}
+                    stroke={ri % 2 === 0 ? inst.c1 : inst.c2}
+                    strokeWidth="1.4" strokeOpacity="0.75" strokeLinecap="round"/>
+                  <circle cx={r.x1} cy={r.y} r="2.4" fill={inst.c1} opacity="0.9"/>
+                  <circle cx={r.x2} cy={r.y} r="2.4" fill={inst.c2} opacity="0.9"/>
+                </g>
+              ))}
+            </svg>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function BiometricPulseCanvas() {
   const cvRef = useRef(null);
@@ -823,6 +896,8 @@ function AnimatedBackground() {
           textShadow:'0 0 20px rgba(201,168,76,.2)',
         }}>{q.text}</div>
       ))}
+      {/* DNA helix strands floating in background */}
+      <DNAHelixBg/>
       {/* Biometric pulse — living lapis & gold particles reacting to mouse */}
       <BiometricPulseCanvas/>
       {/* (constellations removed) */}
@@ -1169,9 +1244,9 @@ const GLOBAL_CSS = `
   input[type=checkbox]{accent-color:var(--lz-lapis);width:18px;height:18px;cursor:pointer}
   .pill{display:inline-flex;align-items:center;gap:6px;background:var(--lz-pill-bg);border:1.5px solid var(--lz-pill-border);color:var(--lz-pill-text);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
-  /* ── Sidebar — Mahogany & Gold ───────────────────────────── */
-  .sidebar{width:272px;background:linear-gradient(175deg,#3D1F16 0%,#2A150F 35%,#1e0e08 65%,#3D1F16 100%);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:2px solid #D4A843;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:10px 0 30px rgba(0,0,0,.6),inset -1px 0 0 rgba(212,168,67,.15),inset 0 0 60px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.22,1,.36,1),background .3s}
-  [data-theme='light'] .sidebar{background:linear-gradient(175deg,#f0e8e0 0%,#e8ddd5 35%,#ddd0c5 65%,#f0e8e0 100%);border-right:2px solid #8B6500;box-shadow:10px 0 20px rgba(0,0,0,.12),inset -1px 0 0 rgba(139,101,0,.2)}
+  /* ── Sidebar — Deep Lapis & Gold ────────────────────────── */
+  .sidebar{width:272px;background:linear-gradient(175deg,#0C0A1E 0%,#080616 35%,#05040F 65%,#0C0A1E 100%);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:2px solid #D4A843;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:10px 0 30px rgba(0,0,0,.7),inset -1px 0 0 rgba(212,168,67,.18),inset 0 0 80px rgba(42,92,173,.04);transition:transform .3s cubic-bezier(.22,1,.36,1),background .3s}
+  [data-theme='light'] .sidebar{background:linear-gradient(175deg,#EEE9F8 0%,#E6E0F5 35%,#DDD7EF 65%,#EEE9F8 100%);border-right:2px solid #8B6500;box-shadow:10px 0 20px rgba(0,0,0,.12),inset -1px 0 0 rgba(139,101,0,.2)}
   .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,228,208,.85);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
   .nav-item:hover{background:rgba(212,168,67,.1);color:#F0E4D0;border-color:rgba(212,168,67,.22)}
   .nav-item.active{background:linear-gradient(135deg,rgba(212,168,67,.18),rgba(212,168,67,.08));color:#D4A843;border:1.5px solid rgba(212,168,67,.45);font-weight:700;box-shadow:inset 0 0 12px rgba(212,168,67,.08)}
@@ -1351,6 +1426,18 @@ const GLOBAL_CSS = `
   @keyframes zenFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
   @keyframes accHoverBounce{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.08);}}
   @keyframes scanLine{0%{top:0%;opacity:1;}80%{top:100%;opacity:.8;}100%{top:100%;opacity:0;}}
+  @keyframes dnaFloat{
+    0%  {transform:translateY(0) rotate(0deg);}
+    30% {transform:translateY(-12px) rotate(1.5deg);}
+    60% {transform:translateY(-6px) rotate(-1deg);}
+    100%{transform:translateY(0) rotate(0deg);}
+  }
+  @keyframes dnaFloatAlt{
+    0%  {transform:translateY(-8px) rotate(-1deg);}
+    40% {transform:translateY(10px) rotate(2deg);}
+    70% {transform:translateY(2px) rotate(-0.5deg);}
+    100%{transform:translateY(-8px) rotate(-1deg);}
+  }
 
   @media(max-width:768px){
     .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translate3d(-100%,0,0);z-index:200;overflow-y:scroll;-webkit-overflow-scrolling:touch;width:82vw;max-width:300px;will-change:transform;backface-visibility:hidden}
@@ -2988,15 +3075,28 @@ function Diary({ data, upd }) {
           </div>
         </div>
         {/* Right — leather cover */}
-        <div style={pageStyle('right',true)}>
-          <div style={{ height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', gap:14, padding:32 }}>
-            <div style={{ fontSize:52 }}>📔</div>
-            <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:19, color:'#C9A84C', textAlign:'center', letterSpacing:2, textShadow:'0 0 20px rgba(201,168,76,.35)' }}>My Health Diary</div>
-            <div style={{ width:50, height:2, background:'rgba(201,168,76,.5)', borderRadius:2 }}/>
-            <div style={{ fontSize:13, color:'rgba(201,168,76,.55)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", textAlign:'center', lineHeight:1.6 }}>A sacred record of my healing journey</div>
-            <button onClick={()=>flipTo('write')} style={{ marginTop:16, padding:'10px 26px', borderRadius:12, background:'rgba(201,168,76,.15)', border:'1.5px solid rgba(201,168,76,.4)', color:'#C9A84C', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+        <div style={{ ...pageStyle('right',true), position:'relative', overflow:'hidden' }}>
+          {/* Leather grain texture overlay */}
+          <div style={{ position:'absolute', inset:0, backgroundImage:['linear-gradient(135deg,rgba(255,255,255,.055) 25%,transparent 25%)','linear-gradient(225deg,rgba(255,255,255,.055) 25%,transparent 25%)','linear-gradient(315deg,rgba(255,255,255,.055) 25%,transparent 25%)','linear-gradient(45deg,rgba(255,255,255,.055) 25%,transparent 25%)'].join(','), backgroundSize:'4px 4px', pointerEvents:'none' }}/>
+          {/* Cover sheen */}
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(145deg,rgba(255,255,255,.10) 0%,transparent 45%,rgba(0,0,0,.25) 100%)', pointerEvents:'none' }}/>
+          {/* Decorative border inset */}
+          <div style={{ position:'absolute', inset:12, border:'1.5px solid rgba(201,168,76,.22)', borderRadius:6, boxShadow:'inset 0 0 18px rgba(0,0,0,.3)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', inset:18, border:'1px solid rgba(201,168,76,.12)', borderRadius:4, pointerEvents:'none' }}/>
+          {/* Content */}
+          <div style={{ position:'relative', zIndex:1, height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', gap:14, padding:40 }}>
+            <div style={{ fontSize:46, filter:'drop-shadow(0 2px 8px rgba(0,0,0,.5))' }}>📔</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:17, color:'#E8C85A', textAlign:'center', letterSpacing:2.5, textShadow:'0 0 24px rgba(201,168,76,.5),0 2px 4px rgba(0,0,0,.6)', lineHeight:1.4 }}>My Health Diary</div>
+            <div style={{ width:60, height:2, background:'linear-gradient(90deg,transparent,#D4A843,transparent)', borderRadius:2 }}/>
+            <div style={{ fontSize:12, color:'rgba(201,168,76,.5)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", textAlign:'center', lineHeight:1.7 }}>A sacred record<br/>of my healing journey</div>
+            <button onClick={()=>flipTo('write')} style={{ marginTop:18, padding:'10px 26px', borderRadius:10, background:'linear-gradient(135deg,#C9A84C 0%,#E8CD72 48%,#A07820 100%)', border:'1.5px solid #D4A843', color:'#1a0a2e', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", letterSpacing:'0.5px', boxShadow:'0 3px 12px rgba(201,168,76,.5),inset 0 1px 0 rgba(255,255,255,.35)', textShadow:'0 1px 0 rgba(255,255,255,.25)' }}>
               + New Entry
             </button>
+            {entries.length > 0 && (
+              <div style={{ fontSize:11, color:'rgba(201,168,76,.45)', fontFamily:"'DM Sans',sans-serif", marginTop:4 }}>
+                {entries.length} {entries.length===1?'entry':'entries'} — click to read ←
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -5011,7 +5111,7 @@ const LIBRARY_SHELVES = [
     color: '#0A1A4A',
     accent: '#2A5CAD',
     glow: 'rgba(42,92,173,.55)',
-    spine: 'linear-gradient(160deg,#0d1f56 0%,#162d7a 40%,#0a1a4a 100%)',
+    spine: 'linear-gradient(160deg,#1B2E82 0%,#2640A8 40%,#142270 100%)',
     books: [
       { title:'ADHD in Adults', subtitle:'Understanding & Strategies', url:'https://chadd.org/for-adults/overview/', emoji:'🧠' },
       { title:'Autism Speaks', subtitle:'Autism Information Hub', url:'https://www.autismspeaks.org/', emoji:'🌐' },
@@ -5026,7 +5126,7 @@ const LIBRARY_SHELVES = [
     color: '#2E0E0E',
     accent: '#C0392B',
     glow: 'rgba(180,40,40,.5)',
-    spine: 'linear-gradient(160deg,#3d1010 0%,#5a1818 40%,#2e0e0e 100%)',
+    spine: 'linear-gradient(160deg,#6E1616 0%,#8C1E1E 40%,#561010 100%)',
     books: [
       { title:'Lupus Foundation', subtitle:'Patient Education & Resources', url:'https://www.lupus.org/resources/what-is-lupus', emoji:'🦋' },
       { title:'ME/CFS', subtitle:'CDC Patient Information', url:'https://www.cdc.gov/me-cfs/index.html', emoji:'⚕️' },
@@ -5041,7 +5141,7 @@ const LIBRARY_SHELVES = [
     color: '#0A2E12',
     accent: '#27AE60',
     glow: 'rgba(39,174,96,.5)',
-    spine: 'linear-gradient(160deg,#0d3a18 0%,#165224 40%,#0a2e12 100%)',
+    spine: 'linear-gradient(160deg,#0F5222 0%,#186C2E 40%,#0B3E1A 100%)',
     books: [
       { title:'PCOS & Hormones', subtitle:'Hormone Health Network', url:'https://www.hormone.org/diseases-and-conditions/polycystic-ovary-syndrome', emoji:'🌸' },
       { title:'Gut-Brain Axis', subtitle:'NIH Research Overview', url:'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4367209/', emoji:'🦠' },
@@ -5056,7 +5156,7 @@ const LIBRARY_SHELVES = [
     color: '#1A1200',
     accent: '#C9A84C',
     glow: 'rgba(201,168,76,.55)',
-    spine: 'linear-gradient(160deg,#2a1e00 0%,#3d2c00 40%,#1a1200 100%)',
+    spine: 'linear-gradient(160deg,#483400 0%,#604600 40%,#382800 100%)',
     books: [
       { title:'Night Blindness', subtitle:'NIH Eye Institute Guide', url:'https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases/night-blindness', emoji:'🌙' },
       { title:'Blue Light & Sleep', subtitle:'Harvard Health Research', url:'https://www.health.harvard.edu/staying-healthy/blue-light-has-a-dark-side', emoji:'💡' },
@@ -5267,11 +5367,11 @@ function ResearchLibrary() {
                       <div style={{
                         position: 'absolute', inset: 0,
                         background: shelf.spine,
-                        borderRadius: '4px 8px 8px 4px',
-                        borderLeft: '4px solid rgba(0,0,0,.5)',
-                        border: `1px solid rgba(212,168,67,.2)`,
-                        borderLeftWidth: 4,
-                        borderLeftColor: 'rgba(0,0,0,.5)',
+                        borderRadius: '3px 7px 7px 3px',
+                        border: `1px solid rgba(212,168,67,.14)`,
+                        borderLeftWidth: 7,
+                        borderLeftColor: 'rgba(0,0,0,.72)',
+                        borderRightColor: 'rgba(255,255,255,.06)',
                         boxShadow: isHovered
                           ? `4px 0 28px rgba(0,0,0,.55), -1px 0 0 rgba(255,255,255,.07), 0 0 24px ${shelf.glow}`
                           : `2px 0 10px rgba(0,0,0,.45), -1px 0 0 rgba(255,255,255,.04)`,
@@ -5295,15 +5395,26 @@ function ResearchLibrary() {
                           background: `linear-gradient(90deg,${shelf.accent},rgba(212,168,67,.7),${shelf.accent})`,
                           opacity: .75,
                         }} />
-                        {/* Velvet texture */}
+                        {/* Velvet cross-hatch nap — fine woven fibre pattern */}
                         <div style={{
                           position: 'absolute', inset: 0, pointerEvents: 'none',
-                          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.018) 2px, rgba(255,255,255,.018) 4px)',
+                          backgroundImage: [
+                            'linear-gradient(135deg,rgba(255,255,255,.07) 25%,transparent 25%)',
+                            'linear-gradient(225deg,rgba(255,255,255,.07) 25%,transparent 25%)',
+                            'linear-gradient(315deg,rgba(255,255,255,.07) 25%,transparent 25%)',
+                            'linear-gradient(45deg,rgba(255,255,255,.07) 25%,transparent 25%)',
+                          ].join(','),
+                          backgroundSize: '3px 3px',
                         }} />
-                        {/* Faux 3D thickness shadow */}
+                        {/* Velvet directional sheen — pile catches light from top-left */}
                         <div style={{
                           position: 'absolute', inset: 0, pointerEvents: 'none',
-                          boxShadow: 'inset -3px 0 8px rgba(0,0,0,.35), inset 2px 0 4px rgba(255,255,255,.04)',
+                          background: 'linear-gradient(145deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.04) 38%,rgba(0,0,0,.28) 100%)',
+                        }} />
+                        {/* Spine depth shadow */}
+                        <div style={{
+                          position: 'absolute', inset: 0, pointerEvents: 'none',
+                          boxShadow: 'inset -4px 0 10px rgba(0,0,0,.45),inset 3px 0 6px rgba(255,255,255,.06),inset 0 4px 8px rgba(0,0,0,.3)',
                         }} />
 
                         {/* Emoji */}
@@ -5660,6 +5771,201 @@ function ResearchLibrary() {
               to   { transform: scale(1)   rotateY(0deg);   opacity: 1; }
             }
           `}</style>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Pet Health Log ───────────────────────────────────────────
+const PET_SPECIES = ['🐶 Dog','🐱 Cat','🐰 Rabbit','🐹 Hamster','🐦 Bird','🐠 Fish','🦎 Reptile','🐾 Other'];
+const PET_LOG_TYPES = ['Vet Visit','Vaccination','Medication','Grooming','Weight Check','Dental','Behaviour Note','Diet Change','Exercise','General Note'];
+
+function PetHealthLog({ data, upd }) {
+  const pets   = data.pets   || [];
+  const [view, setView]         = useState('list');   // 'list' | 'add-pet' | petId string
+  const [logView, setLogView]   = useState('list');   // 'list' | 'add'
+  const [newPet, setNewPet]     = useState({ name:'', species:PET_SPECIES[0], breed:'', dob:'', weight:'', notes:'' });
+  const [newLog, setNewLog]     = useState({ type:PET_LOG_TYPES[0], date:'', notes:'', vet:'', nextDue:'' });
+
+  const activePet = pets.find(p => p.id === view);
+
+  const savePet = () => {
+    if (!newPet.name.trim()) return;
+    const pet = { ...newPet, id: Date.now().toString(), logs: [] };
+    upd('pets', [...pets, pet]);
+    setNewPet({ name:'', species:PET_SPECIES[0], breed:'', dob:'', weight:'', notes:'' });
+    setView(pet.id);
+  };
+
+  const saveLog = () => {
+    if (!newLog.notes.trim() && !newLog.type) return;
+    const entry = { ...newLog, id: Date.now().toString(), date: newLog.date || new Date().toISOString().slice(0,10) };
+    const updated = pets.map(p => p.id === view ? { ...p, logs: [...(p.logs||[]), entry] } : p);
+    upd('pets', updated);
+    setNewLog({ type:PET_LOG_TYPES[0], date:'', notes:'', vet:'', nextDue:'' });
+    setLogView('list');
+  };
+
+  const deletePet = (id) => {
+    if (!window.confirm('Remove this pet?')) return;
+    upd('pets', pets.filter(p => p.id !== id));
+    setView('list');
+  };
+
+  const deleteLog = (petId, logId) => {
+    const updated = pets.map(p => p.id === petId ? { ...p, logs:(p.logs||[]).filter(l=>l.id!==logId) } : p);
+    upd('pets', updated);
+  };
+
+  // ── Pet list ──────────────────────────────────────────────────
+  if (view === 'list') return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <PH emoji="🐾" title="Pet Health Log" sub="Track vet visits, medications, vaccinations & milestones for your fur family"/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:14 }}>
+        {pets.map(p=>(
+          <button key={p.id} onClick={()=>setView(p.id)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, padding:'20px 14px', borderRadius:16, background:'rgba(10,17,40,.85)', border:'1.5px solid rgba(212,168,67,.2)', cursor:'pointer', transition:'all .18s' }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(212,168,67,.55)';e.currentTarget.style.transform='translateY(-3px)';}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(212,168,67,.2)';e.currentTarget.style.transform='';}}>
+            <div style={{ fontSize:38 }}>{p.species.split(' ')[0]}</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:17, fontWeight:700, color:'rgba(240,232,255,.95)' }}>{p.name}</div>
+            {p.breed && <div style={{ fontSize:11, color:'rgba(168,196,240,.55)' }}>{p.breed}</div>}
+            <div style={{ fontSize:11, color:'rgba(212,168,67,.5)', marginTop:2 }}>{(p.logs||[]).length} log{(p.logs||[]).length!==1?'s':''}</div>
+          </button>
+        ))}
+        {/* Add pet card */}
+        <button onClick={()=>setView('add-pet')} style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, padding:'20px 14px', borderRadius:16, background:'rgba(201,168,76,.04)', border:'1.5px dashed rgba(201,168,76,.25)', cursor:'pointer', minHeight:140 }}
+          onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(201,168,76,.5)'}
+          onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(201,168,76,.25)'}>
+          <div style={{ fontSize:30, opacity:.5 }}>➕</div>
+          <div style={{ fontSize:13, color:'rgba(201,168,76,.6)', fontFamily:"'DM Sans',sans-serif" }}>Add a pet</div>
+        </button>
+      </div>
+      {pets.length === 0 && (
+        <div style={{ textAlign:'center', padding:'32px 0', color:'rgba(168,196,240,.35)', fontSize:14, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
+          No fur family members yet. Add your first pet above! 🐾
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Add pet form ──────────────────────────────────────────────
+  if (view === 'add-pet') return (
+    <div style={{ display:'flex', flexDirection:'column', gap:18, maxWidth:520 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <button onClick={()=>setView('list')} style={{ background:'none', border:'none', color:'rgba(212,168,67,.6)', fontSize:18, cursor:'pointer' }}>←</button>
+        <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, fontWeight:700, color:'#C9A84C' }}>Add a Pet</span>
+      </div>
+      <div className="glass-card" style={{ padding:24, display:'flex', flexDirection:'column', gap:14 }}>
+        <label style={{ fontSize:12, color:'rgba(168,196,240,.6)', letterSpacing:1, textTransform:'uppercase' }}>Pet Name *</label>
+        <input className="field" value={newPet.name} onChange={e=>setNewPet(p=>({...p,name:e.target.value}))} placeholder="e.g. Biscuit" style={{ marginBottom:4 }}/>
+        <label style={{ fontSize:12, color:'rgba(168,196,240,.6)', letterSpacing:1, textTransform:'uppercase' }}>Species</label>
+        <select className="field" value={newPet.species} onChange={e=>setNewPet(p=>({...p,species:e.target.value}))}>
+          {PET_SPECIES.map(s=><option key={s} value={s} style={{background:'#0D0820'}}>{s}</option>)}
+        </select>
+        <label style={{ fontSize:12, color:'rgba(168,196,240,.6)', letterSpacing:1, textTransform:'uppercase' }}>Breed / Type</label>
+        <input className="field" value={newPet.breed} onChange={e=>setNewPet(p=>({...p,breed:e.target.value}))} placeholder="e.g. Golden Retriever"/>
+        <div style={{ display:'flex', gap:12 }}>
+          <div style={{ flex:1 }}>
+            <label style={{ fontSize:12, color:'rgba(168,196,240,.6)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:6 }}>Date of Birth</label>
+            <input type="date" className="field" value={newPet.dob} onChange={e=>setNewPet(p=>({...p,dob:e.target.value}))}/>
+          </div>
+          <div style={{ flex:1 }}>
+            <label style={{ fontSize:12, color:'rgba(168,196,240,.6)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:6 }}>Weight</label>
+            <input className="field" value={newPet.weight} onChange={e=>setNewPet(p=>({...p,weight:e.target.value}))} placeholder="e.g. 8.5 kg"/>
+          </div>
+        </div>
+        <label style={{ fontSize:12, color:'rgba(168,196,240,.6)', letterSpacing:1, textTransform:'uppercase' }}>Notes</label>
+        <textarea className="field" value={newPet.notes} onChange={e=>setNewPet(p=>({...p,notes:e.target.value}))} placeholder="Allergies, special needs, microchip ID…" rows={3} style={{ resize:'none' }}/>
+        <button onClick={savePet} style={{ padding:'12px', borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8CD72,#A07820)', border:'none', color:'#1a0a2e', fontSize:15, fontWeight:700, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", boxShadow:'0 4px 16px rgba(201,168,76,.4)' }}>
+          Save Pet 🐾
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── Pet detail + log ──────────────────────────────────────────
+  if (!activePet) { setView('list'); return null; }
+  const logs = activePet.logs || [];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+        <button onClick={()=>setView('list')} style={{ background:'none', border:'none', color:'rgba(212,168,67,.6)', fontSize:18, cursor:'pointer' }}>←</button>
+        <div style={{ fontSize:36 }}>{activePet.species.split(' ')[0]}</div>
+        <div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:700, color:'rgba(240,232,255,.95)' }}>{activePet.name}</div>
+          {(activePet.breed||activePet.dob) && <div style={{ fontSize:12, color:'rgba(168,196,240,.5)' }}>{[activePet.breed, activePet.dob && `b. ${activePet.dob}`, activePet.weight && `${activePet.weight}`].filter(Boolean).join(' · ')}</div>}
+        </div>
+        <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
+          <button onClick={()=>{setLogView('add');}} style={{ padding:'8px 16px', borderRadius:10, background:'linear-gradient(135deg,#C9A84C,#E8CD72,#A07820)', border:'none', color:'#1a0a2e', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", boxShadow:'0 2px 10px rgba(201,168,76,.4)' }}>+ Add Log</button>
+          <button onClick={()=>deletePet(activePet.id)} style={{ padding:'8px 12px', borderRadius:10, border:'1px solid rgba(255,80,80,.25)', background:'transparent', color:'rgba(255,100,100,.5)', fontSize:12, cursor:'pointer' }}>Remove</button>
+        </div>
+      </div>
+
+      {activePet.notes && (
+        <div style={{ padding:'12px 16px', borderRadius:12, background:'rgba(201,168,76,.06)', border:'1px solid rgba(201,168,76,.15)', color:'rgba(240,232,255,.6)', fontSize:13, fontStyle:'italic' }}>
+          {activePet.notes}
+        </div>
+      )}
+
+      {/* Add log form */}
+      {logView === 'add' && (
+        <div className="glass-card" style={{ padding:22, display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, fontWeight:700, color:'#C9A84C', marginBottom:4 }}>New Health Log</div>
+          <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+            <div style={{ flex:'1 1 160px' }}>
+              <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:5 }}>Type</label>
+              <select className="field" value={newLog.type} onChange={e=>setNewLog(p=>({...p,type:e.target.value}))}>
+                {PET_LOG_TYPES.map(t=><option key={t} value={t} style={{background:'#0D0820'}}>{t}</option>)}
+              </select>
+            </div>
+            <div style={{ flex:'1 1 140px' }}>
+              <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:5 }}>Date</label>
+              <input type="date" className="field" value={newLog.date} onChange={e=>setNewLog(p=>({...p,date:e.target.value}))}/>
+            </div>
+            <div style={{ flex:'1 1 140px' }}>
+              <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:5 }}>Next Due</label>
+              <input type="date" className="field" value={newLog.nextDue} onChange={e=>setNewLog(p=>({...p,nextDue:e.target.value}))}/>
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:5 }}>Vet / Clinic</label>
+            <input className="field" value={newLog.vet} onChange={e=>setNewLog(p=>({...p,vet:e.target.value}))} placeholder="Veterinarian or clinic name"/>
+          </div>
+          <div>
+            <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:5 }}>Notes *</label>
+            <textarea className="field" value={newLog.notes} onChange={e=>setNewLog(p=>({...p,notes:e.target.value}))} placeholder="What happened, medications given, observations…" rows={3} style={{ resize:'none' }}/>
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={saveLog} style={{ flex:1, padding:'10px', borderRadius:10, background:'linear-gradient(135deg,#C9A84C,#E8CD72,#A07820)', border:'none', color:'#1a0a2e', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif" }}>Save Log</button>
+            <button onClick={()=>setLogView('list')} style={{ padding:'10px 16px', borderRadius:10, border:'1px solid rgba(168,196,240,.2)', background:'transparent', color:'rgba(168,196,240,.5)', fontSize:13, cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Log timeline */}
+      {logs.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'28px 0', color:'rgba(168,196,240,.3)', fontSize:13, fontStyle:'italic' }}>No health logs yet — tap "+ Add Log" to start tracking.</div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {[...logs].reverse().map(log=>(
+            <div key={log.id} className="glass-card" style={{ padding:'14px 18px', display:'flex', gap:14, alignItems:'flex-start' }}>
+              <div style={{ fontSize:22, flexShrink:0, marginTop:2 }}>
+                {log.type==='Vet Visit'?'🩺':log.type==='Vaccination'?'💉':log.type==='Medication'?'💊':log.type==='Grooming'?'✂️':log.type==='Weight Check'?'⚖️':log.type==='Dental'?'🦷':log.type==='Diet Change'?'🍽️':log.type==='Exercise'?'🏃':'📋'}
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:4 }}>
+                  <span style={{ fontSize:13, fontWeight:700, color:'rgba(240,232,255,.9)', fontFamily:"'DM Sans',sans-serif" }}>{log.type}</span>
+                  {log.date && <span style={{ fontSize:11, color:'rgba(168,196,240,.45)' }}>{new Date(log.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>}
+                  {log.vet && <span style={{ fontSize:11, color:'rgba(201,168,76,.45)' }}>· {log.vet}</span>}
+                  {log.nextDue && <span style={{ fontSize:11, color:'rgba(39,174,96,.55)' }}>· Due: {new Date(log.nextDue+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>}
+                </div>
+                <div style={{ fontSize:13, color:'rgba(168,196,240,.7)', lineHeight:1.6 }}>{log.notes}</div>
+              </div>
+              <button onClick={()=>deleteLog(activePet.id, log.id)} style={{ background:'none', border:'none', color:'rgba(255,100,100,.35)', fontSize:14, cursor:'pointer', flexShrink:0 }}>✕</button>
+            </div>
+          ))}
         </div>
       )}
     </div>
