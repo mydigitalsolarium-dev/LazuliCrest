@@ -700,12 +700,10 @@ function BiometricPulseCanvas() {
     window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('touchmove', onMove, { passive: true });
 
-    let frame = 0;
     const draw = () => {
       rafRef.current = requestAnimationFrame(draw);
       if (!W || !H) return;
       ctx.clearRect(0, 0, W, H);
-      frame++;
       const mx = mouseRef.current.x, my = mouseRef.current.y;
 
       for (const p of pts) {
