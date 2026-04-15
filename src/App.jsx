@@ -91,7 +91,7 @@ const NAV_GROUPS = [
     items: [
       { id:'hydration',   icon:'◇',   label:'Hydration'         },
       { id:'diet',        icon:'✿',   label:'AI Nutrition'      },
-      { id:'gym',         icon:'△',   label:'Lazuli Gym'        },
+      { id:'gym',         icon:'△',   label:'Adaptive Gym'      },
       { id:'mindfulness', icon:'🌟',   label:'Activities'        },
     ]
   },
@@ -105,7 +105,7 @@ const NAV_GROUPS = [
   {
     label: 'AI & Settings',
     items: [
-      { id:'advocate',    icon:'◈',   label:'Lazuli AI'         },
+      { id:'advocate',    icon:'◈',   label:'AI Advocate'       },
       { id:'share',       icon:'◫',   label:'Share & Privacy'   },
     ]
   },
@@ -142,16 +142,16 @@ const CHRONIC_ILLNESS_QUOTES = [
 ];
 
 const ROTATING_QUOTES = [
-  { quote: 'You are worthy of compassionate care.', author: 'Lazuli Crest' },
-  { quote: 'Every doctor visit where you speak up is an act of bravery.', author: 'Lazuli Crest' },
-  { quote: 'Your experience is the most important data in the room.', author: 'Lazuli Crest' },
-  { quote: 'Being chronically ill and still showing up is extraordinary.', author: 'Lazuli Crest' },
-  { quote: 'You deserve a medical team that listens — and we will help you find one.', author: 'Lazuli Crest' },
-  { quote: 'Pain that persists deserves answers, not dismissal.', author: 'Lazuli Crest' },
-  { quote: 'Your health story matters. Document it. Protect it. Share it on your terms.', author: 'Lazuli Crest' },
-  { quote: 'In ancient Egypt, lapis lazuli was ground to heal the spirit. Your healing matters too.', author: 'Lazuli Crest' },
-  { quote: 'Strength is asking for help when your body cannot do it alone.', author: 'Lazuli Crest' },
-  { quote: 'You are the expert on your own body. Always.', author: 'Lazuli Crest' },
+  { quote: 'You are worthy of compassionate care.', author: '✦' },
+  { quote: 'Every doctor visit where you speak up is an act of bravery.', author: '✦' },
+  { quote: 'Your experience is the most important data in the room.', author: '✦' },
+  { quote: 'Being chronically ill and still showing up is extraordinary.', author: '✦' },
+  { quote: 'You deserve a medical team that listens — and we will help you find one.', author: '✦' },
+  { quote: 'Pain that persists deserves answers, not dismissal.', author: '✦' },
+  { quote: 'Your health story matters. Document it. Protect it. Share it on your terms.', author: '✦' },
+  { quote: 'In ancient Egypt, lapis lazuli was ground to heal the spirit. Your healing matters too.', author: '✦' },
+  { quote: 'Strength is asking for help when your body cannot do it alone.', author: '✦' },
+  { quote: 'You are the expert on your own body. Always.', author: '✦' },
 ];
 
 const LAZULI_FACTS = [
@@ -233,7 +233,7 @@ function SharedView({ shareId }) {
           </button>
         </div>
         <div style={{ marginTop:20, fontSize:12, color:'rgba(240,232,255,.2)' }}>
-          This link only works with the correct PIN · Data is read-only · Powered by Lazuli Crest
+          This link only works with the correct PIN · Data is read-only · Your data is safe
         </div>
       </div>
     </div>
@@ -247,7 +247,7 @@ function SharedView({ shareId }) {
         <div style={{ fontSize:48, marginBottom:16 }}>🔗</div>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:20, color:'#C9A84C', marginBottom:12 }}>Link Unavailable</div>
         <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', lineHeight:1.7, marginBottom:24 }}>{errMsg}</div>
-        <a href="/" style={{ padding:'12px 28px', borderRadius:12, background:'rgba(42,92,173,.2)', border:'1px solid rgba(42,92,173,.4)', color:'#A8C4F0', fontSize:14, textDecoration:'none', fontFamily:"'DM Sans',sans-serif" }}>← Go to Lazuli Crest</a>
+        <a href="/" style={{ padding:'12px 28px', borderRadius:12, background:'rgba(42,92,173,.2)', border:'1px solid rgba(42,92,173,.4)', color:'#A8C4F0', fontSize:14, textDecoration:'none', fontFamily:"'DM Sans',sans-serif" }}>← Go to App</a>
       </div>
     </div>
   );
@@ -377,7 +377,7 @@ function SharedView({ shareId }) {
 
         {/* Footer */}
         <div style={{ textAlign:'center', paddingTop:32, borderTop:'1px solid rgba(42,92,173,.15)', marginTop:12 }}>
-          <div style={{ fontSize:12, color:'rgba(240,232,255,.2)', marginBottom:12 }}>This record was shared securely via Lazuli Crest · Read-only view</div>
+          <div style={{ fontSize:12, color:'rgba(240,232,255,.2)', marginBottom:12 }}>This record was shared securely · Read-only view</div>
           <a href="/" style={{ padding:'10px 24px', borderRadius:12, background:'linear-gradient(135deg,rgba(42,92,173,.2),rgba(201,168,76,.1))', border:'1px solid rgba(201,168,76,.3)', color:'#C9A84C', fontSize:13, fontWeight:700, textDecoration:'none', fontFamily:"'DM Sans',sans-serif" }}>Create Your Own Free Account →</a>
         </div>
       </div>
@@ -389,7 +389,7 @@ function SharedView({ shareId }) {
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
-  componentDidCatch(error, info) { console.error('[Lazuli Crest] Runtime error:', error, info); }
+  componentDidCatch(error, info) { console.error('[App] Runtime error:', error, info); }
   render() {
     if (this.state.hasError) {
       return (
@@ -397,7 +397,7 @@ class ErrorBoundary extends React.Component {
           <div style={{ textAlign:'center', maxWidth:480 }}>
             <div style={{ fontSize:48, marginBottom:16 }}>💜</div>
             <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', marginBottom:12 }}>Something went wrong</div>
-            <div style={{ fontSize:14, color:'rgba(240,232,255,.5)', marginBottom:24, lineHeight:1.6 }}>Lazuli Crest encountered an unexpected error. Your data is safe — please refresh to continue.</div>
+            <div style={{ fontSize:14, color:'rgba(240,232,255,.5)', marginBottom:24, lineHeight:1.6 }}>An unexpected error occurred. Your data is safe — please refresh to continue.</div>
             <button onClick={()=>window.location.reload()} style={{ padding:'12px 28px', borderRadius:12, background:'linear-gradient(135deg,rgba(42,92,173,.3),rgba(201,168,76,.15))', border:'1.5px solid rgba(201,168,76,.4)', color:'#C9A84C', fontSize:15, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
               Refresh App
             </button>
@@ -615,13 +615,13 @@ const TAB_HINTS = {
   appointments: { icon:'📅', title:'Appointments',             body:'Save upcoming doctor visits with dates, locations, and notes. Never lose track of what to ask or what was said.' },
   diary:        { icon:'📖', title:'Health Diary',             body:'Write freely about your day, symptoms, emotions, or anything on your mind. Your private wellness journal.' },
   mindfulness:  { icon:'🌿', title:'Mindfulness & Rest',       body:'Breathing exercises, a worry stone, zen garden, soundscapes, and guided imagery — all here to help you reset.' },
-  diet:         { icon:'🥗', title:'Lazuli Kitchen',           body:'Log meals, set a diet protocol, and let Lazuli AI suggest recipes based on your mood or health profile. Use the scanner to find what you can make with what you have.' },
+  diet:         { icon:'🥗', title:'AI Nutrition',             body:'Log meals, set a diet protocol, and let the AI suggest recipes based on your mood or health profile. Use the scanner to find what you can make with what you have.' },
   documents:    { icon:'📁', title:'Documents',                body:'Upload and store lab results, prescriptions, imaging reports, and other medical files. Accessible whenever you need them.' },
-  advocate:     { icon:'💙', title:'Lazuli AI Advocate',       body:'Have a real conversation with your AI health companion. Ask questions, get support, and prepare for appointments.' },
-  profile:      { icon:'👤', title:'Your Profile',             body:'Set your name, diagnosis, care team, and preferences. Your profile helps Lazuli personalize everything for you.' },
+  advocate:     { icon:'💙', title:'AI Health Advocate',       body:'Have a real conversation with your AI health companion. Ask questions, get support, and prepare for appointments.' },
+  profile:      { icon:'👤', title:'Your Profile',             body:'Set your name, diagnosis, care team, and preferences. Your profile helps personalize everything for you.' },
   share:        { icon:'🔗', title:'Share Health Summary',     body:'Generate a secure, PIN-protected link to share your health snapshot with a doctor, caregiver, or loved one.' },
-  gym:          { icon:'🏋️', title:'Lazuli Gym',               body:'Gentle movement tracking designed for chronic illness. Log adaptive workouts and track energy vs. activity.' },
-  updates:      { icon:'✨', title:'What\'s New',               body:'See the latest features and updates added to Lazuli Crest.' },
+  gym:          { icon:'🏋️', title:'Adaptive Gym',             body:'Gentle movement tracking designed for chronic illness. Log adaptive workouts and track energy vs. activity.' },
+  updates:      { icon:'✨', title:'What\'s New',               body:'See the latest features and improvements added to the app.' },
 };
 
 function TabHint({ tab }) {
@@ -911,6 +911,62 @@ const GLOBAL_CSS = `
   [data-theme='light'] #lz-animated-bg{opacity:0 !important}
   /* app root theming */
   .lz-app-root{background:var(--lz-bg-root);color:var(--lz-text);transition:background .3s,color .3s}
+
+  /* ── Light Mode Legibility — override hardcoded dark-theme inline colors ── */
+  /* Cards: solid white, proper shadow */
+  [data-theme='light'] .glass-card,[data-theme='light'] .glass-card-static{
+    background:rgba(255,255,255,.98) !important;
+    border-color:rgba(26,58,122,.14) !important;
+    box-shadow:0 2px 20px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.9) !important;
+  }
+  [data-theme='light'] .stat-card{background:#fff !important;box-shadow:0 2px 12px rgba(0,0,0,.07) !important;}
+  /* Diary */
+  [data-theme='light'] .diary-book{background:#faf7f2 !important;border-color:rgba(26,58,122,.2) !important;}
+  /* Sidebar group labels */
+  [data-theme='light'] .nav-group-label{color:#6B6B8A !important}
+  /* Hamburger lines: dark in light mode */
+  [data-theme='light'] .hamburger span{background:#1A3A7A !important}
+  /* Progress bar tracks */
+  [data-theme='light'] [class*="progress-track"]{background:rgba(26,58,122,.1) !important;}
+  /* Danger button — stays red but darker */
+  [data-theme='light'] .btn-danger{background:rgba(200,30,30,.1) !important;border-color:rgba(200,30,30,.4) !important;color:#b91c1c !important;}
+  [data-theme='light'] .btn-danger:hover{background:#ef4444 !important;color:#fff !important;border-color:#ef4444 !important;}
+  /* Matriarch tag (subtle caps label) */
+  [data-theme='light'] .matriarch-tag{color:rgba(26,58,122,.45) !important;}
+  /* Scrollbar in light mode */
+  [data-theme='light'] ::-webkit-scrollbar-thumb{background:rgba(26,58,122,.25);}
+  /* Make sure any opaque dark backgrounds in cards become white */
+  [data-theme='light'] .glass-card [style*="background:rgba(8"],
+  [data-theme='light'] .glass-card-static [style*="background:rgba(8"],
+  [data-theme='light'] .glass-card [style*="background:rgba(22"],
+  [data-theme='light'] .glass-card-static [style*="background:rgba(22"]{
+    background:rgba(26,58,122,.05) !important;
+  }
+  /* Stat card label row (4th child = muted label text) */
+  [data-theme='light'] .stat-card>div:last-child{color:rgba(26,58,122,.55) !important;}
+  /* Guest banner */
+  [data-theme='light'] .guest-banner{background:rgba(26,58,122,.08) !important;border-color:rgba(26,58,122,.2) !important;}
+  [data-theme='light'] .guest-banner .guest-text{color:#1A3A7A !important;}
+  /* Pill */
+  [data-theme='light'] .pill{background:rgba(26,58,122,.1) !important;border-color:rgba(26,58,122,.25) !important;color:#1A3A7A !important;}
+  /* Auth card */
+  [data-theme='light'] .auth-input{background:rgba(26,58,122,.04) !important;border-color:rgba(26,58,122,.25) !important;color:#1A1A1A !important;}
+  [data-theme='light'] .auth-input::placeholder{color:#6B6B8A !important;}
+  /* Field */
+  [data-theme='light'] .field{background:rgba(26,58,122,.04) !important;border-color:rgba(26,58,122,.22) !important;color:#1A1A1A !important;}
+  [data-theme='light'] .field::placeholder{color:#6B6B8A !important;}
+  [data-theme='light'] select.field option{background:#F9F9F7 !important;color:#1A1A1A !important;}
+  /* Force inline light-lavender text to be legible on white */
+  [data-theme='light'] .page-inner div[style*="color:rgba(240"],
+  [data-theme='light'] .page-inner span[style*="color:rgba(240"],
+  [data-theme='light'] .page-inner p[style*="color:rgba(240"]{color:#3A3A5C !important;}
+  [data-theme='light'] .page-inner div[style*="color:rgba(168"],
+  [data-theme='light'] .page-inner span[style*="color:rgba(168"]{color:#4A4A6A !important;}
+  /* Chart / progress bar tracks */
+  [data-theme='light'] [style*="background:rgba(255,255,255,.06"]{background:rgba(26,58,122,.08) !important;}
+  [data-theme='light'] [style*="background:rgba(255,255,255,.05"]{background:rgba(26,58,122,.06) !important;}
+  [data-theme='light'] [style*="background:rgba(255,255,255,.04"]{background:rgba(26,58,122,.05) !important;}
+  [data-theme='light'] [style*="background:rgba(255,255,255,.03"]{background:rgba(26,58,122,.04) !important;}
 
   @keyframes fadeOut{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
@@ -1465,7 +1521,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
       <nav style={{ padding:'4px 8px', overflowY:'auto' }}>
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
-            <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.35)', textTransform:'uppercase', letterSpacing:1.8, padding:'10px 8px 4px', userSelect:'none' }}>{group.label}</div>
+            <div className="nav-group-label" style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.35)', textTransform:'uppercase', letterSpacing:1.8, padding:'10px 8px 4px', userSelect:'none' }}>{group.label}</div>
             {group.items.map(n => {
               const active = tab===n.id;
               return (
@@ -1503,7 +1559,7 @@ function KoiPond({ size = 90 }) {
   return (
     <div style={{ position:'relative', width:size, height:size, borderRadius:'50%',
       background:'radial-gradient(circle at 40% 35%, rgba(80,220,200,.45) 0%, rgba(20,110,160,.7) 45%, rgba(5,28,58,.9) 100%)',
-      boxShadow:`0 0 ${size*.22}px rgba(64,224,208,.5), 0 0 ${size*.44}px rgba(64,224,208,.18), inset 0 0 ${size*.14}px rgba(0,80,130,.6)`,
+      boxShadow:`0 0 ${size*.22}px rgba(64,224,208,.5),0 0 ${size*.44}px rgba(64,224,208,.18),inset 0 0 ${size*.14}px rgba(0,80,130,.6)`,
       overflow:'hidden', cursor:'grab', userSelect:'none', flexShrink:0
     }}>
       {/* center glow */}
@@ -1532,26 +1588,48 @@ function KoiPond({ size = 90 }) {
   );
 }
 
-// ─── Zen Garden ───────────────────────────────────────────────
+// ─── Zen Garden (Physics + Treasure Dig) ─────────────────────
 function ZenGarden() {
-  const canvasRef   = useRef(null);
-  const containerRef= useRef(null);
-  const audioCtxRef = useRef(null);
-  const lastPosRef  = useRef(null);
-  const isDrawRef   = useRef(false);
+  const sandRef      = useRef(null);   // opaque sand layer
+  const fxRef        = useRef(null);   // particle/sparkle overlay
+  const containerRef = useRef(null);
+  const audioCtxRef  = useRef(null);
+  const rafRef       = useRef(null);
+  const lastPosRef   = useRef(null);
+  const isDrawRef    = useRef(false);
+  const bezierBuf    = useRef([]);
+  const particlesRef = useRef([]);
+  const sparklesRef  = useRef([]);
 
-  const [sandColor, setSandColor] = useState('tan');
-  const [zenTool,   setZenTool]   = useState('rake');
-  const [items,     setItems]     = useState([]);
-  const [dragItem,  setDragItem]  = useState(null);
-  const [zenMuted,  setZenMuted]  = useState(false);
+  const [sandColor,    setSandColor]    = useState('tan');
+  const [zenTool,      setZenTool]      = useState('rake');
+  const [items,        setItems]        = useState([]);      // accessories
+  const [dragItem,     setDragItem]     = useState(null);
+  const [zenMuted,     setZenMuted]     = useState(false);
+  const [treasureMode, setTreasureMode] = useState(false);
+  const [treasures,    setTreasures]    = useState([]);
+  const [found,        setFound]        = useState([]);
 
   const PAL = {
-    tan:   { id:'tan',   label:'Sand ✦',    bg:'rgba(180,140,60,.13)',   line:'#C9A84C', light:'#EDD870', dark:'#8B6E28', border:'rgba(201,168,76,.28)',  tx:'#C9A84C' },
-    white: { id:'white', label:'White ✦',   bg:'rgba(200,195,185,.15)',  line:'#D8D4C8', light:'#F5F0E6', dark:'#A09C90', border:'rgba(210,205,195,.35)', tx:'#D8D4C8' },
-    blue:  { id:'blue',  label:'Blue ✦',    bg:'rgba(90,150,200,.12)',   line:'#7AB4D4', light:'#AADAF8', dark:'#4A84A8', border:'rgba(100,165,215,.3)',  tx:'#7AB4D4' },
-    pink:  { id:'pink',  label:'Sakura ✦',  bg:'rgba(200,130,160,.12)',  line:'#D4A0B8', light:'#F0C4D8', dark:'#A07090', border:'rgba(215,155,185,.3)',  tx:'#D4A0B8' },
+    tan:   { id:'tan',   label:'Sand ✦',   bg:'rgba(180,140,60,.13)',  line:'#C9A84C', light:'#EDD870', dark:'#8B6E28', border:'rgba(201,168,76,.28)', tx:'#C9A84C', nc:[201,168,76]  },
+    white: { id:'white', label:'White ✦',  bg:'rgba(200,195,185,.15)', line:'#D8D4C8', light:'#F5F0E6', dark:'#A09C90', border:'rgba(210,205,195,.35)',tx:'#D8D4C8', nc:[216,212,200] },
+    blue:  { id:'blue',  label:'Blue ✦',   bg:'rgba(90,150,200,.12)',  line:'#7AB4D4', light:'#AADAF8', dark:'#4A84A8', border:'rgba(100,165,215,.3)', tx:'#7AB4D4', nc:[120,180,212] },
+    pink:  { id:'pink',  label:'Sakura ✦', bg:'rgba(200,130,160,.12)', line:'#D4A0B8', light:'#F0C4D8', dark:'#A07090', border:'rgba(215,155,185,.3)', tx:'#D4A0B8', nc:[212,160,184] },
   };
+
+  const GEMS = [
+    { type:'diamond', name:'Diamond',   emoji:'💎', rarity:'legendary', hardness:5, glowColor:'rgba(200,240,255,.95)', rColor:'#E0F8FF' },
+    { type:'sapphire',name:'Sapphire',  emoji:'🩵', rarity:'rare',      hardness:4, glowColor:'rgba(42,92,173,.95)',   rColor:'#7AB4F0' },
+    { type:'ruby',    name:'Ruby',      emoji:'❤️', rarity:'rare',      hardness:3, glowColor:'rgba(220,50,50,.9)',    rColor:'#FF6B6B' },
+    { type:'emerald', name:'Emerald',   emoji:'💚', rarity:'uncommon',  hardness:2, glowColor:'rgba(50,180,80,.85)',   rColor:'#6EE7B7' },
+    { type:'amethyst',name:'Amethyst',  emoji:'🔮', rarity:'uncommon',  hardness:2, glowColor:'rgba(130,50,200,.85)', rColor:'#C084FC' },
+    { type:'coin',    name:'Gold Coin', emoji:'🪙', rarity:'common',    hardness:1, glowColor:'rgba(201,168,76,.8)',   rColor:'#C9A84C' },
+    { type:'fossil',  name:'Fossil',    emoji:'🦴', rarity:'common',    hardness:1, glowColor:'rgba(180,160,120,.7)', rColor:'#D4C090' },
+    { type:'shell',   name:'Sea Shell', emoji:'🐚', rarity:'common',    hardness:1, glowColor:'rgba(210,180,140,.7)', rColor:'#E8C090' },
+    { type:'wrapper', name:'Gum Wrapper',emoji:'🗑',rarity:'trash',     hardness:1, glowColor:'rgba(150,150,150,.5)', rColor:'#AAA'    },
+    { type:'bolt',    name:'Old Bolt',  emoji:'🔩', rarity:'trash',     hardness:1, glowColor:'rgba(140,140,140,.5)', rColor:'#999'    },
+  ];
+  const RARITY_BG = { legendary:'rgba(200,240,255,.12)', rare:'rgba(42,92,173,.12)', uncommon:'rgba(50,180,80,.1)', common:'rgba(201,168,76,.1)', trash:'rgba(150,150,150,.07)' };
 
   const CATALOG = [
     { id:'pagoda',  emoji:'🏯', label:'Pagoda',     sz:52, zi:10 },
@@ -1572,231 +1650,298 @@ function ZenGarden() {
     { id:'moon',    emoji:'🌕', label:'Moon',       sz:38, zi:6  },
   ];
 
-  /* ── canvas init ──────────────────────────────── */
-  const initCanvas = useCallback(() => {
-    const cv = canvasRef.current; if (!cv) return;
+  /* ── Noise sand texture ── */
+  const drawSandTexture = useCallback(() => {
+    const cv = sandRef.current; if (!cv) return;
     const ctx = cv.getContext('2d');
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    const p = PAL[sandColor];
-    ctx.strokeStyle = p.line + '20';
+    const dpr = window.devicePixelRatio || 1;
+    const W = cv.width / dpr, H = cv.height / dpr;
+    const p = PAL[sandColor]; const [nr,ng,nb] = p.nc;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = `rgba(${nr},${ng},${nb},0.2)`; ctx.fillRect(0,0,W,H);
+    // Organic grain lines
     ctx.lineWidth = 0.6;
-    for (let y = 18; y < cv.height; y += 18) {
-      ctx.beginPath();
-      ctx.moveTo(0, y + (Math.random()-.5)*1.5);
-      ctx.lineTo(cv.width, y + (Math.random()-.5)*1.5);
-      ctx.stroke();
+    for (let y=14; y<H; y+=14) {
+      const wv = Math.sin(y*0.08)*3;
+      ctx.strokeStyle = `rgba(${nr+40},${ng+35},${nb+20},${0.07+Math.sin(y*0.15)*0.03})`;
+      ctx.beginPath(); ctx.moveTo(0, y+wv);
+      ctx.quadraticCurveTo(W*0.5, y+wv+Math.sin(y*0.2)*2, W, y+wv*0.5); ctx.stroke();
+    }
+    // Grain dots
+    ctx.fillStyle = `rgba(${nr+20},${ng+18},${nb+8},0.3)`;
+    for (let i=0; i<W*H*0.003; i++) {
+      const gs=Math.random()*1.2+0.3;
+      ctx.beginPath(); ctx.arc(Math.random()*W, Math.random()*H, gs, 0, Math.PI*2); ctx.fill();
     }
   }, [sandColor]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { // size canvas on mount
-    const cv = canvasRef.current; if (!cv) return;
-    const dpr = window.devicePixelRatio || 1;
-    const rect = cv.getBoundingClientRect();
-    cv.width  = rect.width  * dpr;
-    cv.height = rect.height * dpr;
-    cv.getContext('2d').scale(dpr, dpr);
-    initCanvas();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  /* ── Particle emitters ── */
+  const emitSand = useCallback((x,y) => {
+    const p = PAL[sandColor];
+    for (let i=0;i<5;i++) {
+      const a=Math.random()*Math.PI*2, spd=Math.random()*2+0.8;
+      particlesRef.current.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-2,life:1,maxLife:0.22+Math.random()*0.28,r:1+Math.random()*2,color:p.light});
+    }
+  }, [sandColor]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { initCanvas(); }, [sandColor, initCanvas]);
+  const emitSparkle = useCallback((x,y,color) => {
+    for (let i=0;i<14;i++) {
+      const a=(Math.PI*2*i)/14, spd=1.5+Math.random()*3.5;
+      sparklesRef.current.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,life:1,maxLife:0.7+Math.random()*0.5,r:2+Math.random()*3.5,color});
+    }
+  }, []);
 
-  /* ── sand audio ───────────────────────────────── */
+  /* ── Sand ASMR ── */
   const sandSound = useCallback(() => {
     if (zenMuted) return;
     try {
-      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      const ac = audioCtxRef.current;
-      const len = Math.floor(ac.sampleRate * .05);
-      const buf = ac.createBuffer(1, len, ac.sampleRate);
-      const d = buf.getChannelData(0);
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext||window.webkitAudioContext)();
+      const ac=audioCtxRef.current;
+      const len=Math.floor(ac.sampleRate*0.042); const buf=ac.createBuffer(1,len,ac.sampleRate); const d=buf.getChannelData(0);
       for (let i=0;i<len;i++) d[i]=(Math.random()*2-1);
-      const src = ac.createBufferSource(); src.buffer=buf;
-      const lpf = ac.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=1100;
-      const g = ac.createGain(); g.gain.setValueAtTime(.055,ac.currentTime); g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.07);
+      const src=ac.createBufferSource(); src.buffer=buf;
+      const lpf=ac.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=1000;
+      const g=ac.createGain(); g.gain.setValueAtTime(.042,ac.currentTime); g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.07);
       src.connect(lpf); lpf.connect(g); g.connect(ac.destination); src.start();
     } catch {}
   }, [zenMuted]);
 
-  /* ── pointer helpers ──────────────────────────── */
-  const getP = (e, cv) => {
-    const r = cv.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const cx = e.touches ? e.touches[0].clientX : e.clientX;
-    const cy = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x:(cx-r.left)*dpr, y:(cy-r.top)*dpr, nx:cx-r.left, ny:cy-r.top };
-  };
-
-  /* ── drawing ──────────────────────────────────── */
+  /* ── Draw ── */
   const doDraw = useCallback((e) => {
-    const cv = canvasRef.current; if (!cv || !isDrawRef.current) return;
+    const cv=sandRef.current; if (!cv||!isDrawRef.current) return;
     e.preventDefault();
-    const pos = getP(e, cv);
-    const ctx = cv.getContext('2d');
-    const p   = PAL[sandColor];
-    const last= lastPosRef.current;
-    // directional brightness
-    let col = p.line;
-    if (last) {
-      const dir = (pos.nx - last.nx) + (pos.ny - last.ny);
-      col = dir > 2 ? p.light : dir < -2 ? p.dark : p.line;
-    }
+    const dpr=window.devicePixelRatio||1;
+    const rect=cv.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX, cy=e.touches?e.touches[0].clientY:e.clientY;
+    const x=(cx-rect.left)*dpr, y=(cy-rect.top)*dpr, nx=cx-rect.left, ny=cy-rect.top;
+    const ctx=cv.getContext('2d'); const p=PAL[sandColor]; const last=lastPosRef.current;
+    bezierBuf.current.push({x,y}); if(bezierBuf.current.length>3) bezierBuf.current.shift();
+    const sdir = last ? ((nx-last.nx)+(ny-last.ny))>0?1:-1 : 1;
+    const hlC = sdir>0?p.light:p.dark, shC = sdir>0?p.dark:p.light;
+    const p0 = last?{x:last.x,y:last.y}:{x,y}, p1={x,y};
     ctx.lineCap='round'; ctx.lineJoin='round';
+
     if (zenTool==='rake') {
-      const ang = last ? Math.atan2(pos.y-last.y, pos.x-last.x)+Math.PI/2 : Math.PI/2;
-      [-8,0,8].forEach(off=>{
+      const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x)+Math.PI/2;
+      [-8*dpr,0,8*dpr].forEach(off=>{
         const ox=Math.cos(ang)*off, oy=Math.sin(ang)*off;
-        ctx.beginPath(); ctx.strokeStyle=col+'CC'; ctx.lineWidth=1.6;
-        ctx.moveTo((last?last.x:pos.x)+ox, (last?last.y:pos.y)+oy);
-        ctx.lineTo(pos.x+ox, pos.y+oy); ctx.stroke();
+        if (treasureMode) {
+          ctx.globalCompositeOperation='destination-out'; ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=4*dpr;
+        } else {
+          ctx.globalCompositeOperation='source-over';
+          ctx.strokeStyle=p.line+'BB'; ctx.lineWidth=2*dpr;
+          ctx.beginPath(); ctx.moveTo(p0.x+ox,p0.y+oy); ctx.lineTo(p1.x+ox,p1.y+oy); ctx.stroke();
+          const lx=Math.cos(ang)*1.5*dpr, ly=Math.sin(ang)*1.5*dpr;
+          ctx.strokeStyle=hlC+'88'; ctx.lineWidth=dpr;
+          ctx.beginPath(); ctx.moveTo(p0.x+ox+lx,p0.y+oy+ly); ctx.lineTo(p1.x+ox+lx,p1.y+oy+ly); ctx.stroke();
+          ctx.strokeStyle=shC+'66'; ctx.lineWidth=dpr;
+          ctx.beginPath(); ctx.moveTo(p0.x+ox-lx,p0.y+oy-ly); ctx.lineTo(p1.x+ox-lx,p1.y+oy-ly); ctx.stroke();
+        }
+        ctx.beginPath(); ctx.moveTo(p0.x+ox,p0.y+oy); ctx.lineTo(p1.x+ox,p1.y+oy); ctx.stroke();
       });
-      sandSound();
-    } else if (zenTool==='wave' && last) {
-      const mx=(pos.x+last.x)/2, dpr=window.devicePixelRatio||1;
-      ctx.beginPath(); ctx.strokeStyle=col+'BB'; ctx.lineWidth=1.5;
-      ctx.moveTo(last.x,last.y); ctx.quadraticCurveTo(mx,last.y-14*dpr,pos.x,pos.y); ctx.stroke();
-      sandSound();
+      ctx.globalCompositeOperation='source-over';
+      emitSand(p1.x,p1.y); sandSound();
+    } else if (zenTool==='wave'&&last) {
+      ctx.globalCompositeOperation=treasureMode?'destination-out':'source-over';
+      ctx.strokeStyle=treasureMode?'rgba(255,255,255,.65)':p.line+'AA'; ctx.lineWidth=2*dpr;
+      const mx=(p0.x+p1.x)/2;
+      ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.quadraticCurveTo(mx,p0.y-14*dpr,p1.x,p1.y); ctx.stroke();
+      ctx.globalCompositeOperation='source-over'; emitSand(p1.x,p1.y); sandSound();
     } else if (zenTool==='smooth') {
-      const dpr=window.devicePixelRatio||1;
-      const g=ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,22*dpr);
+      ctx.globalCompositeOperation='source-over';
+      const g=ctx.createRadialGradient(p1.x,p1.y,0,p1.x,p1.y,22*dpr);
       g.addColorStop(0,p.bg.replace(/[\d.]+\)$/,'.55)')); g.addColorStop(1,'transparent');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(pos.x,pos.y,22*dpr,0,Math.PI*2); ctx.fill();
-    } else if (zenTool==='draw' && last) {
-      ctx.beginPath(); ctx.strokeStyle=col+'CC'; ctx.lineWidth=1.8;
-      ctx.moveTo(last.x,last.y); ctx.lineTo(pos.x,pos.y); ctx.stroke();
-      sandSound();
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p1.x,p1.y,22*dpr,0,Math.PI*2); ctx.fill();
+    } else if (zenTool==='draw'&&last) {
+      ctx.globalCompositeOperation=treasureMode?'destination-out':'source-over';
+      ctx.strokeStyle=treasureMode?'rgba(255,255,255,.65)':p.line+'BB'; ctx.lineWidth=2.5*dpr;
+      ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke();
+      ctx.globalCompositeOperation='source-over'; emitSand(p1.x,p1.y); sandSound();
     }
-    lastPosRef.current = pos;
-  }, [sandColor, zenTool, sandSound]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const startDraw = (e) => { isDrawRef.current=true; lastPosRef.current=null; doDraw(e); };
-  const stopDraw  = ()  => { isDrawRef.current=false; lastPosRef.current=null; };
+    // Treasure collision
+    if (treasureMode) {
+      setTreasures(prev=>{
+        let changed=false;
+        const next=prev.map(t=>{
+          if (t.revealed) return t;
+          const tx=t.x/100*rect.width, ty=t.y/100*rect.height;
+          if (Math.hypot(nx-tx,ny-ty)<40) {
+            const np=(t.passCount||0)+0.2;
+            if (np>=t.hardness) {
+              changed=true;
+              const gem=GEMS.find(g=>g.type===t.gemType);
+              if (gem) { emitSparkle(tx*dpr,ty*dpr,gem.glowColor); try{navigator.vibrate?.([60,30,100]);}catch{} setFound(f=>[...f,{uid:t.uid,type:t.gemType,name:gem.name,emoji:gem.emoji,rarity:gem.rarity}]); }
+              return {...t,passCount:np,revealed:true};
+            }
+            changed=true; return {...t,passCount:np};
+          }
+          return t;
+        });
+        return changed?next:prev;
+      });
+    }
+    lastPosRef.current={x,y,nx,ny};
+  }, [sandColor,zenTool,treasureMode,emitSand,emitSparkle,sandSound]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── accessory drag ───────────────────────────── */
-  const accDown = (e, uid) => {
-    e.stopPropagation();
-    const cr = containerRef.current; if (!cr) return;
-    const r = cr.getBoundingClientRect();
-    const cx=e.touches?e.touches[0].clientX:e.clientX;
-    const cy=e.touches?e.touches[0].clientY:e.clientY;
-    const it=items.find(i=>i.uid===uid); if (!it) return;
-    setDragItem({ uid, sx:cx-(it.x/100*r.width), sy:cy-(it.y/100*r.height) });
-  };
-  const accMove = (e) => {
-    if (!dragItem) return;
-    const cr=containerRef.current; if (!cr) return;
-    const r=cr.getBoundingClientRect();
-    const cx=e.touches?e.touches[0].clientX:e.clientX;
-    const cy=e.touches?e.touches[0].clientY:e.clientY;
-    setItems(prev=>prev.map(i=>i.uid===dragItem.uid
-      ? {...i, x:Math.min(95,Math.max(5,((cx-dragItem.sx)/r.width)*100)), y:Math.min(95,Math.max(5,((cy-dragItem.sy)/r.height)*100))}
-      : i));
-  };
-  const accUp = () => setDragItem(null);
+  /* ── Canvas init ── */
+  const initCanvas = useCallback(()=>{
+    const cv=sandRef.current; if (!cv) return;
+    cv.getContext('2d').clearRect(0,0,cv.width,cv.height); drawSandTexture();
+    const fx=fxRef.current; if(fx) fx.getContext('2d').clearRect(0,0,fx.width,fx.height);
+    particlesRef.current=[]; sparklesRef.current=[];
+  },[drawSandTexture]);
 
-  const addAcc = (acc) => {
-    setItems(prev=>[...prev, { uid:`${acc.id}-${Date.now()}`, accId:acc.id, x:20+Math.random()*60, y:20+Math.random()*60 }]);
-  };
+  const sizeCV = useCallback(cv=>{
+    if(!cv) return;
+    const dpr=window.devicePixelRatio||1, r=cv.getBoundingClientRect();
+    cv.width=r.width*dpr; cv.height=r.height*dpr; cv.getContext('2d').scale(dpr,dpr);
+  },[]);
 
-  const clearSand = () => {
-    const cv=canvasRef.current; if (!cv) return;
-    cv.getContext('2d').clearRect(0,0,cv.width,cv.height); initCanvas();
-  };
+  useEffect(()=>{ const s=sandRef.current,f=fxRef.current; if(!s||!f) return; sizeCV(s); sizeCV(f); drawSandTexture(); },[]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(()=>{ initCanvas(); },[sandColor,initCanvas]);
 
-  const pal = PAL[sandColor];
+  /* ── RAF animation loop (particles + sparkles) ── */
+  useEffect(()=>{
+    let lt=0;
+    const loop=(t)=>{
+      rafRef.current=requestAnimationFrame(loop);
+      const dt=Math.min((t-lt)/1000,.05); lt=t;
+      const fx=fxRef.current; if(!fx) return;
+      const ctx=fx.getContext('2d'); const dpr=window.devicePixelRatio||1;
+      ctx.clearRect(0,0,fx.width,fx.height);
+      const tick=(arr,grav)=>arr.filter(p=>{
+        p.life-=dt/p.maxLife; if(p.life<=0) return false;
+        p.x+=p.vx*dpr*dt*60; p.y+=p.vy*dpr*dt*60; if(grav) p.vy+=3*dt;
+        ctx.save(); ctx.globalAlpha=Math.max(0,p.life*.85); ctx.fillStyle=p.color;
+        ctx.shadowColor=p.color; ctx.shadowBlur=p.r*2;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r*dpr,0,Math.PI*2); ctx.fill(); ctx.restore(); return true;
+      });
+      particlesRef.current=tick(particlesRef.current,true);
+      sparklesRef.current=tick(sparklesRef.current,false);
+    };
+    rafRef.current=requestAnimationFrame(loop);
+    return()=>{ if(rafRef.current) cancelAnimationFrame(rafRef.current); };
+  },[]);
+
+  /* ── Treasure init ── */
+  const initTreasures = useCallback(()=>{
+    const dist=[{type:'diamond',c:1},{type:'sapphire',c:1},{type:'ruby',c:1},{type:'emerald',c:2},{type:'amethyst',c:1},{type:'coin',c:3},{type:'fossil',c:2},{type:'shell',c:2},{type:'wrapper',c:2},{type:'bolt',c:2}];
+    const arr=[]; dist.forEach(({type,c})=>{ const g=GEMS.find(x=>x.type===type); for(let i=0;i<c;i++) arr.push({uid:`${type}-${Date.now()}-${i}`,gemType:type,hardness:g?.hardness||1,x:8+Math.random()*84,y:8+Math.random()*84,passCount:0,revealed:false}); });
+    setTreasures(arr); setFound([]);
+  },[]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ── Accessory drag ── */
+  const accDown=(e,uid)=>{ e.stopPropagation(); const cr=containerRef.current; if(!cr) return; const r=cr.getBoundingClientRect(); const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY; const it=items.find(i=>i.uid===uid); if(!it) return; setDragItem({uid,sx:cx-(it.x/100*r.width),sy:cy-(it.y/100*r.height)}); };
+  const accMove=(e)=>{ if(!dragItem) return; const cr=containerRef.current; if(!cr) return; const r=cr.getBoundingClientRect(); const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY; setItems(prev=>prev.map(i=>i.uid===dragItem.uid?{...i,x:Math.min(95,Math.max(5,((cx-dragItem.sx)/r.width)*100)),y:Math.min(95,Math.max(5,((cy-dragItem.sy)/r.height)*100))}:i)); };
+  const accUp=()=>setDragItem(null);
+  const addAcc=(acc)=>setItems(prev=>[...prev,{uid:`${acc.id}-${Date.now()}`,accId:acc.id,x:20+Math.random()*60,y:20+Math.random()*60}]);
+
+  const pal=PAL[sandColor];
+  const foundGroups={};
+  found.forEach(f=>{ if(!foundGroups[f.type]) foundGroups[f.type]={count:0,...f}; foundGroups[f.type].count++; });
+  const rarityOrd={legendary:5,rare:4,uncommon:3,common:2,trash:1};
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:14, width:'100%', maxWidth:700, margin:'0 auto', animation:'zenFadeIn .4s ease' }}>
-      {/* Title */}
+    <div style={{ display:'flex',flexDirection:'column',gap:14,width:'100%',maxWidth:700,margin:'0 auto',animation:'zenFadeIn .4s ease' }}>
       <div style={{ textAlign:'center' }}>
-        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, color:'rgba(240,232,255,.85)', letterSpacing:1.5 }}>石庭 Zen Garden</div>
-        <div style={{ fontSize:13, color:'rgba(240,232,255,.35)', marginTop:3, fontStyle:'italic' }}>Rake the sand. Find stillness.</div>
+        <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:26,color:'rgba(240,232,255,.85)',letterSpacing:1.5 }}>石庭 Zen Garden</div>
+        <div style={{ fontSize:13,color:'rgba(240,232,255,.35)',marginTop:3,fontStyle:'italic' }}>{treasureMode?'⛏ Drag the rake to unearth hidden treasures':'Rake the sand. Find stillness.'}</div>
       </div>
 
-      {/* Controls row */}
-      <div style={{ display:'flex', flexWrap:'wrap', gap:8, justifyContent:'center', alignItems:'center' }}>
-        {/* Sand colors */}
-        {Object.values(PAL).map(p=>(
-          <button key={p.id} onClick={()=>setSandColor(p.id)} style={{ padding:'5px 14px', borderRadius:20, border:`1.5px solid ${sandColor===p.id?p.tx:'rgba(255,255,255,.1)'}`, background:sandColor===p.id?p.bg:'transparent', color:sandColor===p.id?p.tx:'rgba(240,232,255,.38)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>{p.label}</button>
-        ))}
-        <div style={{ width:1, height:22, background:'rgba(255,255,255,.1)' }}/>
-        {/* Tools */}
-        {[{id:'rake',label:'🪡 Rake'},{id:'wave',label:'〰 Wave'},{id:'smooth',label:'☁ Smooth'},{id:'draw',label:'✏ Draw'}].map(t=>(
-          <button key={t.id} onClick={()=>setZenTool(t.id)} style={{ padding:'5px 14px', borderRadius:20, border:`1.5px solid ${zenTool===t.id?pal.tx:'rgba(255,255,255,.1)'}`, background:zenTool===t.id?pal.bg:'transparent', color:zenTool===t.id?pal.tx:'rgba(240,232,255,.38)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>{t.label}</button>
-        ))}
-      </div>
-
-      {/* Garden canvas area */}
-      <div
-        ref={containerRef}
-        style={{ position:'relative', width:'100%', height:320, borderRadius:20, overflow:'hidden', border:`1.5px solid ${pal.border}`, background:pal.bg, cursor:dragItem?'grabbing':'crosshair', touchAction:'none', userSelect:'none' }}
-        onMouseDown={e=>{ if (!dragItem) startDraw(e); }}
-        onMouseMove={e=>{ doDraw(e); accMove(e); }}
-        onMouseUp={()=>{ stopDraw(); accUp(); }}
-        onMouseLeave={()=>{ stopDraw(); accUp(); }}
-        onTouchStart={e=>{ if (!dragItem) startDraw(e); }}
-        onTouchMove={e=>{ doDraw(e); accMove(e); }}
-        onTouchEnd={()=>{ stopDraw(); accUp(); }}
-      >
-        <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%' }}/>
-
-        {/* Placed accessories */}
-        {items.map(it=>{
-          const acc=CATALOG.find(a=>a.id===it.accId); if(!acc) return null;
-          return (
-            <div key={it.uid}
-              style={{ position:'absolute', left:`${it.x}%`, top:`${it.y}%`, transform:'translate(-50%,-50%)', zIndex:acc.zi||8, cursor:dragItem?.uid===it.uid?'grabbing':'grab', touchAction:'none' }}
-              onMouseDown={e=>accDown(e,it.uid)} onTouchStart={e=>accDown(e,it.uid)}
-            >
-              {acc.special==='koi'
-                ? <KoiPond size={acc.sz}/>
-                : <div style={{ position:'relative', display:'inline-block' }}>
-                    <span style={{ fontSize:acc.sz*.65, lineHeight:1, filter:'drop-shadow(0 2px 8px rgba(0,0,0,.45))' }}>{acc.emoji}</span>
-                    <button
-                      onClick={e=>{e.stopPropagation();setItems(p=>p.filter(i=>i.uid!==it.uid));}}
-                      style={{ position:'absolute',top:-7,right:-7,width:16,height:16,borderRadius:'50%',background:'rgba(180,40,40,.8)',border:'none',color:'#fff',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s',lineHeight:1 }}
-                      onMouseEnter={e=>e.currentTarget.style.opacity='1'}
-                      onMouseLeave={e=>e.currentTarget.style.opacity='0'}
-                    >×</button>
-                  </div>
-              }
-            </div>
-          );
-        })}
-
-        {items.length===0 && (
-          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
-            <span style={{ fontSize:15, color:`${pal.tx}28`, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Drag to rake · Add accessories below</span>
-          </div>
-        )}
-      </div>
-
-      {/* Accessory catalog */}
-      <div style={{ background:'rgba(255,255,255,.03)', borderRadius:16, padding:'12px 14px', border:'1px solid rgba(255,255,255,.07)' }}>
-        <div style={{ fontSize:12, color:'rgba(240,232,255,.38)', marginBottom:9, fontFamily:"'Cormorant Garamond',serif", letterSpacing:.8 }}>Garden accessories — tap to place, drag to move</div>
-        <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
-          {CATALOG.map(acc=>(
-            <button key={acc.id} onClick={()=>addAcc(acc)}
-              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'7px 11px', borderRadius:12, border:'1px solid rgba(255,255,255,.08)', background:'rgba(255,255,255,.04)', cursor:'pointer', color:'rgba(240,232,255,.65)', fontSize:11, fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}
-              onMouseEnter={e=>{e.currentTarget.style.border=`1px solid ${pal.tx}44`;e.currentTarget.style.background=pal.bg;}}
-              onMouseLeave={e=>{e.currentTarget.style.border='1px solid rgba(255,255,255,.08)';e.currentTarget.style.background='rgba(255,255,255,.04)';}}
-            >
-              {acc.special==='koi'
-                ? <div style={{ width:24,height:24,borderRadius:'50%',background:'radial-gradient(circle, #40E0D0 0%, #1A6B8A 55%, #0A2040 100%)',boxShadow:'0 0 7px rgba(64,224,208,.5)' }}/>
-                : <span style={{ fontSize:20 }}>{acc.emoji}</span>
-              }
-              <span>{acc.label}</span>
-            </button>
-          ))}
+      {/* Controls */}
+      <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',alignItems:'center' }}>
+        <div style={{ display:'flex',borderRadius:22,overflow:'hidden',border:`1.5px solid ${treasureMode?'rgba(201,168,76,.45)':'rgba(255,255,255,.1)'}`,background:'rgba(255,255,255,.03)' }}>
+          <button onClick={()=>{setTreasureMode(false);initCanvas();}} style={{ padding:'6px 16px',background:!treasureMode?pal.bg:'transparent',color:!treasureMode?pal.tx:'rgba(240,232,255,.38)',border:'none',fontSize:12,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",transition:'all .18s' }}>🌿 Zen</button>
+          <button onClick={()=>{setTreasureMode(true);initCanvas();initTreasures();}} style={{ padding:'6px 16px',background:treasureMode?'rgba(201,168,76,.15)':'transparent',color:treasureMode?'#C9A84C':'rgba(240,232,255,.38)',border:'none',fontSize:12,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",transition:'all .18s' }}>⛏ Treasure Dig</button>
         </div>
+        {Object.values(PAL).map(p=>(<button key={p.id} onClick={()=>setSandColor(p.id)} style={{ padding:'5px 13px',borderRadius:20,border:`1.5px solid ${sandColor===p.id?p.tx:'rgba(255,255,255,.1)'}`,background:sandColor===p.id?p.bg:'transparent',color:sandColor===p.id?p.tx:'rgba(240,232,255,.38)',fontSize:12,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",transition:'all .18s' }}>{p.label}</button>))}
+        <div style={{ width:1,height:22,background:'rgba(255,255,255,.1)' }}/>
+        {[{id:'rake',label:'🪡 Rake'},{id:'wave',label:'〰 Wave'},{id:'smooth',label:'☁ Smooth'},{id:'draw',label:'✏ Draw'}].map(t=>(<button key={t.id} onClick={()=>setZenTool(t.id)} style={{ padding:'5px 13px',borderRadius:20,border:`1.5px solid ${zenTool===t.id?pal.tx:'rgba(255,255,255,.1)'}`,background:zenTool===t.id?pal.bg:'transparent',color:zenTool===t.id?pal.tx:'rgba(240,232,255,.38)',fontSize:12,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",transition:'all .18s' }}>{t.label}</button>))}
       </div>
 
-      {/* Footer controls */}
-      <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
-        <button className="btn btn-ghost" onClick={clearSand} style={{ fontSize:15 }}>🧹 Clear Sand</button>
-        <button className="btn btn-ghost" onClick={()=>setItems([])} style={{ fontSize:15 }}>🗑 Remove All</button>
-        <button onClick={()=>setZenMuted(m=>!m)} style={{ fontSize:13, color:'rgba(240,232,255,.35)', background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:20, padding:'5px 14px', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
-          {zenMuted?'🔇 Sounds off':'🔊 Sand sounds'}
-        </button>
+      {/* Garden area */}
+      <div ref={containerRef}
+        style={{ position:'relative',width:'100%',height:320,borderRadius:20,overflow:'hidden',
+          border:`3px solid ${treasureMode?'rgba(139,90,43,.7)':'rgba(60,40,15,.55)'}`,
+          background:treasureMode?'linear-gradient(160deg,rgba(18,8,2,.97),rgba(12,5,1,.99))':pal.bg,
+          cursor:dragItem?'grabbing':'crosshair',touchAction:'none',userSelect:'none',
+          boxShadow:treasureMode?'inset 0 8px 32px rgba(0,0,0,.85),0 8px 40px rgba(0,0,0,.7)':`inset 0 4px 20px rgba(0,0,0,.35),0 4px 24px rgba(0,0,0,.4)` }}
+        onMouseDown={e=>{ if(!dragItem){isDrawRef.current=true;lastPosRef.current=null;bezierBuf.current=[];doDraw(e);}}}
+        onMouseMove={e=>{ if(isDrawRef.current) doDraw(e); accMove(e); }}
+        onMouseUp={()=>{isDrawRef.current=false;lastPosRef.current=null;accUp();}}
+        onMouseLeave={()=>{isDrawRef.current=false;lastPosRef.current=null;accUp();}}
+        onTouchStart={e=>{ if(!dragItem){isDrawRef.current=true;lastPosRef.current=null;bezierBuf.current=[];doDraw(e);}}}
+        onTouchMove={e=>{ if(isDrawRef.current) doDraw(e); accMove(e); }}
+        onTouchEnd={()=>{isDrawRef.current=false;lastPosRef.current=null;accUp();}}
+      >
+        {treasureMode && <div style={{ position:'absolute',inset:0,boxShadow:'inset 0 10px 40px rgba(0,0,0,.8)',zIndex:50,pointerEvents:'none',borderRadius:16 }}/>}
+        {/* Hidden treasures */}
+        {treasureMode && treasures.map(t=>{ const gem=GEMS.find(g=>g.type===t.gemType); if(!gem||(!t.revealed&&t.passCount<0.1)) return null; const op=t.revealed?1:Math.min(1,(t.passCount/t.hardness)*0.7); return (
+          <div key={t.uid} style={{ position:'absolute',left:`${t.x}%`,top:`${t.y}%`,transform:'translate(-50%,-50%)',zIndex:2,pointerEvents:'none',opacity:op,filter:t.revealed?`drop-shadow(0 0 10px ${gem.glowColor})`:'blur(2px)',animation:t.revealed?'pulseGlow 2s ease-in-out infinite':'none',transition:'opacity .4s,filter .4s',textAlign:'center' }}>
+            <div style={{ fontSize:28,lineHeight:1 }}>{gem.emoji}</div>
+            {t.revealed&&<div style={{ fontSize:9,color:gem.rColor,fontWeight:700,fontFamily:"'DM Sans',sans-serif",marginTop:1,whiteSpace:'nowrap',textShadow:`0 0 8px ${gem.glowColor}` }}>{gem.name.toUpperCase()}</div>}
+          </div>
+        );})}
+        {/* Sand canvas */}
+        <canvas ref={sandRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',zIndex:3 }}/>
+        {/* FX canvas */}
+        <canvas ref={fxRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',zIndex:4,pointerEvents:'none' }}/>
+        {/* Accessories */}
+        {items.map(it=>{ const acc=CATALOG.find(a=>a.id===it.accId); if(!acc) return null; return (
+          <div key={it.uid} style={{ position:'absolute',left:`${it.x}%`,top:`${it.y}%`,transform:'translate(-50%,-50%)',zIndex:acc.zi||8,cursor:dragItem?.uid===it.uid?'grabbing':'grab',touchAction:'none' }} onMouseDown={e=>accDown(e,it.uid)} onTouchStart={e=>accDown(e,it.uid)}>
+            {acc.special==='koi'?<KoiPond size={acc.sz}/>
+              :<div style={{ position:'relative',display:'inline-block' }}>
+                <span style={{ fontSize:acc.sz*.65,lineHeight:1,filter:'drop-shadow(0 2px 8px rgba(0,0,0,.5))' }}>{acc.emoji}</span>
+                <button onClick={e=>{e.stopPropagation();setItems(p=>p.filter(i=>i.uid!==it.uid));}} style={{ position:'absolute',top:-7,right:-7,width:16,height:16,borderRadius:'50%',background:'rgba(180,40,40,.8)',border:'none',color:'#fff',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s',lineHeight:1 }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>×</button>
+              </div>}
+          </div>
+        );})}
+        {items.length===0&&!treasureMode&&(<div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none',zIndex:5 }}><span style={{ fontSize:15,color:`${pal.tx}28`,fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic' }}>Drag to rake · Add accessories below</span></div>)}
+        {treasureMode&&found.length===0&&(<div style={{ position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:10,pointerEvents:'none' }}><span style={{ fontSize:13,color:'rgba(201,168,76,.5)',fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic' }}>Drag the rake to unearth hidden treasures…</span></div>)}
+      </div>
+
+      {/* Excavation log */}
+      {treasureMode&&(
+        <div style={{ background:'rgba(18,10,2,.96)',border:'1.5px solid rgba(139,90,43,.45)',borderRadius:16,padding:'14px 18px' }}>
+          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10 }}>
+            <div style={{ fontFamily:"'Cinzel',serif",fontSize:14,color:'#C9A84C',letterSpacing:.8 }}>⛏ Excavation Log — {found.length} found</div>
+            <button onClick={()=>{initCanvas();initTreasures();}} className="btn btn-ghost" style={{ fontSize:12,padding:'5px 12px' }}>🔄 New Dig</button>
+          </div>
+          {found.length===0?<div style={{ fontSize:14,color:'rgba(201,168,76,.4)',fontStyle:'italic' }}>Nothing yet… dig deeper!</div>
+            :<div style={{ display:'flex',flexWrap:'wrap',gap:8 }}>
+              {Object.values(foundGroups).sort((a,b)=>(rarityOrd[b.rarity]||0)-(rarityOrd[a.rarity]||0)).map((f,i)=>{ const gem=GEMS.find(g=>g.type===f.type); return (
+                <div key={i} style={{ display:'flex',alignItems:'center',gap:6,padding:'6px 12px',borderRadius:20,background:RARITY_BG[f.rarity]||'rgba(0,0,0,.3)',border:`1px solid ${gem?.glowColor||'rgba(255,255,255,.1)'}`,animation:'zenFadeIn .3s ease' }}>
+                  <span style={{ fontSize:18,filter:`drop-shadow(0 0 5px ${gem?.glowColor||'transparent'})` }}>{f.emoji}</span>
+                  <span style={{ fontSize:13,color:'rgba(240,232,255,.85)',fontFamily:"'DM Sans',sans-serif" }}>{f.name}</span>
+                  {f.count>1&&<span style={{ fontSize:11,color:'rgba(201,168,76,.7)',fontWeight:700 }}>×{f.count}</span>}
+                </div>
+              );})}
+            </div>}
+          <div style={{ display:'flex',gap:12,marginTop:10,flexWrap:'wrap' }}>
+            {[['legendary','💎'],['rare','🩵'],['uncommon','💚'],['common','🪙'],['trash','🔩']].map(([r,e])=>(<div key={r} style={{ fontSize:11,color:'rgba(240,232,255,.3)',display:'flex',gap:3,alignItems:'center' }}><span>{e}</span><span style={{ textTransform:'capitalize' }}>{r}</span></div>))}
+          </div>
+        </div>
+      )}
+
+      {/* Accessory catalog (zen mode only) */}
+      {!treasureMode&&(
+        <div style={{ background:'rgba(255,255,255,.03)',borderRadius:16,padding:'12px 14px',border:'1px solid rgba(255,255,255,.07)' }}>
+          <div style={{ fontSize:12,color:'rgba(240,232,255,.38)',marginBottom:9,fontFamily:"'Cormorant Garamond',serif",letterSpacing:.8 }}>Garden accessories — tap to place, drag to move</div>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:7 }}>
+            {CATALOG.map(acc=>(<button key={acc.id} onClick={()=>addAcc(acc)} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'7px 11px',borderRadius:12,border:'1px solid rgba(255,255,255,.08)',background:'rgba(255,255,255,.04)',cursor:'pointer',color:'rgba(240,232,255,.65)',fontSize:11,fontFamily:"'DM Sans',sans-serif",transition:'all .18s' }} onMouseEnter={e=>{e.currentTarget.style.border=`1px solid ${pal.tx}44`;e.currentTarget.style.background=pal.bg;}} onMouseLeave={e=>{e.currentTarget.style.border='1px solid rgba(255,255,255,.08)';e.currentTarget.style.background='rgba(255,255,255,.04)';}}>
+              {acc.special==='koi'?<div style={{ width:24,height:24,borderRadius:'50%',background:'radial-gradient(circle,#40E0D0 0%,#1A6B8A 55%,#0A2040 100%)',boxShadow:'0 0 7px rgba(64,224,208,.5)' }}/>:<span style={{ fontSize:20 }}>{acc.emoji}</span>}
+              <span>{acc.label}</span>
+            </button>))}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap' }}>
+        <button className="btn btn-ghost" onClick={()=>{particlesRef.current=[];sparklesRef.current=[];initCanvas();}} style={{ fontSize:15 }}>🧹 Clear Sand</button>
+        {!treasureMode&&<button className="btn btn-ghost" onClick={()=>setItems([])} style={{ fontSize:15 }}>🗑 Remove All</button>}
+        <button onClick={()=>setZenMuted(m=>!m)} style={{ fontSize:13,color:'rgba(240,232,255,.35)',background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.08)',borderRadius:20,padding:'5px 14px',cursor:'pointer',fontFamily:"'DM Sans',sans-serif" }}>{zenMuted?'🔇 Sounds off':'🔊 Sand sounds'}</button>
       </div>
     </div>
   );
@@ -1819,7 +1964,7 @@ function GuestAIWall({ feature = 'Lazuli AI', onSignUp }) {
       <div style={{ fontSize:52, marginBottom:18, opacity:.7 }}>💙</div>
       <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:10 }}>{feature}</div>
       <div style={{ fontSize:15, color:'rgba(240,232,255,.55)', lineHeight:1.8, maxWidth:380, marginBottom:28 }}>
-        This feature requires a free Lazuli Crest account.<br/>
+        This feature requires a free account.<br/>
         <strong style={{ color:'rgba(240,232,255,.8)' }}>Your data stays private.</strong> No payment needed — ever.
       </div>
       <button onClick={()=>setShowAuth(true)} style={{ padding:'13px 32px', borderRadius:14, background:'linear-gradient(135deg,rgba(42,92,173,.6),rgba(201,168,76,.3))', border:'1.5px solid rgba(201,168,76,.5)', color:'#C9A84C', fontSize:16, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", marginBottom:12 }}>
@@ -1841,9 +1986,9 @@ function PH({ emoji, title, sub, children }) {
       <div>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
           <span style={{ fontSize:22 }}>{emoji}</span>
-          <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', letterSpacing:.5, lineHeight:1.1, textShadow:'0 0 20px rgba(201,168,76,.25)' }}>{title}</span>
+          <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'var(--lz-text-gold)', letterSpacing:.5, lineHeight:1.1, textShadow:'0 0 20px rgba(201,168,76,.25)' }}>{title}</span>
         </div>
-        {sub && <div style={{ fontSize:16, color:'rgba(240,232,255,.6)', marginLeft:32 }}>{sub}</div>}
+        {sub && <div style={{ fontSize:16, color:'var(--lz-text-soft)', marginLeft:32 }}>{sub}</div>}
       </div>
       {children && <div style={{ flexShrink:0 }}>{children}</div>}
     </div>
@@ -1852,8 +1997,8 @@ function PH({ emoji, title, sub, children }) {
 function SH({ title, emoji, onAction, actionLabel }) {
   return (
     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:13 }}>
-      <div style={{ fontWeight:600, fontSize:16, color:'#F0E8FF' }}>{emoji} {title}</div>
-      {onAction && <button onClick={onAction} style={{ border:'none', background:'transparent', color:'rgba(201,168,76,.58)', fontWeight:600, fontSize:16, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{actionLabel} →</button>}
+      <div style={{ fontWeight:600, fontSize:16, color:'var(--lz-text)' }}>{emoji} {title}</div>
+      {onAction && <button onClick={onAction} style={{ border:'none', background:'transparent', color:'var(--lz-text-gold)', fontWeight:600, fontSize:16, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", opacity:.75 }}>{actionLabel} →</button>}
     </div>
   );
 }
@@ -1861,8 +2006,8 @@ function Nil({ icon, msg, cta, fn, sub }) {
   return (
     <div style={{ textAlign:'center', padding:'32px 16px' }}>
       <div style={{ fontSize:32, marginBottom:10, opacity:.4 }}>{icon}</div>
-      <div style={{ fontSize:16, color:'rgba(240,232,255,.3)', marginBottom:sub?4:cta?14:0 }}>{msg}</div>
-      {sub && <div style={{ fontSize:16, color:'rgba(168,196,240,.35)', marginBottom:14 }}>{sub}</div>}
+      <div style={{ fontSize:16, color:'var(--lz-text-muted)', marginBottom:sub?4:cta?14:0 }}>{msg}</div>
+      {sub && <div style={{ fontSize:16, color:'var(--lz-text-muted)', marginBottom:14 }}>{sub}</div>}
       {cta && fn && <button className="btn btn-gold" onClick={fn} style={{ fontSize:16, padding:'8px 18px' }}>{cta}</button>}
     </div>
   );
@@ -2069,7 +2214,7 @@ function Dashboard({ data, setTab, upd, user, bgInsight }) {
             <div style={{ position:'absolute', top:0, right:0, width:70, height:70, borderRadius:'50%', background:`radial-gradient(circle,${s.glow} 0%,transparent 70%)`, filter:'blur(9px)' }}/>
             <div style={{ fontFamily:'serif', fontSize:20, color:s.color, marginBottom:8, opacity:.85 }}>{s.icon}</div>
             <div style={{ fontSize:34, fontWeight:700, color:s.color, lineHeight:1, marginBottom:4, fontFamily:"'Cinzel',serif" }}>{s.val}</div>
-            <div style={{ fontSize:16, color:'rgba(240,232,255,.38)' }}>{s.label}</div>
+            <div style={{ fontSize:16, color:'var(--lz-text-muted)' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -2084,7 +2229,7 @@ function Dashboard({ data, setTab, upd, user, bgInsight }) {
         <div className="glass-card-static" style={{ padding:18, marginBottom:18 }}>
           <SH title="Today's Medications" emoji="◉" onAction={()=>setTab('medications')} actionLabel="All"/>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:9 }}>
-            <div style={{ fontSize:16, color:'rgba(240,232,255,.38)' }}>{totalTaken} of {activeMeds.length} taken</div>
+            <div style={{ fontSize:16, color:'var(--lz-text-muted)' }}>{totalTaken} of {activeMeds.length} taken</div>
             <div style={{ fontSize:15, fontWeight:700, color:'#C9A84C', fontFamily:"'Cinzel',serif" }}>{medPct}%</div>
           </div>
           <div style={{ background:'rgba(255,255,255,.06)', borderRadius:5, height:5, overflow:'hidden', marginBottom:13 }}>
@@ -2096,8 +2241,8 @@ function Dashboard({ data, setTab, upd, user, bgInsight }) {
               <div key={m.id} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                 <button onClick={()=>toggleTaken(m.id)} style={{ width:24,height:24,borderRadius:'50%',border:`2px solid ${taken?'#6ee7b7':'rgba(42,92,173,.4)'}`,background:taken?'linear-gradient(135deg,#6ee7b7,#34d399)':'transparent',color:'#000',fontSize:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',cursor:isCare?'not-allowed':'pointer',fontWeight:900 }}>{taken?'✓':''}</button>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:16, fontWeight:500, color:taken?'rgba(240,232,255,.28)':'#F0E8FF', textDecoration:taken?'line-through':'none' }}>{m.name}</div>
-                  <div style={{ fontSize:16, color:'rgba(240,232,255,.28)' }}>{m.dose} · {m.frequency}</div>
+                  <div style={{ fontSize:16, fontWeight:500, color:taken?'var(--lz-text-muted)':'var(--lz-text)', textDecoration:taken?'line-through':'none' }}>{m.name}</div>
+                  <div style={{ fontSize:16, color:'var(--lz-text-muted)' }}>{m.dose} · {m.frequency}</div>
                 </div>
               </div>
             );
@@ -2867,7 +3012,7 @@ Return EXACTLY 3 JSON objects in an array. Each: { name, matchPct (integer 85-99
     if (!user || !scanTags.length) return;
     setLoadingScan(true); setScanResults([]); setScanLine(true);
     setTimeout(()=>setScanLine(false), 2500);
-    const sys = `You are Lazuli Kitchen AI. The user has these ingredients: ${scanTags.join(', ')}.
+    const sys = `You are a nutrition AI. The user has these ingredients: ${scanTags.join(', ')}.
 Diet: ${protocol||'general'}. Conditions: ${data.profile?.conditions||'not specified'}.
 Suggest 2-3 recipes using ONLY those ingredients. Return JSON array: [{ name, emoji, time (e.g. "25 min"), tags (array), why, steps (array of 3 short strings) }]. ONLY JSON, no markdown.`;
     try {
@@ -2938,7 +3083,7 @@ Suggest 2-3 recipes using ONLY those ingredients. Return JSON array: [{ name, em
           <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:8 }}>
             <div style={{ fontSize:36, filter:'drop-shadow(0 2px 8px rgba(201,168,76,.4))' }}>👩‍🍳</div>
             <div>
-              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', letterSpacing:2, textShadow:'0 0 20px rgba(201,168,76,.35)' }}>Lazuli Kitchen</div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', letterSpacing:2, textShadow:'0 0 20px rgba(201,168,76,.35)' }}>Your Kitchen</div>
               <div style={{ fontSize:16, color:'rgba(201,168,76,.5)', letterSpacing:1, marginTop:2 }}>Your personal nutrition sanctuary</div>
             </div>
           </div>
@@ -4436,7 +4581,7 @@ function Advocate({ data, user }) {
   const handleShare = async () => {
     const text = msgs.map(m=>`${m.role==='user'?'Patient':'Lazuli'}: ${m.content}`).join('\n\n');
     setShareStatus('sharing');
-    const ok = await share({ title:'My Lazuli AI Session', text, url: window.location.href });
+    const ok = await share({ title:'My AI Health Session', text, url: window.location.href });
     setShareStatus(ok?'copied':'idle');
     if (ok) setTimeout(()=>setShareStatus('idle'), 2500);
   };
@@ -4494,14 +4639,14 @@ function Advocate({ data, user }) {
   };
 
   // Guest wall — AI features require an account
-  if (!user) return <GuestAIWall feature="💙 Lazuli AI" />;
+  if (!user) return <GuestAIWall feature="💙 AI Advocate" />;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16, height:'calc(100vh - 120px)', minHeight:500 }}>
       {/* Header */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10, flexShrink:0 }}>
         <div>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 Lazuli AI</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 AI Advocate</div>
           <div style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
         <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
@@ -4621,14 +4766,14 @@ function Advocate({ data, user }) {
 // ─── Updates / What's New ─────────────────────────────────────
 function Updates() {
   const features = [
-    { icon:'💙', title:'Lazuli AI Health Advocate', desc:'Your personal AI health companion trained to support chronic illness patients — answers questions, helps you prep for appointments, and always believes you.', status:'live' },
+    { icon:'💙', title:'AI Health Advocate', desc:'Your personal AI health companion trained to support chronic illness patients — answers questions, helps you prep for appointments, and always believes you.', status:'live' },
     { icon:'🗺', title:'Body Map & Brain Map', desc:'Interactive anatomical maps to track pain, symptoms, and neurological patterns over time with visual heat mapping.', status:'live' },
     { icon:'💉', title:'Infusion Hub', desc:'Full infusion appointment management — gentle prep checklists, side effect tracking, and your personal companion message before each infusion.', status:'live' },
     { icon:'💧', title:'Hydration Station', desc:'Track daily hydration with a gorgeous animated glass pitcher. Customize drink types and amounts to your routine.', status:'live' },
     { icon:'📖', title:'Secure Diary', desc:'A fully private, beautiful diary with custom fonts, mood tracking, and photo uploads. Never shared, always encrypted.', status:'live' },
     { icon:'🔗', title:'Shareable Health Summary', desc:'Generate a PIN-protected, read-only health snapshot to share with doctors, caregivers, or specialists — you control exactly what\'s included.', status:'live' },
-    { icon:'🏋️', title:'Lazuli Gym — Adaptive Fitness', desc:'AI-powered gentle exercise guidance designed specifically for chronic illness patients. Your occupational therapist in your pocket.', status:'coming' },
-    { icon:'📱', title:'Google Play Store App', desc:'Take Lazuli Crest everywhere — the full native Android app is in development and coming to Google Play Store soon.', status:'coming' },
+    { icon:'🏋️', title:'Adaptive Gym', desc:'AI-powered gentle exercise guidance designed specifically for chronic illness patients. Your occupational therapist in your pocket.', status:'coming' },
+    { icon:'📱', title:'Google Play Store App', desc:'Take the app everywhere — the full native Android experience is in development and coming to Google Play Store soon.', status:'coming' },
     { icon:'🤝', title:'Care Team Collaboration', desc:'Invite a caregiver, family member, or care coordinator to view your health data in a separate read-only care portal.', status:'coming' },
     { icon:'📚', title:'Research Library & AI Librarian', desc:'A curated library of peer-reviewed research on chronic illness, rare disease, and treatment options. Click any book to read the source — or ask the AI Librarian for a plain-language summary of the science.', status:'coming' },
     { icon:'📊', title:'Advanced Health Analytics', desc:'Trend charts, symptom correlations, flare pattern detection, and exportable health reports for your medical team.', status:'coming' },
@@ -4661,7 +4806,7 @@ function Updates() {
         <div style={{ fontSize:44, animation:'heartbeat 2.5s ease-in-out infinite', filter:'drop-shadow(0 0 12px rgba(201,168,76,.5))' }}>📱</div>
         <div style={{ flex:1 }}>
           <div style={{ fontFamily:"'Cinzel',serif", fontSize:18, color:'#C9A84C', marginBottom:6, fontWeight:700 }}>Google Play Store — Coming Soon</div>
-          <div style={{ fontSize:15, color:'rgba(240,232,255,.7)', lineHeight:1.7 }}>The full Lazuli Crest native Android app is in development. Take your complete health vault with you — offline access, push reminders, and the same luxury experience on every device.</div>
+          <div style={{ fontSize:15, color:'rgba(240,232,255,.7)', lineHeight:1.7 }}>The full native Android app is in development. Take your complete health vault with you — offline access, push reminders, and the same experience on every device.</div>
         </div>
         <div style={{ padding:'10px 22px', borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', color:'#000', fontWeight:700, fontSize:16, cursor:'default', boxShadow:'0 4px 20px rgba(201,168,76,.4)' }}>Notify Me</div>
       </div>
@@ -4741,7 +4886,7 @@ function LazuliGym({ data }) {
 
   return (
     <div>
-      <PH emoji="🏋️" title="Lazuli Gym" sub="Gentle, adaptive movement curated for chronic illness — designed with occupational therapy principles"/>
+      <PH emoji="🏋️" title="Adaptive Gym" sub="Gentle, adaptive movement curated for chronic illness — designed with occupational therapy principles"/>
 
       {aiSuggestion && (
         <div style={{ marginBottom:20, padding:'18px 22px', background:'rgba(42,92,173,.1)', border:'1px solid rgba(42,92,173,.3)', borderRadius:16, display:'flex', gap:14, alignItems:'flex-start' }}>
@@ -5069,9 +5214,9 @@ function SharePrivacy({ data, upd, user }) {
       <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
         {[
           {icon:'🔐',title:'Your account is yours alone',color:'#6ee7b7',text:'Your data lives in a private Firebase Firestore database. Security rules ensure only you can access it.'},
-          {icon:'💙', title:'About Lazuli AI',color:'#A8C4F0',text:'When you use Lazuli AI or AI Nutrition, a summary of your health data is sent to the Gemini API. No conversations are logged by Lazuli Crest.'},
+          {icon:'💙', title:'About AI Advocate',color:'#A8C4F0',text:'When you use AI Advocate or AI Nutrition, a summary of your health data is sent to the Gemini API. No conversations are logged by the app.'},
           {icon:'📖',title:'Your diary is always private',color:'#C084FC',text:'Diary entries are never included in share links. They exist only in your personal account.'},
-          {icon:'⚠️',title:'Medical disclaimer',color:'rgba(240,232,255,.4)',text:'Lazuli Crest is a personal health companion — NOT a medical service. In an emergency, call 911.'},
+          {icon:'⚠️',title:'Medical disclaimer',color:'rgba(240,232,255,.4)',text:'This app is a personal health companion — NOT a medical service. In an emergency, call 911.'},
         ].map((s,i)=>(
           <div key={i} className="glass-card-static" style={{ padding:20,borderLeft:`3px solid ${s.color}33` }}>
             <div style={{ display:'flex',gap:13,alignItems:'flex-start' }}>

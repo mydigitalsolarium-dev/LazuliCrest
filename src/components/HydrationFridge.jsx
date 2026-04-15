@@ -294,7 +294,7 @@ export default function HydrationFridge({ data, upd }) {
 
           {/* Fridge top panel */}
           <div style={{ padding:'10px 18px 9px', background:'rgba(6,10,32,.9)', borderBottom:'1px solid rgba(42,92,173,.2)', borderRadius:'16px 16px 0 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:13, color:'rgba(201,168,76,.55)', letterSpacing:2.5, textTransform:'uppercase' }}>Lazuli Crest</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:13, color:'rgba(201,168,76,.55)', letterSpacing:2.5, textTransform:'uppercase' }}>Hydration</div>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background:'#6ee7b7', boxShadow:'0 0 8px #6ee7b7, 0 0 14px rgba(110,231,183,.5)' }}/>
               <div style={{ fontSize:11, color:'rgba(110,231,183,.5)', fontFamily:"'DM Sans',sans-serif" }}>38°F • Chilled</div>
