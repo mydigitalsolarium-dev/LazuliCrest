@@ -409,10 +409,23 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// ─── Dark / Light mode hook ───────────────────────────────────
+function useDarkMode() {
+  const [dark, setDark] = useState(() => {
+    try { return localStorage.getItem('lazuli_theme') !== 'light'; } catch { return true; }
+  });
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    try { localStorage.setItem('lazuli_theme', dark ? 'dark' : 'light'); } catch {}
+  }, [dark]);
+  return [dark, () => setDark(d => !d)];
+}
+
 // ─── Root ─────────────────────────────────────────────────────
 export default function App() {
   const shareId = new URLSearchParams(window.location.search).get('share');
 
+  const [darkMode, toggleDarkMode] = useDarkMode();
   const [user, setUser]           = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [data, setData]           = useState(BLANK_DATA);
@@ -475,7 +488,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-    <div style={{ minHeight:'100vh', background:'#130828', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF', position:'relative' }}>
+    <div className="lz-app-root" style={{ minHeight:'100vh', fontFamily:"'DM Sans',sans-serif", position:'relative' }}>
       <style>{GLOBAL_CSS}</style>
       <AnimatedBackground/>
 
@@ -490,7 +503,7 @@ export default function App() {
 
       <div style={{ display:'flex', maxWidth:1280, margin:'0 auto', minHeight:'100vh', position:'relative', zIndex:1 }}>
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
-        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} onShowAuth={()=>setShowAuth(true)}/>
+        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} onShowAuth={()=>setShowAuth(true)} darkMode={darkMode} toggleDarkMode={toggleDarkMode}/>
 
         {privacyOn && (
           <div style={{ position:'fixed', inset:0, zIndex:200, backdropFilter:'blur(18px) brightness(.4)', WebkitBackdropFilter:'blur(18px) brightness(.4)', pointerEvents:'none' }}/>
@@ -506,6 +519,9 @@ export default function App() {
             </div>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               {saving && <div style={{ width:6, height:6, borderRadius:'50%', background:'#C9A84C', animation:'pulseGlow 1s infinite' }}/>}
+              <button onClick={toggleDarkMode} title={darkMode?'Switch to light mode':'Switch to dark mode'} style={{ padding:'5px 11px', borderRadius:20, border:`1px solid ${darkMode?'rgba(201,168,76,.3)':'rgba(26,58,122,.35)'}`, background:darkMode?'rgba(201,168,76,.07)':'rgba(26,58,122,.1)', color:darkMode?'#C9A84C':'#8B6500', fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", lineHeight:1 }}>
+                {darkMode?'☀️':'🌙'}
+              </button>
               <button onClick={()=>setPrivacyOn(p=>!p)} style={{ padding:'5px 12px', borderRadius:20, border:`1px solid ${privacyOn?'rgba(201,168,76,.4)':'rgba(42,92,173,.3)'}`, background:privacyOn?'rgba(201,168,76,.08)':'rgba(4,14,52,.6)', color:privacyOn?'#C9A84C':'rgba(168,196,240,.5)', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
                 {privacyOn?'🔓':'🔒'}
               </button>
@@ -824,8 +840,77 @@ const GLOBAL_CSS = `
   body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none;overscroll-behavior:contain}
   button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:18px}
   ::-webkit-scrollbar{width:5px}
-  ::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}
+  ::-webkit-scrollbar-thumb{background:var(--lz-border-lapis);border-radius:4px}
   ::-webkit-scrollbar-track{background:transparent}
+
+  /* ══ Lazuli Crest Design Tokens — Dark Default / Light Override ══════════ */
+  :root{
+    --lz-bg-root:#130828;
+    --lz-bg-card:rgba(22,12,52,.82);
+    --lz-bg-card-alt:rgba(8,3,22,.9);
+    --lz-bg-sidebar:rgba(16,8,40,.96);
+    --lz-bg-field:rgba(255,255,255,.055);
+    --lz-bg-field-focus:rgba(201,168,76,.055);
+    --lz-bg-lapis-soft:rgba(42,92,173,.15);
+    --lz-bg-stat:rgba(8,3,22,.9);
+    --lz-bg-topbar:rgba(4,1,16,.97);
+    --lz-text:#F0E8FF;
+    --lz-text-soft:rgba(168,196,240,.75);
+    --lz-text-muted:rgba(168,196,240,.45);
+    --lz-text-gold:#C9A84C;
+    --lz-border-card:rgba(120,80,220,.22);
+    --lz-border-lapis:rgba(42,92,173,.4);
+    --lz-border-lapis-soft:rgba(42,92,173,.2);
+    --lz-border-gold:rgba(201,168,76,.3);
+    --lz-border-sidebar:rgba(120,80,220,.2);
+    --lz-gold:#C9A84C;
+    --lz-gold-btn:linear-gradient(135deg,#C9A84C,#E8C96B);
+    --lz-lapis:#2A5CAD;
+    --lz-lapis-btn:linear-gradient(135deg,#1E3A8A,#2A5CAD);
+    --lz-shadow-card:0 8px 32px rgba(0,0,0,.5);
+    --lz-shadow-stat:0 4px 24px rgba(0,0,0,.5);
+    --lz-pill-bg:rgba(42,92,173,.2);
+    --lz-pill-border:rgba(42,92,173,.45);
+    --lz-pill-text:#A8C4F0;
+    --lz-nav-active-bg:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));
+    --lz-nav-icon:rgba(200,180,255,.65);
+  }
+  [data-theme='light']{
+    --lz-bg-root:#F9F9F7;
+    --lz-bg-card:rgba(255,255,255,.97);
+    --lz-bg-card-alt:rgba(248,246,242,.98);
+    --lz-bg-sidebar:#EEE9F8;
+    --lz-bg-field:rgba(26,58,122,.05);
+    --lz-bg-field-focus:rgba(155,104,0,.06);
+    --lz-bg-lapis-soft:rgba(26,58,122,.08);
+    --lz-bg-stat:rgba(255,255,255,.97);
+    --lz-bg-topbar:rgba(248,246,242,.98);
+    --lz-text:#1A1A1A;
+    --lz-text-soft:#3A3A5C;
+    --lz-text-muted:#6B6B8A;
+    --lz-text-gold:#8B6500;
+    --lz-border-card:rgba(26,58,122,.18);
+    --lz-border-lapis:rgba(26,58,122,.35);
+    --lz-border-lapis-soft:rgba(26,58,122,.2);
+    --lz-border-gold:rgba(155,104,0,.35);
+    --lz-border-sidebar:rgba(26,58,122,.18);
+    --lz-gold:#8B6500;
+    --lz-gold-btn:linear-gradient(135deg,#8B6500,#C9A84C);
+    --lz-lapis:#1A3A7A;
+    --lz-lapis-btn:linear-gradient(135deg,#0F2460,#1A3A7A);
+    --lz-shadow-card:0 4px 24px rgba(0,0,0,.1);
+    --lz-shadow-stat:0 2px 12px rgba(0,0,0,.08);
+    --lz-pill-bg:rgba(26,58,122,.1);
+    --lz-pill-border:rgba(26,58,122,.3);
+    --lz-pill-text:#1A3A7A;
+    --lz-nav-active-bg:linear-gradient(135deg,rgba(26,58,122,.14),rgba(26,58,122,.06));
+    --lz-nav-icon:#6B6B8A;
+  }
+  /* light mode — tone down the animated background */
+  [data-theme='light'] .aurora-orb,[data-theme='light'] .float-sym,[data-theme='light'] .float-quote{display:none !important}
+  [data-theme='light'] #lz-animated-bg{opacity:0 !important}
+  /* app root theming */
+  .lz-app-root{background:var(--lz-bg-root);color:var(--lz-text);transition:background .3s,color .3s}
 
   @keyframes fadeOut{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
@@ -863,25 +948,25 @@ const GLOBAL_CSS = `
 
   /* ── Luxury glass cards — lapis gem ─────────────────────── */
   .glass-card{
-    background:rgba(22,12,52,.82);
+    background:var(--lz-bg-card);
     backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
-    border:1.5px solid rgba(120,80,220,.22);
+    border:1.5px solid var(--lz-border-card);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.3);
+    box-shadow:var(--lz-shadow-card),inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.2);
     transition:all .22s ease
   }
   .glass-card:hover{
-    border-color:rgba(201,168,76,.4);
-    box-shadow:0 14px 48px rgba(0,0,0,.6),0 0 30px rgba(42,92,173,.12);
+    border-color:var(--lz-border-gold);
+    box-shadow:0 14px 48px rgba(0,0,0,.4),0 0 30px rgba(42,92,173,.1);
     transform:translateY(-2px)
   }
   .glass-card-static{
-    background:rgba(22,12,52,.82);
+    background:var(--lz-bg-card);
     backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
-    border:1.5px solid rgba(120,80,220,.22);
+    border:1.5px solid var(--lz-border-card);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
-    transition:border-color .22s;will-change:auto;
+    box-shadow:var(--lz-shadow-card),inset 0 1px 0 rgba(255,255,255,.06);
+    transition:border-color .22s,background .3s;will-change:auto;
   }
 
   .matriarch-quote{font-family:'Cormorant Garamond',serif;font-style:italic;color:#C9A84C;line-height:1.8;font-size:18px;text-shadow:0 0 10px rgba(201,168,76,.25)}
@@ -889,33 +974,33 @@ const GLOBAL_CSS = `
 
   /* ── Buttons ─────────────────────────────────────────────── */
   .btn{border:none;border-radius:12px;padding:13px 26px;font-weight:600;font-size:17px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;letter-spacing:.15px}
-  .btn-gold{background:linear-gradient(135deg,#C9A84C,#E8C96B);color:#000;font-weight:700;box-shadow:0 4px 20px rgba(201,168,76,.4),inset 0 1px 0 rgba(255,255,255,.25)}
-  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.55)}
+  .btn-gold{background:var(--lz-gold-btn);color:#000;font-weight:700;box-shadow:0 4px 20px rgba(201,168,76,.35),inset 0 1px 0 rgba(255,255,255,.25)}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.5)}
   .btn-gold:active{transform:translateY(0)}
-  .btn-ghost{background:rgba(42,92,173,.15);border:1.5px solid rgba(42,92,173,.45);color:#A8C4F0}
-  .btn-ghost:hover{background:rgba(42,92,173,.28);border-color:rgba(201,168,76,.5);color:#fff}
+  .btn-ghost{background:var(--lz-bg-lapis-soft);border:1.5px solid var(--lz-border-lapis);color:var(--lz-pill-text)}
+  .btn-ghost:hover{background:rgba(42,92,173,.28);border-color:var(--lz-border-gold);color:var(--lz-text)}
   .btn-danger{background:rgba(255,80,80,.1);border:1.5px solid rgba(255,80,80,.35);color:#ff9090}
   .btn-danger:hover{background:#ff5050;color:#fff;border-color:#ff5050}
-  .btn-subtle{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(240,232,255,.6)}
-  .btn-subtle:hover{background:rgba(255,255,255,.12);color:#F0E8FF}
-  .btn-lapis{background:linear-gradient(135deg,#1E3A8A,#2A5CAD);color:#E0EFFF;font-weight:600;border:none;box-shadow:0 4px 18px rgba(42,92,173,.4)}
-  .btn-lapis:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(42,92,173,.6)}
+  .btn-subtle{background:var(--lz-bg-lapis-soft);border:1px solid var(--lz-border-lapis-soft);color:var(--lz-text-soft)}
+  .btn-subtle:hover{background:var(--lz-bg-lapis-soft);color:var(--lz-text)}
+  .btn-lapis{background:var(--lz-lapis-btn);color:#E0EFFF;font-weight:600;border:none;box-shadow:0 4px 18px rgba(42,92,173,.3)}
+  .btn-lapis:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(42,92,173,.5)}
 
   /* ── Form fields ─────────────────────────────────────────── */
-  .field{background:rgba(255,255,255,.055);border:1.5px solid rgba(42,92,173,.4);border-radius:12px;padding:13px 16px;font-size:18px;color:#F0E8FF;width:100%;outline:none;transition:all .18s;caret-color:#C9A84C}
-  .field:focus{border-color:#C9A84C;background:rgba(201,168,76,.055);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
-  .field::placeholder{color:rgba(240,232,255,.32)}
-  select.field option{background:#080316;color:#F0E8FF}
-  label{font-size:16px;font-weight:600;color:#C9A84C;display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:.9px}
-  input[type=range]{accent-color:#C9A84C;cursor:pointer;width:100%}
-  input[type=checkbox]{accent-color:#2A5CAD;width:18px;height:18px;cursor:pointer}
-  .pill{display:inline-flex;align-items:center;gap:6px;background:rgba(42,92,173,.2);border:1.5px solid rgba(42,92,173,.45);color:#A8C4F0;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
+  .field{background:var(--lz-bg-field);border:1.5px solid var(--lz-border-lapis);border-radius:12px;padding:13px 16px;font-size:18px;color:var(--lz-text);width:100%;outline:none;transition:all .18s;caret-color:var(--lz-gold)}
+  .field:focus{border-color:var(--lz-gold);background:var(--lz-bg-field-focus);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
+  .field::placeholder{color:var(--lz-text-muted)}
+  select.field option{background:var(--lz-bg-root);color:var(--lz-text)}
+  label{font-size:16px;font-weight:600;color:var(--lz-text-gold);display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:.9px}
+  input[type=range]{accent-color:var(--lz-gold);cursor:pointer;width:100%}
+  input[type=checkbox]{accent-color:var(--lz-lapis);width:18px;height:18px;cursor:pointer}
+  .pill{display:inline-flex;align-items:center;gap:6px;background:var(--lz-pill-bg);border:1.5px solid var(--lz-pill-border);color:var(--lz-pill-text);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
   /* ── Sidebar — z-index fix for mobile ────────────────────── */
-  .sidebar{width:272px;background:rgba(16,8,40,.96);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid rgba(120,80,220,.2);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.7),inset -1px 0 0 rgba(120,80,220,.15);transition:transform .3s cubic-bezier(.22,1,.36,1)}
-  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,232,255,.95);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
-  .nav-item:hover{background:rgba(42,92,173,.14);color:rgba(240,232,255,.9);border-color:rgba(42,92,173,.28)}
-  .nav-item.active{background:linear-gradient(135deg,rgba(42,92,173,.3),rgba(42,92,173,.12));color:#C9A84C;border-color:rgba(201,168,76,.3);font-weight:600}
+  .sidebar{width:272px;background:var(--lz-bg-sidebar);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid var(--lz-border-sidebar);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.4),inset -1px 0 0 var(--lz-border-sidebar);transition:transform .3s cubic-bezier(.22,1,.36,1),background .3s}
+  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--lz-text);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
+  .nav-item:hover{background:var(--lz-bg-lapis-soft);color:var(--lz-text);border-color:var(--lz-border-lapis-soft)}
+  .nav-item.active{background:var(--lz-nav-active-bg);color:var(--lz-text-gold);border-color:var(--lz-border-gold);font-weight:600}
 
   .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;overscroll-behavior:contain}
   .privacy-sensitive{transition:filter .3s ease}
@@ -924,20 +1009,20 @@ const GLOBAL_CSS = `
   .privacy-btn.active{border-color:rgba(201,168,76,.5);background:rgba(201,168,76,.1);color:#C9A84C}
   .privacy-btn:hover{border-color:rgba(42,92,173,.6);color:#F0E8FF}
   .page-inner{flex:1;padding:28px 36px;padding-bottom:48px}
-  .mobile-topbar{display:none;align-items:center;gap:12px;padding:14px 18px;background:rgba(4,1,16,.97);backdrop-filter:blur(20px);border-bottom:1.5px solid rgba(42,92,173,.2);position:sticky;top:0;z-index:90;flex-shrink:0}
+  .mobile-topbar{display:none;align-items:center;gap:12px;padding:14px 18px;background:var(--lz-bg-topbar);backdrop-filter:blur(20px);border-bottom:1.5px solid var(--lz-border-lapis-soft);position:sticky;top:0;z-index:90;flex-shrink:0;transition:background .3s}
   .hamburger{background:transparent;border:none;cursor:pointer;padding:5px;display:flex;flex-direction:column;gap:5px;flex-shrink:0}
   .hamburger span{display:block;width:24px;height:2px;background:#C9A84C;border-radius:2px}
   .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99;backdrop-filter:blur(4px)}
 
   /* ── Stat cards ──────────────────────────────────────────── */
-  .stat-card{background:rgba(8,3,22,.9);border:1.5px solid rgba(201,168,76,.2);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:inset 0 2px 8px rgba(0,0,0,.4),inset 0 -1px 0 rgba(120,80,220,.15),0 4px 24px rgba(0,0,0,.5)}
-  .stat-card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.38);box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 36px rgba(42,92,173,.15),inset 0 2px 8px rgba(0,0,0,.4)}
+  .stat-card{background:var(--lz-bg-stat);border:1.5px solid var(--lz-border-gold);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:var(--lz-shadow-stat)}
+  .stat-card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.5);box-shadow:0 16px 48px rgba(0,0,0,.3),0 0 24px rgba(42,92,173,.12)}
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 
   /* ── Auth inputs ─────────────────────────────────────────── */
-  .auth-input{background:rgba(255,255,255,.055);border:1.5px solid rgba(42,92,173,.4);border-radius:14px;padding:15px 18px;font-size:16px;color:#F0E8FF;width:100%;outline:none;transition:all .18s;caret-color:#C9A84C}
-  .auth-input:focus{border-color:#C9A84C;background:rgba(201,168,76,.055);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
-  .auth-input::placeholder{color:rgba(240,232,255,.32)}
+  .auth-input{background:var(--lz-bg-field);border:1.5px solid var(--lz-border-lapis);border-radius:14px;padding:15px 18px;font-size:16px;color:var(--lz-text);width:100%;outline:none;transition:all .18s;caret-color:var(--lz-gold)}
+  .auth-input:focus{border-color:var(--lz-gold);background:var(--lz-bg-field-focus);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
+  .auth-input::placeholder{color:var(--lz-text-muted)}
 
   /* ── Diary — real notebook ───────────────────────────────── */
   .diary-book{
@@ -1336,7 +1421,7 @@ function DailyQuoteSidebar() {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
-function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn, onShowAuth }) {
+function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn, onShowAuth, darkMode, toggleDarkMode }) {
   const isCare      = data.profile?.accountType === 'caree';
   const displayName = user ? (isCare ? data.profile?.careeName||'Your Caree' : (user.displayName||'Your Account')) : 'Guest';
   const [factIdx, setFactIdx] = useState(0);
@@ -1386,7 +1471,7 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
               return (
                 <button key={n.id} onClick={()=>setTab(n.id)} className={`nav-item${active?' active':''}`} style={{ marginBottom:1 }}>
                   {active && <div style={{ position:'absolute', left:0, top:'18%', bottom:'18%', width:3, background:'linear-gradient(180deg,#2A5CAD,#C9A84C)', borderRadius:'0 3px 3px 0' }}/>}
-                  <span style={{ fontSize:15, width:20, textAlign:'center', lineHeight:1, color:active?'#C9A84C':'rgba(200,180,255,.65)' }}>{n.icon}</span>
+                  <span style={{ fontSize:15, width:20, textAlign:'center', lineHeight:1, color:active?'var(--lz-text-gold)':'var(--lz-nav-icon)' }}>{n.icon}</span>
                   <span style={{ flex:1, fontSize:14 }}>{n.label}</span>
                   {active && <span style={{ width:4, height:4, borderRadius:'50%', background:'#C9A84C', boxShadow:'0 0 6px #C9A84C' }}/>}
                 </button>
@@ -1397,6 +1482,10 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
       </nav>
       <div style={{ padding:'10px 12px 14px', borderTop:'1px solid rgba(42,92,173,.15)', display:'flex', flexDirection:'column', gap:8, flex:1 }}>
         <DailyQuoteSidebar/>
+        {/* Light / Dark mode toggle */}
+        <button onClick={toggleDarkMode} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:`1.5px solid ${darkMode?'rgba(201,168,76,.3)':'rgba(26,58,122,.35)'}`, background:darkMode?'rgba(201,168,76,.07)':'rgba(26,58,122,.08)', color:darkMode?'rgba(201,168,76,.8)':'#6B4E00', fontWeight:600, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .25s', marginBottom:4 }}>
+          {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+        </button>
         <button onClick={()=>setPrivacyOn(p=>!p)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:`1.5px solid ${privacyOn?'rgba(201,168,76,.5)':'rgba(42,92,173,.3)'}`, background:privacyOn?'rgba(201,168,76,.1)':'rgba(42,92,173,.08)', color:privacyOn?'#C9A84C':'rgba(168,196,240,.6)', fontWeight:600, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', marginBottom:6 }}>
           {privacyOn ? '🔓 Show Details' : '🔒 Privacy Screen'}
         </button>
