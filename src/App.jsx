@@ -5,7 +5,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import {
   uid, todayStr, fmtDate, greet, getDailyMessage,
@@ -164,6 +164,227 @@ const LAZULI_FACTS = [
   '✦ In Ayurveda, lapis lazuli is associated with the throat chakra — giving voice to the unheard.',
 ];
 
+// ─── Shared Health View (no auth required) ───────────────────
+function SharedView({ shareId }) {
+  const [step, setStep]       = useState('pin');   // 'pin' | 'loading' | 'view' | 'error'
+  const [pinInput, setPinInput] = useState('');
+  const [snap, setSnap]       = useState(null);
+  const [errMsg, setErrMsg]   = useState('');
+
+  const submit = async () => {
+    if (!pinInput.trim()) return;
+    setStep('loading');
+    try {
+      const ref  = doc(db, 'shares', shareId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) { setErrMsg('This share link is invalid or has been deleted.'); setStep('error'); return; }
+      const d = snap.data();
+      // Expiry check
+      if (d.expiresAt && new Date(d.expiresAt) < new Date()) { setErrMsg('This share link has expired (links last 7 days).'); setStep('error'); return; }
+      // PIN check — stored as btoa(pin)
+      const storedPin = atob(d.pin);
+      if (pinInput.trim() !== storedPin) { setErrMsg('Incorrect PIN. Please try again.'); setStep('pin'); return; }
+      // Decode data
+      const health = JSON.parse(decodeURIComponent(atob(d.data)));
+      setSnap(health);
+      setStep('view');
+    } catch(e) {
+      setErrMsg('Could not load the share. Please check your link and try again.');
+      setStep('error');
+    }
+  };
+
+  const SectionCard = ({ title, icon, children }) => (
+    <div style={{ marginBottom:20, background:'rgba(255,255,255,.03)', border:'1px solid rgba(42,92,173,.18)', borderRadius:16, overflow:'hidden' }}>
+      <div style={{ padding:'12px 18px', background:'rgba(42,92,173,.08)', borderBottom:'1px solid rgba(42,92,173,.14)', display:'flex', alignItems:'center', gap:9 }}>
+        <span style={{ fontSize:18 }}>{icon}</span>
+        <span style={{ fontFamily:"'Cinzel',serif", fontSize:15, fontWeight:600, color:'#C9A84C' }}>{title}</span>
+      </div>
+      <div style={{ padding:'14px 18px' }}>{children}</div>
+    </div>
+  );
+
+  // ── PIN entry screen ────────────────────────────────────────
+  if (step === 'pin' || step === 'loading') return (
+    <div style={{ minHeight:'100vh', background:'#0d0520', display:'flex', alignItems:'center', justifyContent:'center', padding:24, fontFamily:"'DM Sans',sans-serif" }}>
+      <style>{`*{box-sizing:border-box;margin:0;padding:0}body{-webkit-font-smoothing:antialiased}`}</style>
+      <div style={{ width:'100%', maxWidth:420, textAlign:'center' }}>
+        <div style={{ marginBottom:20 }}><img src="/icons/icon-192.png" alt="Lazuli Crest" width={64} height={64} style={{ borderRadius:14, filter:'drop-shadow(0 0 16px rgba(42,92,173,.6))' }} onError={e=>e.target.style.display='none'}/></div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', letterSpacing:2, marginBottom:6 }}>Lazuli Crest</div>
+        <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', marginBottom:32 }}>Secure Health Record Viewer</div>
+
+        <div style={{ background:'rgba(16,8,40,.9)', border:'1.5px solid rgba(42,92,173,.3)', borderRadius:20, padding:'32px 28px', backdropFilter:'blur(20px)' }}>
+          <div style={{ fontSize:36, marginBottom:14 }}>🔐</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'#F0E8FF', marginBottom:8, fontWeight:700 }}>Enter your PIN</div>
+          <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', marginBottom:24, lineHeight:1.6 }}>
+            Someone shared their health record with you.<br/>Enter the PIN they gave you to view it.
+          </div>
+          {errMsg && <div style={{ padding:'10px 14px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.25)', borderRadius:10, fontSize:13, color:'#ff9999', marginBottom:16 }}>{errMsg}</div>}
+          <input
+            value={pinInput}
+            onChange={e=>setPinInput(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&submit()}
+            placeholder="Enter PIN…"
+            autoFocus
+            style={{ width:'100%', padding:'14px 16px', borderRadius:12, border:'1.5px solid rgba(42,92,173,.4)', background:'rgba(255,255,255,.05)', color:'#F0E8FF', fontSize:18, textAlign:'center', letterSpacing:4, fontFamily:"'DM Sans',sans-serif", outline:'none', marginBottom:14 }}
+          />
+          <button onClick={submit} disabled={step==='loading' || !pinInput.trim()} style={{ width:'100%', padding:'14px', borderRadius:12, background:'linear-gradient(135deg,#2A5CAD,#1e4080)', border:'none', color:'#fff', fontSize:16, fontWeight:700, cursor:'pointer', opacity:step==='loading'?.7:1, fontFamily:"'DM Sans',sans-serif" }}>
+            {step==='loading' ? '⏳ Verifying…' : '→ View Health Record'}
+          </button>
+        </div>
+        <div style={{ marginTop:20, fontSize:12, color:'rgba(240,232,255,.2)' }}>
+          This link only works with the correct PIN · Data is read-only · Powered by Lazuli Crest
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Error screen ────────────────────────────────────────────
+  if (step === 'error') return (
+    <div style={{ minHeight:'100vh', background:'#0d0520', display:'flex', alignItems:'center', justifyContent:'center', padding:24, fontFamily:"'DM Sans',sans-serif" }}>
+      <style>{`*{box-sizing:border-box;margin:0;padding:0}`}</style>
+      <div style={{ textAlign:'center', maxWidth:400 }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>🔗</div>
+        <div style={{ fontFamily:"'Cinzel',serif", fontSize:20, color:'#C9A84C', marginBottom:12 }}>Link Unavailable</div>
+        <div style={{ fontSize:14, color:'rgba(240,232,255,.4)', lineHeight:1.7, marginBottom:24 }}>{errMsg}</div>
+        <a href="/" style={{ padding:'12px 28px', borderRadius:12, background:'rgba(42,92,173,.2)', border:'1px solid rgba(42,92,173,.4)', color:'#A8C4F0', fontSize:14, textDecoration:'none', fontFamily:"'DM Sans',sans-serif" }}>← Go to Lazuli Crest</a>
+      </div>
+    </div>
+  );
+
+  // ── Health data view ────────────────────────────────────────
+  return (
+    <div style={{ minHeight:'100vh', background:'#0d0520', fontFamily:"'DM Sans',sans-serif", color:'#F0E8FF' }}>
+      <style>{`*{box-sizing:border-box;margin:0;padding:0}body{-webkit-font-smoothing:antialiased}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(42,92,173,.5);border-radius:4px}`}</style>
+
+      {/* Header */}
+      <div style={{ background:'rgba(4,1,16,.97)', borderBottom:'1px solid rgba(42,92,173,.2)', padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:10, backdropFilter:'blur(20px)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <img src="/icons/icon-192.png" alt="Lazuli Crest" width={32} height={32} style={{ borderRadius:7 }} onError={e=>e.target.style.display='none'}/>
+          <div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:15, fontWeight:700, color:'#C9A84C' }}>Lazuli Crest</div>
+            <div style={{ fontSize:11, color:'rgba(240,232,255,.3)' }}>Shared Health Record · Read-only</div>
+          </div>
+        </div>
+        <a href="/" style={{ padding:'7px 16px', borderRadius:10, border:'1px solid rgba(42,92,173,.35)', background:'rgba(42,92,173,.1)', color:'#A8C4F0', fontSize:13, textDecoration:'none' }}>← Open App</a>
+      </div>
+
+      <div style={{ maxWidth:760, margin:'0 auto', padding:'28px 20px 60px' }}>
+        {/* Patient header */}
+        <div style={{ marginBottom:28, padding:'20px 24px', background:'linear-gradient(135deg,rgba(42,92,173,.12),rgba(201,168,76,.06))', border:'1.5px solid rgba(201,168,76,.25)', borderRadius:18 }}>
+          <div style={{ fontSize:11, color:'rgba(201,168,76,.5)', letterSpacing:3, textTransform:'uppercase', marginBottom:6 }}>Shared Health Record</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:4 }}>{snap.name}</div>
+          {snap.conditions && <div style={{ fontSize:14, color:'rgba(240,232,255,.55)', marginBottom:4 }}>Conditions: {snap.conditions}</div>}
+          <div style={{ fontSize:12, color:'rgba(240,232,255,.25)', marginTop:6 }}>Generated {snap.generatedAt ? new Date(snap.generatedAt).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}) : ''}</div>
+        </div>
+
+        {/* Symptoms */}
+        {snap.recentSymptoms?.length > 0 && (
+          <SectionCard title="Recent Symptoms" icon="◈">
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {snap.recentSymptoms.map((s,i) => (
+                <div key={i} style={{ padding:'10px 14px', background:'rgba(255,255,255,.03)', borderRadius:10, borderLeft:'3px solid rgba(42,92,173,.4)' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                    <span style={{ fontSize:13, color:'rgba(240,232,255,.6)', fontWeight:600 }}>{s.date}</span>
+                    <div style={{ display:'flex', gap:12, fontSize:12 }}>
+                      <span style={{ color:'#f87171' }}>Pain {s.pain}/10</span>
+                      <span style={{ color:'#6ee7b7' }}>Energy {s.energy}/10</span>
+                      <span style={{ color:'#93c5fd' }}>Mood {s.mood}/10</span>
+                    </div>
+                  </div>
+                  {s.symptoms && <div style={{ fontSize:13, color:'rgba(240,232,255,.8)' }}>{s.symptoms}</div>}
+                  {s.notes && <div style={{ fontSize:12, color:'rgba(240,232,255,.4)', marginTop:4, fontStyle:'italic' }}>{s.notes}</div>}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Medications */}
+        {snap.medications?.length > 0 && (
+          <SectionCard title="Active Medications" icon="◉">
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {snap.medications.map((m,i) => (
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 12px', background:'rgba(110,231,183,.05)', borderRadius:9, border:'1px solid rgba(110,231,183,.12)' }}>
+                  <span style={{ fontWeight:600, fontSize:14, color:'rgba(240,232,255,.9)' }}>{m.name}</span>
+                  <span style={{ fontSize:13, color:'rgba(240,232,255,.4)' }}>{m.dose} · {m.frequency}</span>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Body Map */}
+        {snap.bodyMap?.length > 0 && (
+          <SectionCard title="Body Map — Pain Areas" icon="👤">
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              {snap.bodyMap.map((b,i) => (
+                <div key={i} style={{ padding:'7px 13px', borderRadius:20, background:'rgba(249,115,22,.08)', border:'1px solid rgba(249,115,22,.2)', fontSize:13 }}>
+                  <span style={{ color:'rgba(240,232,255,.8)' }}>{b.area}</span>
+                  <span style={{ marginLeft:6, color:'#f97316', fontWeight:700 }}>{b.severity}/10</span>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Appointments */}
+        {snap.appointments?.length > 0 && (
+          <SectionCard title="Upcoming Appointments" icon="🗓">
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {snap.appointments.map((a,i) => (
+                <div key={i} style={{ display:'flex', gap:12, alignItems:'center', padding:'8px 12px', background:'rgba(42,92,173,.07)', borderRadius:9, border:'1px solid rgba(42,92,173,.15)' }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:'#A8C4F0', minWidth:72, flexShrink:0 }}>{a.date}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, color:'rgba(240,232,255,.8)', fontWeight:500 }}>{a.provider}</div>
+                    <div style={{ fontSize:12, color:'rgba(240,232,255,.35)' }}>{a.type}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Metabolic Logs */}
+        {snap.metabolicLogs?.length > 0 && (
+          <SectionCard title="Metabolic / Lab Data" icon="🔬">
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {snap.metabolicLogs.map((m,i) => (
+                <div key={i} style={{ padding:'8px 12px', background:'rgba(255,255,255,.03)', borderRadius:8, fontSize:13, color:'rgba(240,232,255,.7)' }}>
+                  {JSON.stringify(m)}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Diary */}
+        {snap.diaryEntries?.length > 0 && (
+          <SectionCard title="Diary Entries" icon="📖">
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {snap.diaryEntries.map((e,i) => (
+                <div key={i} style={{ padding:'12px 14px', background:'rgba(255,255,255,.03)', borderRadius:10, borderLeft:'3px solid rgba(201,168,76,.3)' }}>
+                  <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:6 }}>
+                    <span style={{ fontSize:16 }}>{e.mood||'✍️'}</span>
+                    <span style={{ fontSize:12, color:'rgba(240,232,255,.4)' }}>{e.date}</span>
+                  </div>
+                  <div style={{ fontSize:14, color:'rgba(240,232,255,.75)', lineHeight:1.7, fontFamily:"Georgia,serif", fontStyle:'italic' }}>{e.text}</div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* Footer */}
+        <div style={{ textAlign:'center', paddingTop:32, borderTop:'1px solid rgba(42,92,173,.15)', marginTop:12 }}>
+          <div style={{ fontSize:12, color:'rgba(240,232,255,.2)', marginBottom:12 }}>This record was shared securely via Lazuli Crest · Read-only view</div>
+          <a href="/" style={{ padding:'10px 24px', borderRadius:12, background:'linear-gradient(135deg,rgba(42,92,173,.2),rgba(201,168,76,.1))', border:'1px solid rgba(201,168,76,.3)', color:'#C9A84C', fontSize:13, fontWeight:700, textDecoration:'none', fontFamily:"'DM Sans',sans-serif" }}>Create Your Own Free Account →</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Error Boundary ──────────────────────────────────────────
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
@@ -190,6 +411,8 @@ class ErrorBoundary extends React.Component {
 
 // ─── Root ─────────────────────────────────────────────────────
 export default function App() {
+  const shareId = new URLSearchParams(window.location.search).get('share');
+
   const [user, setUser]           = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [data, setData]           = useState(BLANK_DATA);
@@ -242,6 +465,9 @@ export default function App() {
   const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const { insight: bgInsight, reflecting } = useBackgroundAnalysis(data, user?.uid);
+
+  // ── Intercept ?share= links — no login needed ──────────────
+  if (shareId) return <SharedView shareId={shareId}/>;
 
   if (!authReady) return <Splash/>;
 
@@ -316,7 +542,7 @@ export default function App() {
             {tab==='appointments' && <Appointments data={data} upd={upd}/>}
             {tab==='diary'        && <Diary        data={data} upd={upd}/>}
             {tab==='mindfulness'  && <Mindfulness/>}
-            {tab==='diet'         && <AIDiet       data={data} upd={upd}/>}
+            {tab==='diet'         && <AIDiet       data={data} upd={upd} user={user}/>}
             {tab==='documents'    && <Documents    data={data} upd={upd}/>}
             {tab==='advocate'     && <Advocate     data={data} user={user}/>}
             {tab==='profile'      && <Profile      data={data} upd={upd} user={user}/>}
@@ -1130,6 +1356,38 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
 }
 
 // ─── Shared helpers ───────────────────────────────────────────
+// ─── Guest AI Wall ────────────────────────────────────────────
+function GuestAIWall({ feature = 'Lazuli AI', onSignUp }) {
+  const [showAuth, setShowAuth] = useState(false);
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'60px 24px', textAlign:'center', minHeight:400 }}>
+      {showAuth && (
+        <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,.85)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          <div style={{ position:'relative', width:'100%', maxWidth:460 }}>
+            <button onClick={()=>setShowAuth(false)} style={{ position:'absolute', top:-14, right:-14, background:'rgba(42,92,173,.3)', border:'1px solid rgba(42,92,173,.4)', borderRadius:'50%', width:32, height:32, color:'rgba(240,232,255,.7)', fontSize:18, cursor:'pointer', zIndex:1 }}>✕</button>
+            <AuthScreen onSuccess={()=>{ setShowAuth(false); if(onSignUp) onSignUp(); }}/>
+          </div>
+        </div>
+      )}
+      <div style={{ fontSize:52, marginBottom:18, opacity:.7 }}>💙</div>
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:10 }}>{feature}</div>
+      <div style={{ fontSize:15, color:'rgba(240,232,255,.55)', lineHeight:1.8, maxWidth:380, marginBottom:28 }}>
+        This feature requires a free Lazuli Crest account.<br/>
+        <strong style={{ color:'rgba(240,232,255,.8)' }}>Your data stays private.</strong> No payment needed — ever.
+      </div>
+      <button onClick={()=>setShowAuth(true)} style={{ padding:'13px 32px', borderRadius:14, background:'linear-gradient(135deg,rgba(42,92,173,.6),rgba(201,168,76,.3))', border:'1.5px solid rgba(201,168,76,.5)', color:'#C9A84C', fontSize:16, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", marginBottom:12 }}>
+        ✦ Create Free Account
+      </button>
+      <button onClick={()=>setShowAuth(true)} style={{ padding:'10px 24px', borderRadius:12, background:'transparent', border:'1px solid rgba(42,92,173,.3)', color:'rgba(168,196,240,.6)', fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+        Already have an account? Sign In
+      </button>
+      <div style={{ marginTop:24, fontSize:12, color:'rgba(240,232,255,.2)', maxWidth:320, lineHeight:1.6 }}>
+        You can still explore everything else as a guest — symptoms, diary, appointments, and more.
+      </div>
+    </div>
+  );
+}
+
 function PH({ emoji, title, sub, children }) {
   return (
     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:24, flexWrap:'wrap', gap:12 }}>
@@ -2097,7 +2355,7 @@ const DIET_PROTOCOLS = [
   'Dairy-Free','Paleo','Vegan','Low-Histamine','SIBO','Elimination',
 ];
 
-function AIDiet({ data, upd }) {
+function AIDiet({ data, upd, user }) {
   const [protocol, setProtocol] = useState(data.dietProtocol||'');
   const [mealLog, setMealLog]   = useState('');
   const [mealTime, setMealTime] = useState('breakfast');
@@ -2290,12 +2548,19 @@ function AIDiet({ data, upd }) {
               <div style={{ fontSize:15, color:'rgba(240,232,255,.45)', marginTop:2 }}>Tell me what you have or what you're craving — I'll suggest recipes for your {protocol||'dietary'} needs.</div>
             </div>
           </div>
+          {!user ? (
+            <div style={{ padding:'16px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.18)', borderRadius:12, fontSize:14, color:'rgba(168,196,240,.6)', lineHeight:1.6, display:'flex', gap:10, alignItems:'center' }}>
+              <span style={{ fontSize:20 }}>💙</span>
+              <span>AI recipe curation requires a free account. <button onClick={()=>document.dispatchEvent(new CustomEvent('lazuli-show-auth'))} style={{ background:'none', border:'none', color:'#C9A84C', cursor:'pointer', fontWeight:700, fontSize:14, padding:0, fontFamily:"'DM Sans',sans-serif" }}>Sign up free →</button></span>
+            </div>
+          ) : (
           <div style={{ display:'flex', gap:10, marginBottom:16 }}>
             <input className="field" value={aiPrompt} onChange={e=>setAiPrompt(e.target.value)} placeholder={`e.g. "AIP breakfast with sweet potato" or "What's good for my fatigue?"`} onKeyDown={e=>e.key==='Enter'&&askAI()} style={{ flex:1, background:'rgba(252,248,238,.04)', borderColor:'rgba(201,168,76,.25)' }}/>
             <button className="btn btn-gold" style={{ flexShrink:0 }} onClick={askAI} disabled={loadingAI||!aiPrompt.trim()}>
               {loadingAI ? <span style={{ display:'inline-block', width:15, height:15, border:'2px solid rgba(0,0,0,.3)', borderTopColor:'#000', borderRadius:'50%', animation:'spin .7s linear infinite' }}/> : '✦ Cook it up'}
             </button>
           </div>
+          )}
           {aiReply && (
             <div style={{ padding:'18px 20px', background:'rgba(252,248,238,.03)', border:'1px solid rgba(201,168,76,.18)', borderRadius:14, animation:'popIn .3s ease' }}>
               <div style={{ fontSize:14, fontWeight:700, color:'rgba(201,168,76,.6)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>✦ From Lazuli's Kitchen</div>
@@ -3537,6 +3802,9 @@ function Advocate({ data, user }) {
     setLoading(false); setAiTyping(false);
     setTimeout(()=>inputRef.current?.focus(), 100);
   };
+
+  // Guest wall — AI features require an account
+  if (!user) return <GuestAIWall feature="💙 Lazuli AI" />;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16, height:'calc(100vh - 120px)', minHeight:500 }}>
