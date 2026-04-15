@@ -531,6 +531,7 @@ export default function App() {
 
           <div className="page-fade page-inner" key={tab}>
             <RotatingQuoteBanner/>
+            {tab !== 'dashboard' && <TabHint tab={tab}/>}
             {tab==='dashboard'    && <Dashboard    data={data} setTab={go} upd={upd} user={user} bgInsight={bgInsight}/>}
             {tab==='symptoms'     && <Symptoms     data={data} upd={upd}/>}
             {tab==='bodymap'      && <BodyMap      data={data} upd={upd}/>}
@@ -584,6 +585,51 @@ const FLOAT_ITEMS = [
   {sym:'π',  x:20, size:36, delay:70,  dur:89},
   {sym:'μ',  x:52, size:34, delay:15,  dur:96},
 ];
+
+// ── Tab onboarding hints ──────────────────────────────────────
+const TAB_HINTS = {
+  dashboard:    { icon:'🏠', title:'Your Health Dashboard',    body:'Your personal overview — daily trends, AI insights, and quick links to every tool. Everything starts here.' },
+  symptoms:     { icon:'📊', title:'Symptom Tracker',          body:'Log how you feel each day. Track pain, fatigue, flares, and patterns over time. Your history helps spot triggers.' },
+  bodymap:      { icon:'🫀', title:'Body Map',                 body:'Tap any area on the silhouette to mark pain or discomfort. Build a visual picture of where symptoms live.' },
+  brain:        { icon:'🧠', title:'Brain & Cognition',        body:'Track brain fog, memory, and cognitive symptoms. Log notes when you\'re feeling mentally clear or foggy.' },
+  infusion:     { icon:'💉', title:'Infusion Hub',             body:'Log IV infusions, IVIG, and other infusion treatments. Track dates, reactions, and notes from each session.' },
+  metabolic:    { icon:'🔬', title:'Metabolic Lab',            body:'Monitor blood glucose, vitals, and metabolic markers. Spot patterns between what you eat and how you feel.' },
+  hydration:    { icon:'💧', title:'Hydration Tracker',        body:'Track your fluid intake throughout the day. Stay on top of your hydration goals — especially important for POTS and dysautonomia.' },
+  medications:  { icon:'💊', title:'Medications',              body:'Log your current medications, dosages, and schedules. Track when you take them and flag any issues.' },
+  appointments: { icon:'📅', title:'Appointments',             body:'Save upcoming doctor visits with dates, locations, and notes. Never lose track of what to ask or what was said.' },
+  diary:        { icon:'📖', title:'Health Diary',             body:'Write freely about your day, symptoms, emotions, or anything on your mind. Your private wellness journal.' },
+  mindfulness:  { icon:'🌿', title:'Mindfulness & Rest',       body:'Breathing exercises, a worry stone, zen garden, soundscapes, and guided imagery — all here to help you reset.' },
+  diet:         { icon:'🥗', title:'Lazuli Kitchen',           body:'Log meals, set a diet protocol, and let Lazuli AI suggest recipes based on your mood or health profile. Use the scanner to find what you can make with what you have.' },
+  documents:    { icon:'📁', title:'Documents',                body:'Upload and store lab results, prescriptions, imaging reports, and other medical files. Accessible whenever you need them.' },
+  advocate:     { icon:'💙', title:'Lazuli AI Advocate',       body:'Have a real conversation with your AI health companion. Ask questions, get support, and prepare for appointments.' },
+  profile:      { icon:'👤', title:'Your Profile',             body:'Set your name, diagnosis, care team, and preferences. Your profile helps Lazuli personalize everything for you.' },
+  share:        { icon:'🔗', title:'Share Health Summary',     body:'Generate a secure, PIN-protected link to share your health snapshot with a doctor, caregiver, or loved one.' },
+  gym:          { icon:'🏋️', title:'Lazuli Gym',               body:'Gentle movement tracking designed for chronic illness. Log adaptive workouts and track energy vs. activity.' },
+  updates:      { icon:'✨', title:'What\'s New',               body:'See the latest features and updates added to Lazuli Crest.' },
+};
+
+function TabHint({ tab }) {
+  const key = `lazuli_hint_seen_${tab}`;
+  const [visible, setVisible] = React.useState(() => {
+    try { return !localStorage.getItem(key); } catch { return false; }
+  });
+  const hint = TAB_HINTS[tab];
+  if (!hint || !visible) return null;
+  const dismiss = () => {
+    setVisible(false);
+    try { localStorage.setItem(key, '1'); } catch {}
+  };
+  return (
+    <div style={{ display:'flex', alignItems:'flex-start', gap:12, padding:'12px 16px', marginBottom:16, borderRadius:14, background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.22)', animation:'zenFadeIn .35s ease', position:'relative' }}>
+      <span style={{ fontSize:22, flexShrink:0, marginTop:1 }}>{hint.icon}</span>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:14, fontWeight:700, color:'rgba(168,196,240,.85)', marginBottom:3, fontFamily:"'DM Sans',sans-serif" }}>{hint.title}</div>
+        <div style={{ fontSize:13, color:'rgba(168,196,240,.55)', lineHeight:1.55 }}>{hint.body}</div>
+      </div>
+      <button onClick={dismiss} style={{ background:'transparent', border:'none', color:'rgba(240,232,255,.25)', cursor:'pointer', fontSize:16, padding:'2px 4px', flexShrink:0 }} title="Got it">✕</button>
+    </div>
+  );
+}
 
 const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
   text: q,
@@ -1026,6 +1072,14 @@ const GLOBAL_CSS = `
   @keyframes orbit1{from{transform:rotate(0deg) translateX(70px) rotate(0deg);}to{transform:rotate(360deg) translateX(70px) rotate(-360deg);}}
   @keyframes orbit2{from{transform:rotate(120deg) translateX(85px);}to{transform:rotate(480deg) translateX(85px);}}
   @keyframes barBounce{0%{transform:scaleY(.5);}100%{transform:scaleY(1.2);}}
+  @keyframes koiGlow{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1);}50%{opacity:1;transform:translate(-50%,-50%) scale(1.3);}}
+  @keyframes koiRipple{0%{transform:translate(-50%,-50%) scale(.15);opacity:.85;}100%{transform:translate(-50%,-50%) scale(1.05);opacity:0;}}
+  @keyframes koiSwim1{0%{transform:translate(-42%,-62%) rotate(0deg) translateX(30px) rotate(0deg);}100%{transform:translate(-42%,-62%) rotate(360deg) translateX(30px) rotate(-360deg);}}
+  @keyframes koiSwim2{0%{transform:translate(-58%,-38%) rotate(180deg) translateX(22px) rotate(-180deg);}100%{transform:translate(-58%,-38%) rotate(540deg) translateX(22px) rotate(-540deg);}}
+  @keyframes koiWater{0%,100%{opacity:.25;transform:scaleX(1);}50%{opacity:.55;transform:scaleX(1.06);}}
+  @keyframes zenFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes accHoverBounce{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.08);}}
+  @keyframes scanLine{0%{top:0%;opacity:1;}80%{top:100%;opacity:.8;}100%{top:100%;opacity:0;}}
 
   @media(max-width:768px){
     .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translate3d(-100%,0,0);z-index:200;overflow-y:scroll;-webkit-overflow-scrolling:touch;width:82vw;max-width:300px;will-change:transform;backface-visibility:hidden}
@@ -1352,6 +1406,310 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
         }
       </div>
     </aside>
+  );
+}
+
+// ─── Koi Pond decoration ─────────────────────────────────────
+function KoiPond({ size = 90 }) {
+  return (
+    <div style={{ position:'relative', width:size, height:size, borderRadius:'50%',
+      background:'radial-gradient(circle at 40% 35%, rgba(80,220,200,.45) 0%, rgba(20,110,160,.7) 45%, rgba(5,28,58,.9) 100%)',
+      boxShadow:`0 0 ${size*.22}px rgba(64,224,208,.5), 0 0 ${size*.44}px rgba(64,224,208,.18), inset 0 0 ${size*.14}px rgba(0,80,130,.6)`,
+      overflow:'hidden', cursor:'grab', userSelect:'none', flexShrink:0
+    }}>
+      {/* center glow */}
+      <div style={{ position:'absolute', top:'50%', left:'50%', width:size*.38, height:size*.38, borderRadius:'50%',
+        background:'rgba(64,224,208,.28)', animation:'koiGlow 2.8s ease-in-out infinite', pointerEvents:'none' }}/>
+      {/* ripple rings */}
+      {[.38,.62,.88].map((sc,i)=>(
+        <div key={i} style={{ position:'absolute', top:'50%', left:'50%',
+          width:'100%', height:'100%', borderRadius:'50%',
+          border:`1.5px solid rgba(100,230,210,${.35-i*.08})`,
+          animation:`koiRipple 3.2s ${i*.9}s ease-out infinite`,
+          pointerEvents:'none', boxSizing:'border-box'
+        }}/>
+      ))}
+      {/* water shimmer */}
+      <div style={{ position:'absolute', inset:0, borderRadius:'50%',
+        background:'repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(100,220,200,.06) 7px)',
+        animation:'koiWater 4s ease-in-out infinite', pointerEvents:'none'
+      }}/>
+      {/* koi fish */}
+      <div style={{ position:'absolute', top:'50%', left:'50%', fontSize:size*.22,
+        animation:'koiSwim1 5s linear infinite', pointerEvents:'none' }}>🐠</div>
+      <div style={{ position:'absolute', top:'50%', left:'50%', fontSize:size*.18,
+        animation:'koiSwim2 7s linear infinite', pointerEvents:'none' }}>🐟</div>
+    </div>
+  );
+}
+
+// ─── Zen Garden ───────────────────────────────────────────────
+function ZenGarden() {
+  const canvasRef   = useRef(null);
+  const containerRef= useRef(null);
+  const audioCtxRef = useRef(null);
+  const lastPosRef  = useRef(null);
+  const isDrawRef   = useRef(false);
+
+  const [sandColor, setSandColor] = useState('tan');
+  const [zenTool,   setZenTool]   = useState('rake');
+  const [items,     setItems]     = useState([]);
+  const [dragItem,  setDragItem]  = useState(null);
+  const [zenMuted,  setZenMuted]  = useState(false);
+
+  const PAL = {
+    tan:   { id:'tan',   label:'Sand ✦',    bg:'rgba(180,140,60,.13)',   line:'#C9A84C', light:'#EDD870', dark:'#8B6E28', border:'rgba(201,168,76,.28)',  tx:'#C9A84C' },
+    white: { id:'white', label:'White ✦',   bg:'rgba(200,195,185,.15)',  line:'#D8D4C8', light:'#F5F0E6', dark:'#A09C90', border:'rgba(210,205,195,.35)', tx:'#D8D4C8' },
+    blue:  { id:'blue',  label:'Blue ✦',    bg:'rgba(90,150,200,.12)',   line:'#7AB4D4', light:'#AADAF8', dark:'#4A84A8', border:'rgba(100,165,215,.3)',  tx:'#7AB4D4' },
+    pink:  { id:'pink',  label:'Sakura ✦',  bg:'rgba(200,130,160,.12)',  line:'#D4A0B8', light:'#F0C4D8', dark:'#A07090', border:'rgba(215,155,185,.3)',  tx:'#D4A0B8' },
+  };
+
+  const CATALOG = [
+    { id:'pagoda',  emoji:'🏯', label:'Pagoda',     sz:52, zi:10 },
+    { id:'torii',   emoji:'⛩️', label:'Torii',      sz:50, zi:10 },
+    { id:'stone',   emoji:'🪨', label:'Stone',      sz:40, zi:8  },
+    { id:'bamboo',  emoji:'🎍', label:'Bamboo',     sz:48, zi:9  },
+    { id:'blossom', emoji:'🌸', label:'Blossom',    sz:38, zi:8  },
+    { id:'lantern', emoji:'🏮', label:'Lantern',    sz:38, zi:9  },
+    { id:'koipond', emoji:null,  label:'Koi Pond',  sz:90, zi:7, special:'koi' },
+    { id:'statue',  emoji:'🗿', label:'Statue',     sz:44, zi:9  },
+    { id:'lotus',   emoji:'🪷', label:'Lotus',      sz:34, zi:8  },
+    { id:'crane',   emoji:'🦢', label:'Crane',      sz:40, zi:9  },
+    { id:'deer',    emoji:'🦌', label:'Deer',       sz:42, zi:9  },
+    { id:'frog',    emoji:'🐸', label:'Frog',       sz:30, zi:8  },
+    { id:'candle',  emoji:'🕯️', label:'Candle',    sz:30, zi:8  },
+    { id:'bridge',  emoji:'🌉', label:'Bridge',     sz:58, zi:7  },
+    { id:'bonsai',  emoji:'🪴', label:'Bonsai',     sz:44, zi:9  },
+    { id:'moon',    emoji:'🌕', label:'Moon',       sz:38, zi:6  },
+  ];
+
+  /* ── canvas init ──────────────────────────────── */
+  const initCanvas = useCallback(() => {
+    const cv = canvasRef.current; if (!cv) return;
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const p = PAL[sandColor];
+    ctx.strokeStyle = p.line + '20';
+    ctx.lineWidth = 0.6;
+    for (let y = 18; y < cv.height; y += 18) {
+      ctx.beginPath();
+      ctx.moveTo(0, y + (Math.random()-.5)*1.5);
+      ctx.lineTo(cv.width, y + (Math.random()-.5)*1.5);
+      ctx.stroke();
+    }
+  }, [sandColor]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { // size canvas on mount
+    const cv = canvasRef.current; if (!cv) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = cv.getBoundingClientRect();
+    cv.width  = rect.width  * dpr;
+    cv.height = rect.height * dpr;
+    cv.getContext('2d').scale(dpr, dpr);
+    initCanvas();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { initCanvas(); }, [sandColor, initCanvas]);
+
+  /* ── sand audio ───────────────────────────────── */
+  const sandSound = useCallback(() => {
+    if (zenMuted) return;
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const ac = audioCtxRef.current;
+      const len = Math.floor(ac.sampleRate * .05);
+      const buf = ac.createBuffer(1, len, ac.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i=0;i<len;i++) d[i]=(Math.random()*2-1);
+      const src = ac.createBufferSource(); src.buffer=buf;
+      const lpf = ac.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=1100;
+      const g = ac.createGain(); g.gain.setValueAtTime(.055,ac.currentTime); g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.07);
+      src.connect(lpf); lpf.connect(g); g.connect(ac.destination); src.start();
+    } catch {}
+  }, [zenMuted]);
+
+  /* ── pointer helpers ──────────────────────────── */
+  const getP = (e, cv) => {
+    const r = cv.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x:(cx-r.left)*dpr, y:(cy-r.top)*dpr, nx:cx-r.left, ny:cy-r.top };
+  };
+
+  /* ── drawing ──────────────────────────────────── */
+  const doDraw = useCallback((e) => {
+    const cv = canvasRef.current; if (!cv || !isDrawRef.current) return;
+    e.preventDefault();
+    const pos = getP(e, cv);
+    const ctx = cv.getContext('2d');
+    const p   = PAL[sandColor];
+    const last= lastPosRef.current;
+    // directional brightness
+    let col = p.line;
+    if (last) {
+      const dir = (pos.nx - last.nx) + (pos.ny - last.ny);
+      col = dir > 2 ? p.light : dir < -2 ? p.dark : p.line;
+    }
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    if (zenTool==='rake') {
+      const ang = last ? Math.atan2(pos.y-last.y, pos.x-last.x)+Math.PI/2 : Math.PI/2;
+      [-8,0,8].forEach(off=>{
+        const ox=Math.cos(ang)*off, oy=Math.sin(ang)*off;
+        ctx.beginPath(); ctx.strokeStyle=col+'CC'; ctx.lineWidth=1.6;
+        ctx.moveTo((last?last.x:pos.x)+ox, (last?last.y:pos.y)+oy);
+        ctx.lineTo(pos.x+ox, pos.y+oy); ctx.stroke();
+      });
+      sandSound();
+    } else if (zenTool==='wave' && last) {
+      const mx=(pos.x+last.x)/2, dpr=window.devicePixelRatio||1;
+      ctx.beginPath(); ctx.strokeStyle=col+'BB'; ctx.lineWidth=1.5;
+      ctx.moveTo(last.x,last.y); ctx.quadraticCurveTo(mx,last.y-14*dpr,pos.x,pos.y); ctx.stroke();
+      sandSound();
+    } else if (zenTool==='smooth') {
+      const dpr=window.devicePixelRatio||1;
+      const g=ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,22*dpr);
+      g.addColorStop(0,p.bg.replace(/[\d.]+\)$/,'.55)')); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(pos.x,pos.y,22*dpr,0,Math.PI*2); ctx.fill();
+    } else if (zenTool==='draw' && last) {
+      ctx.beginPath(); ctx.strokeStyle=col+'CC'; ctx.lineWidth=1.8;
+      ctx.moveTo(last.x,last.y); ctx.lineTo(pos.x,pos.y); ctx.stroke();
+      sandSound();
+    }
+    lastPosRef.current = pos;
+  }, [sandColor, zenTool, sandSound]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startDraw = (e) => { isDrawRef.current=true; lastPosRef.current=null; doDraw(e); };
+  const stopDraw  = ()  => { isDrawRef.current=false; lastPosRef.current=null; };
+
+  /* ── accessory drag ───────────────────────────── */
+  const accDown = (e, uid) => {
+    e.stopPropagation();
+    const cr = containerRef.current; if (!cr) return;
+    const r = cr.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    const it=items.find(i=>i.uid===uid); if (!it) return;
+    setDragItem({ uid, sx:cx-(it.x/100*r.width), sy:cy-(it.y/100*r.height) });
+  };
+  const accMove = (e) => {
+    if (!dragItem) return;
+    const cr=containerRef.current; if (!cr) return;
+    const r=cr.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    setItems(prev=>prev.map(i=>i.uid===dragItem.uid
+      ? {...i, x:Math.min(95,Math.max(5,((cx-dragItem.sx)/r.width)*100)), y:Math.min(95,Math.max(5,((cy-dragItem.sy)/r.height)*100))}
+      : i));
+  };
+  const accUp = () => setDragItem(null);
+
+  const addAcc = (acc) => {
+    setItems(prev=>[...prev, { uid:`${acc.id}-${Date.now()}`, accId:acc.id, x:20+Math.random()*60, y:20+Math.random()*60 }]);
+  };
+
+  const clearSand = () => {
+    const cv=canvasRef.current; if (!cv) return;
+    cv.getContext('2d').clearRect(0,0,cv.width,cv.height); initCanvas();
+  };
+
+  const pal = PAL[sandColor];
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:14, width:'100%', maxWidth:700, margin:'0 auto', animation:'zenFadeIn .4s ease' }}>
+      {/* Title */}
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, color:'rgba(240,232,255,.85)', letterSpacing:1.5 }}>石庭 Zen Garden</div>
+        <div style={{ fontSize:13, color:'rgba(240,232,255,.35)', marginTop:3, fontStyle:'italic' }}>Rake the sand. Find stillness.</div>
+      </div>
+
+      {/* Controls row */}
+      <div style={{ display:'flex', flexWrap:'wrap', gap:8, justifyContent:'center', alignItems:'center' }}>
+        {/* Sand colors */}
+        {Object.values(PAL).map(p=>(
+          <button key={p.id} onClick={()=>setSandColor(p.id)} style={{ padding:'5px 14px', borderRadius:20, border:`1.5px solid ${sandColor===p.id?p.tx:'rgba(255,255,255,.1)'}`, background:sandColor===p.id?p.bg:'transparent', color:sandColor===p.id?p.tx:'rgba(240,232,255,.38)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>{p.label}</button>
+        ))}
+        <div style={{ width:1, height:22, background:'rgba(255,255,255,.1)' }}/>
+        {/* Tools */}
+        {[{id:'rake',label:'🪡 Rake'},{id:'wave',label:'〰 Wave'},{id:'smooth',label:'☁ Smooth'},{id:'draw',label:'✏ Draw'}].map(t=>(
+          <button key={t.id} onClick={()=>setZenTool(t.id)} style={{ padding:'5px 14px', borderRadius:20, border:`1.5px solid ${zenTool===t.id?pal.tx:'rgba(255,255,255,.1)'}`, background:zenTool===t.id?pal.bg:'transparent', color:zenTool===t.id?pal.tx:'rgba(240,232,255,.38)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* Garden canvas area */}
+      <div
+        ref={containerRef}
+        style={{ position:'relative', width:'100%', height:320, borderRadius:20, overflow:'hidden', border:`1.5px solid ${pal.border}`, background:pal.bg, cursor:dragItem?'grabbing':'crosshair', touchAction:'none', userSelect:'none' }}
+        onMouseDown={e=>{ if (!dragItem) startDraw(e); }}
+        onMouseMove={e=>{ doDraw(e); accMove(e); }}
+        onMouseUp={()=>{ stopDraw(); accUp(); }}
+        onMouseLeave={()=>{ stopDraw(); accUp(); }}
+        onTouchStart={e=>{ if (!dragItem) startDraw(e); }}
+        onTouchMove={e=>{ doDraw(e); accMove(e); }}
+        onTouchEnd={()=>{ stopDraw(); accUp(); }}
+      >
+        <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%' }}/>
+
+        {/* Placed accessories */}
+        {items.map(it=>{
+          const acc=CATALOG.find(a=>a.id===it.accId); if(!acc) return null;
+          return (
+            <div key={it.uid}
+              style={{ position:'absolute', left:`${it.x}%`, top:`${it.y}%`, transform:'translate(-50%,-50%)', zIndex:acc.zi||8, cursor:dragItem?.uid===it.uid?'grabbing':'grab', touchAction:'none' }}
+              onMouseDown={e=>accDown(e,it.uid)} onTouchStart={e=>accDown(e,it.uid)}
+            >
+              {acc.special==='koi'
+                ? <KoiPond size={acc.sz}/>
+                : <div style={{ position:'relative', display:'inline-block' }}>
+                    <span style={{ fontSize:acc.sz*.65, lineHeight:1, filter:'drop-shadow(0 2px 8px rgba(0,0,0,.45))' }}>{acc.emoji}</span>
+                    <button
+                      onClick={e=>{e.stopPropagation();setItems(p=>p.filter(i=>i.uid!==it.uid));}}
+                      style={{ position:'absolute',top:-7,right:-7,width:16,height:16,borderRadius:'50%',background:'rgba(180,40,40,.8)',border:'none',color:'#fff',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s',lineHeight:1 }}
+                      onMouseEnter={e=>e.currentTarget.style.opacity='1'}
+                      onMouseLeave={e=>e.currentTarget.style.opacity='0'}
+                    >×</button>
+                  </div>
+              }
+            </div>
+          );
+        })}
+
+        {items.length===0 && (
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
+            <span style={{ fontSize:15, color:`${pal.tx}28`, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Drag to rake · Add accessories below</span>
+          </div>
+        )}
+      </div>
+
+      {/* Accessory catalog */}
+      <div style={{ background:'rgba(255,255,255,.03)', borderRadius:16, padding:'12px 14px', border:'1px solid rgba(255,255,255,.07)' }}>
+        <div style={{ fontSize:12, color:'rgba(240,232,255,.38)', marginBottom:9, fontFamily:"'Cormorant Garamond',serif", letterSpacing:.8 }}>Garden accessories — tap to place, drag to move</div>
+        <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+          {CATALOG.map(acc=>(
+            <button key={acc.id} onClick={()=>addAcc(acc)}
+              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'7px 11px', borderRadius:12, border:'1px solid rgba(255,255,255,.08)', background:'rgba(255,255,255,.04)', cursor:'pointer', color:'rgba(240,232,255,.65)', fontSize:11, fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}
+              onMouseEnter={e=>{e.currentTarget.style.border=`1px solid ${pal.tx}44`;e.currentTarget.style.background=pal.bg;}}
+              onMouseLeave={e=>{e.currentTarget.style.border='1px solid rgba(255,255,255,.08)';e.currentTarget.style.background='rgba(255,255,255,.04)';}}
+            >
+              {acc.special==='koi'
+                ? <div style={{ width:24,height:24,borderRadius:'50%',background:'radial-gradient(circle, #40E0D0 0%, #1A6B8A 55%, #0A2040 100%)',boxShadow:'0 0 7px rgba(64,224,208,.5)' }}/>
+                : <span style={{ fontSize:20 }}>{acc.emoji}</span>
+              }
+              <span>{acc.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer controls */}
+      <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+        <button className="btn btn-ghost" onClick={clearSand} style={{ fontSize:15 }}>🧹 Clear Sand</button>
+        <button className="btn btn-ghost" onClick={()=>setItems([])} style={{ fontSize:15 }}>🗑 Remove All</button>
+        <button onClick={()=>setZenMuted(m=>!m)} style={{ fontSize:13, color:'rgba(240,232,255,.35)', background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)', borderRadius:20, padding:'5px 14px', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+          {zenMuted?'🔇 Sounds off':'🔊 Sand sounds'}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -2366,6 +2724,74 @@ function AIDiet({ data, upd, user }) {
   const [mealPhoto, setMealPhoto] = useState(null);
   const mealPhotoRef = useRef();
 
+  // ── Meal Finder ──
+  const [mealMode,       setMealMode]       = useState('mood');   // 'mood' | 'health'
+  const [selectedMood,   setSelectedMood]   = useState(null);
+  const [mealResults,    setMealResults]    = useState([]);
+  const [loadingFinder,  setLoadingFinder]  = useState(false);
+  const [finderActive,   setFinderActive]   = useState(false);
+  // ── Scanner ──
+  const [scanInput,      setScanInput]      = useState('');
+  const [scanTags,       setScanTags]       = useState([]);
+  const [scanResults,    setScanResults]    = useState([]);
+  const [loadingScan,    setLoadingScan]    = useState(false);
+  const [scanActive,     setScanActive]     = useState(false);
+  const [scanLine,       setScanLine]       = useState(false);
+
+  const MOODS = [
+    { id:'cozy',      label:'Cozy',       desc:'Warm & comforting',    grad:'linear-gradient(135deg,#C9804C,#E8A860,#7A3010)', icon:'🍂' },
+    { id:'energized', label:'Energized',  desc:'Light & invigorating', grad:'linear-gradient(135deg,#1FC8A0,#40E0D0,#0A5A48)', icon:'⚡' },
+    { id:'comfort',   label:'Comfort',    desc:'Soul-soothing',         grad:'linear-gradient(135deg,#C46080,#E8A0B8,#5A1830)', icon:'🤗' },
+    { id:'light',     label:'Light',      desc:'Fresh & airy',          grad:'linear-gradient(135deg,#8AB4C8,#B8D8E8,#2A4858)', icon:'🌿' },
+    { id:'indulgent', label:'Indulgent',  desc:'Rich & satisfying',     grad:'linear-gradient(135deg,#6B35A8,#C9A84C,#2A0848)', icon:'✨' },
+    { id:'healing',   label:'Healing',    desc:'Nourishing & gentle',   grad:'linear-gradient(135deg,#4CAF7A,#90E8B0,#1A4030)', icon:'💚' },
+  ];
+
+  const findMeals = async () => {
+    if (!user) return;
+    setLoadingFinder(true); setMealResults([]);
+    const moodCtx = mealMode === 'mood' && selectedMood
+      ? `The user is in a "${selectedMood.label}" mood — ${selectedMood.desc}.`
+      : `Use the user's clinical health profile to suggest optimal meals.`;
+    const sys = `You are Lazuli, a nutritionist AI. ${moodCtx}
+Diet protocol: ${protocol||'general healthy'}. Health conditions: ${data.profile?.conditions||'not specified'}.
+Recent symptoms: ${(data.symptoms||[]).slice(-3).map(s=>s.name).join(', ')||'none recent'}.
+Return EXACTLY 3 JSON objects in an array. Each: { name, matchPct (integer 85-99), why (1 sentence why it suits the user), emoji (single), tags (array of 1-2 strings like "High Iron","Anti-inflammatory") }. Return ONLY valid JSON array, no markdown.`;
+    try {
+      const r = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ messages:[{role:'user',content:'Suggest 3 meals'}], system:sys, userId:data.uid }) });
+      const j = await r.json();
+      const txt = j.content?.[0]?.text || j.text || '[]';
+      const arr = JSON.parse(txt.match(/\[[\s\S]*?\]/)?.[0] || '[]');
+      setMealResults(arr.slice(0,3));
+    } catch { setMealResults([]); }
+    setLoadingFinder(false);
+  };
+
+  const addScanTag = () => {
+    const v = scanInput.trim();
+    if (!v || scanTags.includes(v)) return;
+    setScanTags(t=>[...t, v]); setScanInput('');
+  };
+
+  const scanRecipes = async () => {
+    if (!user || !scanTags.length) return;
+    setLoadingScan(true); setScanResults([]); setScanLine(true);
+    setTimeout(()=>setScanLine(false), 2500);
+    const sys = `You are Lazuli Kitchen AI. The user has these ingredients: ${scanTags.join(', ')}.
+Diet: ${protocol||'general'}. Conditions: ${data.profile?.conditions||'not specified'}.
+Suggest 2-3 recipes using ONLY those ingredients. Return JSON array: [{ name, emoji, time (e.g. "25 min"), tags (array), why, steps (array of 3 short strings) }]. ONLY JSON, no markdown.`;
+    try {
+      const r = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ messages:[{role:'user',content:'What can I make?'}], system:sys, userId:data.uid }) });
+      const j = await r.json();
+      const txt = j.content?.[0]?.text || j.text || '[]';
+      const arr = JSON.parse(txt.match(/\[[\s\S]*?\]/)?.[0] || '[]');
+      setScanResults(arr.slice(0,3));
+    } catch { setScanResults([]); }
+    setLoadingScan(false);
+  };
+
   const today = todayStr();
   const todayMeals = (data.dietLogs||[]).filter(l=>l.date===today);
 
@@ -2432,6 +2858,212 @@ function AIDiet({ data, upd, user }) {
             {['🫙','🥗','🍳','🥘','🫕','🍲'].map((e,i)=>(
               <span key={i} style={{ fontSize:20, opacity:.45, filter:'drop-shadow(0 2px 4px rgba(0,0,0,.5))' }}>{e}</span>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ══ AI Meal Finder ══ */}
+      <div style={{ marginBottom:20, borderRadius:20, overflow:'hidden', border:'1.5px solid rgba(42,92,173,.25)', background:'rgba(10,14,30,.85)', backdropFilter:'blur(20px)', boxShadow:'0 8px 40px rgba(0,0,0,.5)' }}>
+        {/* Header tab strip */}
+        <div style={{ display:'flex', borderBottom:'1px solid rgba(42,92,173,.2)', position:'relative' }}>
+          {[{id:'mood',label:'✦ Mood-Based'},{id:'health',label:'💊 Health-Based'}].map(m=>(
+            <button key={m.id} onClick={()=>{setMealMode(m.id);setMealResults([]);}}
+              style={{ flex:1, padding:'14px 8px', background:'transparent', border:'none', color:mealMode===m.id?'#C9A84C':'rgba(240,232,255,.35)', fontSize:14, cursor:'pointer', fontFamily:"'Cinzel',serif", letterSpacing:1, borderBottom:`2px solid ${mealMode===m.id?'#C9A84C':'transparent'}`, transition:'all .22s' }}>
+              {m.label}
+            </button>
+          ))}
+          <button onClick={()=>setFinderActive(f=>!f)} style={{ padding:'10px 18px', background:'transparent', border:'none', color:'rgba(240,232,255,.3)', fontSize:18, cursor:'pointer', transition:'transform .2s' }}>
+            {finderActive?'▲':'▼'}
+          </button>
+        </div>
+
+        {/* Sliding panel */}
+        <div style={{ maxHeight:finderActive?'900px':'0', overflow:'hidden', transition:'max-height .4s cubic-bezier(.4,0,.2,1)' }}>
+          <div style={{ padding:'20px 20px 16px' }}>
+            {/* ── MOOD MODE ── */}
+            <div style={{ display:mealMode==='mood'?'block':'none', animation:'zenFadeIn .3s ease' }}>
+              <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', marginBottom:14, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>How are you feeling right now? I'll curate something perfect.</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:16 }}>
+                {MOODS.map(m=>(
+                  <button key={m.id} onClick={()=>setSelectedMood(selectedMood?.id===m.id?null:m)}
+                    style={{ padding:'14px 8px', borderRadius:14, border:`1.5px solid ${selectedMood?.id===m.id?'rgba(255,255,255,.4)':'rgba(255,255,255,.07)'}`, background:selectedMood?.id===m.id?m.grad:'rgba(255,255,255,.03)', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5, transition:'all .22s', boxShadow:selectedMood?.id===m.id?'0 4px 20px rgba(0,0,0,.4)':'none', transform:selectedMood?.id===m.id?'scale(1.04)':'scale(1)' }}>
+                    <span style={{ fontSize:24 }}>{m.icon}</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:selectedMood?.id===m.id?'#fff':'rgba(240,232,255,.65)', fontFamily:"'DM Sans',sans-serif" }}>{m.label}</span>
+                    <span style={{ fontSize:11, color:selectedMood?.id===m.id?'rgba(255,255,255,.75)':'rgba(240,232,255,.32)' }}>{m.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── HEALTH MODE ── */}
+            <div style={{ display:mealMode==='health'?'block':'none', animation:'zenFadeIn .3s ease' }}>
+              <div style={{ padding:'16px 18px', borderRadius:14, background:'rgba(42,92,173,.08)', border:'1px solid rgba(42,92,173,.2)', marginBottom:16 }}>
+                <div style={{ fontSize:13, color:'rgba(168,196,240,.7)', marginBottom:10, fontFamily:"'Cinzel',serif", letterSpacing:.8 }}>YOUR CLINICAL PROFILE</div>
+                {[
+                  { label:'Conditions', val:data.profile?.conditions||'Not set' },
+                  { label:'Diet',       val:protocol||'No protocol selected' },
+                  { label:'Recent symptoms', val:(data.symptoms||[]).slice(-2).map(s=>s.name).join(', ')||'None logged' },
+                ].map(r=>(
+                  <div key={r.label} style={{ display:'flex', gap:10, marginBottom:7, alignItems:'flex-start' }}>
+                    <span style={{ fontSize:12, color:'rgba(168,196,240,.45)', minWidth:120, flexShrink:0 }}>{r.label}</span>
+                    <span style={{ fontSize:13, color:'rgba(240,232,255,.75)', lineHeight:1.5 }}>{r.val}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize:13, color:'rgba(240,232,255,.38)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>Lazuli will cross-reference your conditions, diet, and recent symptoms to find the most supportive meals.</div>
+            </div>
+
+            {/* Find button */}
+            {!user ? (
+              <div style={{ padding:'12px 16px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.18)', borderRadius:12, fontSize:14, color:'rgba(168,196,240,.6)', display:'flex', gap:10, alignItems:'center' }}>
+                <span>💙</span>
+                <span>AI meal finding requires a free account. <button onClick={()=>document.dispatchEvent(new CustomEvent('lazuli-show-auth'))} style={{ background:'none', border:'none', color:'#C9A84C', cursor:'pointer', fontWeight:700, fontSize:14, padding:0, fontFamily:"'DM Sans',sans-serif" }}>Sign up free →</button></span>
+              </div>
+            ) : (
+              <button className="btn btn-gold" style={{ width:'100%', padding:'13px', fontSize:16, letterSpacing:.5 }}
+                onClick={findMeals} disabled={loadingFinder||(mealMode==='mood'&&!selectedMood)}>
+                {loadingFinder
+                  ? <span style={{ display:'inline-flex', alignItems:'center', gap:8 }}><span style={{ width:16,height:16,border:'2px solid rgba(0,0,0,.3)',borderTopColor:'#000',borderRadius:'50%',animation:'spin .7s linear infinite',display:'inline-block' }}/> Curating…</span>
+                  : `✦ Find My ${mealMode==='mood'?(selectedMood?.label||'Mood')+' Meals':'Health-Based Meals'}`}
+              </button>
+            )}
+
+            {/* ── Curated Results Grid ── */}
+            {mealResults.length > 0 && (
+              <div style={{ marginTop:20, animation:'zenFadeIn .35s ease' }}>
+                <div style={{ fontSize:13, color:'rgba(201,168,76,.6)', letterSpacing:1.5, textTransform:'uppercase', fontFamily:"'Cinzel',serif", marginBottom:12 }}>✦ AI-Curated for You</div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:12 }}>
+                  {mealResults.map((m,i)=>(
+                    <div key={i} style={{ borderRadius:16, background:'linear-gradient(145deg,rgba(15,10,30,.96),rgba(25,18,50,.98))', border:'1.5px solid rgba(42,92,173,.25)', padding:'18px 16px', position:'relative', overflow:'hidden', boxShadow:'0 6px 24px rgba(0,0,0,.4)' }}>
+                      {/* Match badge */}
+                      <div style={{ position:'absolute', top:12, right:12, background:'linear-gradient(135deg,rgba(201,168,76,.2),rgba(42,92,173,.2))', border:'1px solid rgba(201,168,76,.35)', borderRadius:20, padding:'3px 10px', fontSize:12, color:'#C9A84C', fontFamily:"'DM Sans',sans-serif", fontWeight:700 }}>
+                        {m.matchPct||'95'}% Match
+                      </div>
+                      <div style={{ fontSize:34, marginBottom:8 }}>{m.emoji||'🍽'}</div>
+                      <div style={{ fontSize:16, fontWeight:700, color:'rgba(240,232,255,.9)', marginBottom:6, lineHeight:1.3, paddingRight:56 }}>{m.name}</div>
+                      {/* Why this works */}
+                      <div style={{ fontSize:12, color:'rgba(168,196,240,.6)', lineHeight:1.5, marginBottom:10, fontStyle:'italic' }}>
+                        <span style={{ color:'rgba(201,168,76,.5)', fontStyle:'normal' }}>Why this works: </span>{m.why}
+                      </div>
+                      {/* Tags */}
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                        {(m.tags||[]).map((tag,ti)=>(
+                          <span key={ti} style={{ fontSize:11, padding:'3px 9px', borderRadius:20, background:'rgba(42,92,173,.15)', border:'1px solid rgba(42,92,173,.3)', color:'rgba(168,196,240,.75)', fontFamily:"'DM Sans',sans-serif" }}>{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ══ AI Kitchen Scanner ══ */}
+      <div style={{ marginBottom:20, borderRadius:20, overflow:'hidden', border:'1.5px solid rgba(42,92,173,.22)', background:'rgba(8,12,26,.88)', backdropFilter:'blur(20px)', boxShadow:'0 8px 40px rgba(0,0,0,.5)' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px', borderBottom:'1px solid rgba(42,92,173,.18)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ fontSize:20 }}>📷</span>
+            <div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:15, color:'#C9A84C', letterSpacing:.8 }}>AI Kitchen Scanner</div>
+              <div style={{ fontSize:12, color:'rgba(240,232,255,.35)', marginTop:1 }}>Add your ingredients — I'll find what you can make</div>
+            </div>
+          </div>
+          <button onClick={()=>setScanActive(f=>!f)} style={{ padding:'7px 14px', borderRadius:20, border:'1px solid rgba(42,92,173,.3)', background:'transparent', color:'rgba(240,232,255,.45)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+            {scanActive?'▲ Close':'▼ Open'}
+          </button>
+        </div>
+
+        <div style={{ maxHeight:scanActive?'900px':'0', overflow:'hidden', transition:'max-height .4s cubic-bezier(.4,0,.2,1)' }}>
+          <div style={{ padding:'20px' }}>
+            {/* Viewfinder */}
+            <div style={{ position:'relative', width:'100%', height:160, borderRadius:14, background:'linear-gradient(160deg,rgba(2,8,20,.97),rgba(5,15,35,.99))', border:'1.5px solid rgba(42,92,173,.35)', overflow:'hidden', marginBottom:16 }}>
+              {/* Corner brackets */}
+              {[{t:0,l:0,bt:'borderTop',bl:'borderLeft'},{t:0,r:0,bt:'borderTop',bl:'borderRight'},{b:0,l:0,bt:'borderBottom',bl:'borderLeft'},{b:0,r:0,bt:'borderBottom',bl:'borderRight'}].map((c,i)=>{
+                const s={position:'absolute',width:20,height:20,...(c.t!==undefined?{top:c.t}:{}),
+                  ...(c.b!==undefined?{bottom:c.b}:{}),
+                  ...(c.l!==undefined?{left:c.l}:{}),
+                  ...(c.r!==undefined?{right:c.r}:{}),
+                  [c.bt]:'2px solid rgba(42,92,173,.9)',[c.bl]:'2px solid rgba(42,92,173,.9)'};
+                return <div key={i} style={s}/>;
+              })}
+              {/* Scan line */}
+              {scanLine && <div style={{ position:'absolute', left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,rgba(42,200,160,.9),transparent)', boxShadow:'0 0 12px rgba(42,200,160,.7)', animation:'scanLine 2.5s ease-in-out', top:0 }}/>}
+              {/* Content */}
+              {scanTags.length === 0 ? (
+                <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
+                  <div style={{ fontSize:28, opacity:.3 }}>🫛</div>
+                  <div style={{ fontSize:13, color:'rgba(42,92,173,.5)', fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Type ingredients below to scan your kitchen</div>
+                </div>
+              ) : (
+                <div style={{ position:'absolute', inset:0, padding:'14px 16px', display:'flex', flexWrap:'wrap', gap:8, alignContent:'flex-start', overflowY:'auto' }}>
+                  {scanTags.map((tag,ti)=>(
+                    <div key={ti} style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px', borderRadius:20, background:'rgba(42,92,173,.25)', border:'1px solid rgba(42,92,173,.5)', color:'rgba(168,196,240,.9)', fontSize:13, fontFamily:"'DM Sans',sans-serif", animation:'zenFadeIn .2s ease', boxShadow:'0 2px 8px rgba(0,0,0,.3)' }}>
+                      <span>{tag}</span>
+                      {!loadingScan && <button onClick={()=>setScanTags(t=>t.filter((_,i)=>i!==ti))} style={{ background:'none',border:'none',color:'rgba(168,196,240,.45)',cursor:'pointer',fontSize:14,padding:'0 0 0 4px',lineHeight:1 }}>×</button>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Input */}
+            <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+              <input className="field" value={scanInput} onChange={e=>setScanInput(e.target.value)}
+                onKeyDown={e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addScanTag();}}}
+                placeholder="Type an ingredient, press Enter (e.g. chicken, spinach, lemon…)"
+                style={{ flex:1 }}/>
+              <button className="btn btn-ghost" style={{ flexShrink:0 }} onClick={addScanTag}>+ Add</button>
+            </div>
+
+            {!user ? (
+              <div style={{ padding:'10px 14px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.18)', borderRadius:10, fontSize:13, color:'rgba(168,196,240,.6)', display:'flex', gap:8, alignItems:'center' }}>
+                <span>💙</span>
+                <span>Ingredient scanning requires a free account. <button onClick={()=>document.dispatchEvent(new CustomEvent('lazuli-show-auth'))} style={{ background:'none',border:'none',color:'#C9A84C',cursor:'pointer',fontWeight:700,fontSize:13,padding:0,fontFamily:"'DM Sans',sans-serif" }}>Sign up free →</button></span>
+              </div>
+            ) : (
+              <button className="btn btn-gold" style={{ width:'100%', padding:'12px' }} onClick={scanRecipes}
+                disabled={loadingScan||!scanTags.length}>
+                {loadingScan
+                  ? <span style={{ display:'inline-flex',alignItems:'center',gap:8 }}><span style={{ width:15,height:15,border:'2px solid rgba(0,0,0,.3)',borderTopColor:'#000',borderRadius:'50%',animation:'spin .7s linear infinite',display:'inline-block' }}/> Scanning…</span>
+                  : `🔍 Scan ${scanTags.length} Ingredient${scanTags.length!==1?'s':''} for Recipes`}
+              </button>
+            )}
+
+            {/* Scanner results */}
+            {scanResults.length > 0 && (
+              <div style={{ marginTop:16, animation:'zenFadeIn .35s ease' }}>
+                <div style={{ fontSize:12, color:'rgba(201,168,76,.55)', letterSpacing:1.5, textTransform:'uppercase', fontFamily:"'Cinzel',serif", marginBottom:10 }}>✦ Recipes Found</div>
+                {scanResults.map((r,i)=>(
+                  <div key={i} style={{ marginBottom:12, borderRadius:14, background:'rgba(15,10,30,.95)', border:'1px solid rgba(42,92,173,.22)', padding:'16px 18px', animation:'zenFadeIn .3s ease' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                      <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                        <span style={{ fontSize:26 }}>{r.emoji||'🍽'}</span>
+                        <div>
+                          <div style={{ fontSize:16, fontWeight:700, color:'rgba(240,232,255,.9)' }}>{r.name}</div>
+                          <div style={{ fontSize:12, color:'rgba(240,232,255,.3)', marginTop:2 }}>⏱ {r.time||'~20 min'}</div>
+                        </div>
+                      </div>
+                      <div style={{ display:'flex', gap:5, flexWrap:'wrap', justifyContent:'flex-end', maxWidth:140 }}>
+                        {(r.tags||[]).map((t,ti)=>(
+                          <span key={ti} style={{ fontSize:11,padding:'2px 8px',borderRadius:20,background:'rgba(42,92,173,.15)',border:'1px solid rgba(42,92,173,.28)',color:'rgba(168,196,240,.7)' }}>{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ fontSize:13, color:'rgba(168,196,240,.55)', fontStyle:'italic', marginBottom:10 }}>{r.why}</div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                      {(r.steps||[]).map((s,si)=>(
+                        <div key={si} style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+                          <span style={{ fontSize:11, background:'rgba(201,168,76,.15)', border:'1px solid rgba(201,168,76,.25)', borderRadius:'50%', width:20, height:20, display:'flex', alignItems:'center', justifyContent:'center', color:'#C9A84C', fontWeight:700, flexShrink:0, marginTop:1 }}>{si+1}</span>
+                          <span style={{ fontSize:14, color:'rgba(240,232,255,.75)', lineHeight:1.5 }}>{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -2844,9 +3476,7 @@ function Mindfulness() {
   const [stoneMuted, setStoneMuted] = useState(false);
   const stoneAudioCtxRef = useRef(null);
 
-  // Zen garden
-  const [zenLines, setZenLines]   = useState([]);
-  const [zenTool, setZenTool]     = useState('rake');
+  // Zen garden — state now lives inside <ZenGarden/> component
 
   // Soundscape
   const [playingSound, setPlayingSound] = useState(null);
@@ -2947,12 +3577,6 @@ function Mindfulness() {
     setTimeout(()=>setGratBurst(false), 800);
   };
 
-  const drawZen = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left)/rect.width*100).toFixed(1);
-    const y = ((e.clientY - rect.top)/rect.height*100).toFixed(1);
-    setZenLines(l=>[...l, {x,y,id:Date.now()}].slice(-80));
-  };
 
   const audioElsRef = useRef([]);
 
@@ -3457,30 +4081,7 @@ function Mindfulness() {
 )}
 
       {/* ── Zen Garden ── */}
-      {tool==='zen' && (
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'rgba(240,232,255,.7)', textAlign:'center' }}>Draw in the sand. Breathe.</div>
-          <div style={{ display:'flex', gap:10, marginBottom:4 }}>
-            {['rake','smooth','circle'].map(t=>(
-              <button key={t} onClick={()=>setZenTool(t)} style={{ padding:'8px 18px', borderRadius:20, border:`1.5px solid ${zenTool===t?'rgba(201,168,76,.5)':'rgba(42,92,173,.25)'}`, background:zenTool===t?'rgba(201,168,76,.1)':'transparent', color:zenTool===t?'#C9A84C':'rgba(240,232,255,.5)', fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>{t}</button>
-            ))}
-          </div>
-          <div
-            onMouseMove={e=>{ if(e.buttons===1) drawZen(e); }}
-            onClick={drawZen}
-            style={{ width:'100%', maxWidth:560, height:280, background:'rgba(201,168,76,.04)', border:'1.5px solid rgba(201,168,76,.15)', borderRadius:16, position:'relative', cursor:'crosshair', overflow:'hidden' }}>
-            {/* Sand texture lines */}
-            {[...Array(12)].map((_,i)=>(
-              <div key={i} style={{ position:'absolute', left:0, right:0, top:`${8+i*22}px`, height:'1px', background:'rgba(201,168,76,.06)' }}/>
-            ))}
-            {zenLines.map((l,i)=>(
-              <div key={l.id} style={{ position:'absolute', left:`${l.x}%`, top:`${l.y}%`, width:zenTool==='circle'?20:4, height:zenTool==='circle'?20:zenTool==='rake'?12:4, borderRadius:zenTool==='circle'?'50%':'2px', background:'rgba(201,168,76,.3)', transform:'translate(-50%,-50%)', boxShadow:'0 0 4px rgba(201,168,76,.2)' }}/>
-            ))}
-            {zenLines.length===0 && <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(240,232,255,.15)', fontSize:18, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Drag to draw in the sand</div>}
-          </div>
-          <button className="btn btn-ghost" onClick={()=>setZenLines([])} style={{ fontSize:16 }}>Clear Garden</button>
-        </div>
-      )}
+      {tool==='zen' && <ZenGarden />}
 
       {/* ── Soundscapes ── */}
       {tool==='soundscapes' && (
