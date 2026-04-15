@@ -100,6 +100,7 @@ const NAV_GROUPS = [
     items: [
       { id:'diary',       icon:'▣',   label:'My Diary'          },
       { id:'documents',   icon:'▤',   label:'Documents'         },
+      { id:'library',     icon:'📚',  label:'Research Library'  },
     ]
   },
   {
@@ -566,6 +567,7 @@ export default function App() {
             {tab==='share'        && <SharePrivacy data={data} upd={upd} user={user}/>}
             {tab==='updates'      && <Updates/>}
             {tab==='gym'          && <LazuliGym data={data}/>}
+            {tab==='library'      && <ResearchLibrary/>}
           </div>
         </main>
       </div>
@@ -622,6 +624,7 @@ const TAB_HINTS = {
   share:        { icon:'🔗', title:'Share Health Summary',     body:'Generate a secure, PIN-protected link to share your health snapshot with a doctor, caregiver, or loved one.' },
   gym:          { icon:'🏋️', title:'Adaptive Gym',             body:'Gentle movement tracking designed for chronic illness. Log adaptive workouts and track energy vs. activity.' },
   updates:      { icon:'✨', title:'What\'s New',               body:'See the latest features and improvements added to the app.' },
+  library:      { icon:'📚', title:'Research Library',          body:'A curated collection of trustworthy medical research — organized by topic. Click any book to open the source in a new tab.' },
 };
 
 function TabHint({ tab }) {
@@ -970,6 +973,7 @@ const GLOBAL_CSS = `
 
   @keyframes fadeOut{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+  @keyframes bookGlow{from{opacity:0}to{opacity:1}}
   @keyframes genieIn{0%{opacity:0;transform:scale(.1) translateY(60px) rotate(-8deg);filter:blur(12px)}40%{opacity:.8;transform:scale(1.06) translateY(-10px) rotate(2deg);filter:blur(2px)}70%{transform:scale(.97) translateY(4px) rotate(-1deg)}100%{opacity:1;transform:scale(1) translateY(0) rotate(0deg);filter:blur(0)}}
   @keyframes smokeRise{0%{opacity:0;transform:translateY(0) scaleX(1)}50%{opacity:.4;transform:translateY(-40px) scaleX(1.5)}100%{opacity:0;transform:translateY(-80px) scaleX(2)}}
   @keyframes pulseGlow{0%,100%{box-shadow:0 0 12px rgba(42,92,173,.5)}50%{box-shadow:0 0 28px rgba(42,92,173,.9)}}
@@ -4838,6 +4842,323 @@ function Updates() {
           "In alchemy, lapis lazuli was called the philosopher's stone of healing — rare, precious, and transformative. We built Lazuli Crest on that same principle."
         </div>
         <div style={{ fontSize:16, color:'rgba(240,232,255,.2)', marginTop:8, letterSpacing:2 }}>— THE LAZULI CREST TEAM</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Research Library ─────────────────────────────────────────
+const LIBRARY_SHELVES = [
+  {
+    id: 'neuro',
+    label: 'Neuro-Diversity & Cognition',
+    color: '#0A1A4A',
+    accent: '#2A5CAD',
+    glow: 'rgba(42,92,173,.55)',
+    spine: 'linear-gradient(160deg,#0d1f56 0%,#162d7a 40%,#0a1a4a 100%)',
+    books: [
+      { title:'ADHD in Adults', subtitle:'Understanding & Strategies', url:'https://chadd.org/for-adults/overview/', emoji:'🧠' },
+      { title:'Autism Speaks', subtitle:'Autism Information Hub', url:'https://www.autismspeaks.org/', emoji:'🌐' },
+      { title:'Memory Loss', subtitle:'Mayo Clinic — When to Worry', url:'https://www.mayoclinic.org/diseases-conditions/alzheimers-disease/in-depth/memory-loss/art-20046326', emoji:'💭' },
+      { title:'Ketogenic Diet & Epilepsy', subtitle:'NIH Clinical Evidence', url:'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6361831/', emoji:'⚡' },
+      { title:'Brain Fog & Chronic Illness', subtitle:'NIH Neurological Review', url:'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8461687/', emoji:'🌫️' },
+    ],
+  },
+  {
+    id: 'autoimmune',
+    label: 'Autoimmune & Inflammatory',
+    color: '#2E0E0E',
+    accent: '#C0392B',
+    glow: 'rgba(180,40,40,.5)',
+    spine: 'linear-gradient(160deg,#3d1010 0%,#5a1818 40%,#2e0e0e 100%)',
+    books: [
+      { title:'Lupus Foundation', subtitle:'Patient Education & Resources', url:'https://www.lupus.org/resources/what-is-lupus', emoji:'🦋' },
+      { title:'ME/CFS', subtitle:'CDC Patient Information', url:'https://www.cdc.gov/me-cfs/index.html', emoji:'⚕️' },
+      { title:'Fibromyalgia', subtitle:'Arthritis Foundation Guide', url:'https://www.arthritis.org/diseases/fibromyalgia', emoji:'💢' },
+      { title:'Chronic Inflammation', subtitle:'Harvard Health Explainer', url:'https://www.health.harvard.edu/staying-healthy/understanding-acute-and-chronic-inflammation', emoji:'🔬' },
+      { title:'POTS & Dysautonomia', subtitle:'Dysautonomia International', url:'https://www.dysautonomiainternational.org/page.php?ID=34', emoji:'💓' },
+    ],
+  },
+  {
+    id: 'gut',
+    label: 'Gut Health, Hormones & Nutrition',
+    color: '#0A2E12',
+    accent: '#27AE60',
+    glow: 'rgba(39,174,96,.5)',
+    spine: 'linear-gradient(160deg,#0d3a18 0%,#165224 40%,#0a2e12 100%)',
+    books: [
+      { title:'PCOS & Hormones', subtitle:'Hormone Health Network', url:'https://www.hormone.org/diseases-and-conditions/polycystic-ovary-syndrome', emoji:'🌸' },
+      { title:'Gut-Brain Axis', subtitle:'NIH Research Overview', url:'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4367209/', emoji:'🦠' },
+      { title:'Thyroid Disease', subtitle:'American Thyroid Association', url:'https://www.thyroid.org/patient-thyroid-information/', emoji:'🔵' },
+      { title:'Sourdough & Gut Health', subtitle:'Oxford Academic Study', url:'https://academic.oup.com/gastro/article/1/1/94/6805451', emoji:'🍞' },
+      { title:'Anti-Inflammatory Diet', subtitle:'Harvard T.H. Chan School', url:'https://www.hsph.harvard.edu/nutritionsource/anti-inflammatory-diet/', emoji:'🥗' },
+    ],
+  },
+  {
+    id: 'vision',
+    label: 'Vision, Light & Accessibility',
+    color: '#1A1200',
+    accent: '#C9A84C',
+    glow: 'rgba(201,168,76,.55)',
+    spine: 'linear-gradient(160deg,#2a1e00 0%,#3d2c00 40%,#1a1200 100%)',
+    books: [
+      { title:'Night Blindness', subtitle:'NIH Eye Institute Guide', url:'https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases/night-blindness', emoji:'🌙' },
+      { title:'Blue Light & Sleep', subtitle:'Harvard Health Research', url:'https://www.health.harvard.edu/staying-healthy/blue-light-has-a-dark-side', emoji:'💡' },
+      { title:'WCAG Accessibility', subtitle:'W3C Web Guidelines', url:'https://www.w3.org/WAI/WCAG21/quickref/', emoji:'♿' },
+      { title:'Low Vision Resources', subtitle:'American Foundation for the Blind', url:'https://www.afb.org/blindness-and-low-vision/eye-conditions', emoji:'👁️' },
+      { title:'Photophobia & Chronic Pain', subtitle:'American Migraine Foundation', url:'https://americanmigrainefoundation.org/resource-library/understanding-light-sensitivity/', emoji:'☀️' },
+    ],
+  },
+];
+
+function ResearchLibrary() {
+  const [darkMode] = React.useState(() => document.documentElement.getAttribute('data-theme') !== 'light');
+  const [openBook, setOpenBook] = React.useState(null); // { url, title }
+  const [hoveredBook, setHoveredBook] = React.useState(null);
+
+  // Push to history so Back button returns to library
+  React.useEffect(() => {
+    window.history.pushState({ libPage: true }, '', window.location.href);
+    const onPop = () => {}; // stay on page — handled by App nav
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // Open book with animation then redirect
+  const handleBookClick = React.useCallback((book) => {
+    setOpenBook(book);
+    setTimeout(() => {
+      window.open(book.url, '_blank', 'noopener,noreferrer');
+      setOpenBook(null);
+    }, 520);
+  }, []);
+
+  // Light mode: clean 2D grid
+  if (!darkMode) {
+    return (
+      <div>
+        <PH emoji="📚" title="Research Library" sub="Curated medical research — click any card to open the source"/>
+        {LIBRARY_SHELVES.map(shelf => (
+          <div key={shelf.id} style={{ marginBottom:32 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'var(--lz-lapis)', textTransform:'uppercase', letterSpacing:1.6, marginBottom:14, paddingBottom:6, borderBottom:'2px solid rgba(26,58,122,.15)' }}>
+              {shelf.label}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:12 }}>
+              {shelf.books.map((book, bi) => (
+                <a key={bi} href={book.url} target="_blank" rel="noopener noreferrer"
+                  style={{ display:'block', padding:'14px 16px', borderRadius:14, background:'#fff',
+                    border:`1.5px solid rgba(26,58,122,.18)`, textDecoration:'none',
+                    boxShadow:'0 2px 12px rgba(0,0,0,.06)', transition:'all .18s',
+                    ':hover':{ transform:'translateY(-2px)' }
+                  }}>
+                  <div style={{ fontSize:22, marginBottom:6 }}>{book.emoji}</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:'#1A1A1A', marginBottom:3 }}>{book.title}</div>
+                  <div style={{ fontSize:12, color:'#6B6B8A', lineHeight:1.4 }}>{book.subtitle}</div>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Dark mode: 3D bookshelf
+  return (
+    <div>
+      <PH emoji="📚" title="Research Library" sub="Gilded research — click any spine to open the source"/>
+
+      {/* Room atmosphere */}
+      <div style={{ position:'relative', marginBottom:8 }}>
+
+        {LIBRARY_SHELVES.map((shelf, si) => (
+          <div key={shelf.id} style={{ marginBottom:38, position:'relative' }}>
+
+            {/* Shelf label */}
+            <div style={{ fontSize:11, fontWeight:700, color:'rgba(201,168,76,.55)', textTransform:'uppercase',
+              letterSpacing:2.2, marginBottom:10, paddingLeft:4 }}>
+              {shelf.label}
+            </div>
+
+            {/* Wooden shelf board */}
+            <div style={{
+              position:'relative',
+              background:'linear-gradient(180deg,#3d2600 0%,#5a3800 30%,#4a2e00 60%,#3d2600 100%)',
+              borderRadius:'10px 10px 6px 6px',
+              padding:'22px 18px 0',
+              boxShadow:`0 8px 32px rgba(0,0,0,.6), inset 0 1px 0 rgba(201,168,76,.15), 0 0 40px ${shelf.glow}`,
+              border:'1.5px solid rgba(201,168,76,.12)',
+              minHeight:160,
+            }}>
+              {/* Gold rail at top */}
+              <div style={{ position:'absolute', top:0, left:0, right:0, height:4,
+                background:'linear-gradient(90deg,#8B6500,#C9A84C,#E8C96B,#C9A84C,#8B6500)',
+                borderRadius:'10px 10px 0 0', boxShadow:'0 0 12px rgba(201,168,76,.5)' }}/>
+
+              {/* Books row */}
+              <div style={{ display:'flex', gap:6, alignItems:'flex-end', paddingBottom:14,
+                overflowX:'auto', overflowY:'visible', paddingTop:4,
+                scrollbarWidth:'thin', scrollbarColor:'rgba(201,168,76,.3) transparent',
+              }}>
+                {shelf.books.map((book, bi) => {
+                  const bookKey = `${si}-${bi}`;
+                  const isHovered = hoveredBook === bookKey;
+                  const isOpening = openBook?.url === book.url;
+                  const heightVar = 110 + (bi % 3) * 18; // varied heights
+                  const widthVar  = 52  + (bi % 4) * 10;  // varied widths
+
+                  return (
+                    <div
+                      key={bi}
+                      onClick={() => handleBookClick(book)}
+                      onMouseEnter={() => setHoveredBook(bookKey)}
+                      onMouseLeave={() => setHoveredBook(null)}
+                      style={{
+                        position:'relative',
+                        width:widthVar,
+                        height:heightVar,
+                        flexShrink:0,
+                        cursor:'pointer',
+                        transformOrigin:'bottom center',
+                        transform: isOpening
+                          ? 'rotateY(-90deg) scaleX(0.1) translateY(-8px)'
+                          : isHovered
+                            ? 'rotateY(-18deg) translateZ(14px) translateY(-8px) scale(1.04)'
+                            : 'rotateY(0deg) translateZ(0) translateY(0)',
+                        transition: isOpening
+                          ? 'transform .5s cubic-bezier(.22,1,.36,1)'
+                          : 'transform .22s cubic-bezier(.22,1,.36,1)',
+                        transformStyle:'preserve-3d',
+                        perspective:400,
+                        zIndex: isHovered ? 10 : 1,
+                      }}>
+
+                      {/* Book spine face */}
+                      <div style={{
+                        position:'absolute', inset:0,
+                        background: shelf.spine,
+                        borderRadius:'3px 6px 6px 3px',
+                        border:`1px solid rgba(201,168,76,.18)`,
+                        borderLeft:`3px solid rgba(0,0,0,.4)`,
+                        boxShadow: isHovered
+                          ? `4px 0 24px rgba(0,0,0,.5), -1px 0 0 rgba(255,255,255,.06), 0 0 20px ${shelf.glow}`
+                          : `2px 0 8px rgba(0,0,0,.4), -1px 0 0 rgba(255,255,255,.04)`,
+                        overflow:'hidden',
+                        display:'flex',
+                        flexDirection:'column',
+                        alignItems:'center',
+                        justifyContent:'center',
+                        gap:6,
+                        padding:'8px 4px',
+                      }}>
+                        {/* Gold top stripe */}
+                        <div style={{ position:'absolute', top:0, left:0, right:0, height:5,
+                          background:`linear-gradient(90deg,${shelf.accent},rgba(201,168,76,.6))`,
+                          opacity:.7 }}/>
+                        {/* Gold bottom stripe */}
+                        <div style={{ position:'absolute', bottom:0, left:0, right:0, height:5,
+                          background:`linear-gradient(90deg,${shelf.accent},rgba(201,168,76,.6))`,
+                          opacity:.7 }}/>
+                        {/* Velvet texture overlay */}
+                        <div style={{ position:'absolute', inset:0,
+                          backgroundImage:`repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.015) 2px, rgba(255,255,255,.015) 4px)`,
+                          pointerEvents:'none' }}/>
+
+                        {/* Emoji */}
+                        <div style={{ fontSize:16, filter:'drop-shadow(0 0 4px rgba(201,168,76,.5))' }}>
+                          {book.emoji}
+                        </div>
+
+                        {/* Title — rotated vertically */}
+                        <div style={{
+                          writingMode:'vertical-rl',
+                          textOrientation:'mixed',
+                          fontSize:11,
+                          fontWeight:700,
+                          color:'rgba(220,200,160,.92)',
+                          fontFamily:"'Cormorant Garamond',serif",
+                          letterSpacing:.8,
+                          lineHeight:1.2,
+                          textAlign:'center',
+                          maxHeight:70,
+                          overflow:'hidden',
+                          textShadow:'0 0 8px rgba(201,168,76,.4)',
+                        }}>
+                          {book.title}
+                        </div>
+
+                        {/* Glow on hover */}
+                        {isHovered && (
+                          <div style={{ position:'absolute', inset:0,
+                            background:`radial-gradient(ellipse at 50% 50%, ${shelf.glow} 0%, transparent 70%)`,
+                            borderRadius:'3px 6px 6px 3px',
+                            pointerEvents:'none',
+                            animation:'bookGlow .3s ease forwards' }}/>
+                        )}
+                      </div>
+
+                      {/* Tooltip on hover */}
+                      {isHovered && (
+                        <div style={{
+                          position:'absolute', bottom:'calc(100% + 10px)', left:'50%',
+                          transform:'translateX(-50%)',
+                          background:'rgba(8,3,22,.97)',
+                          border:`1px solid ${shelf.accent}55`,
+                          borderRadius:10,
+                          padding:'8px 12px',
+                          width:160,
+                          boxShadow:`0 8px 32px rgba(0,0,0,.6), 0 0 16px ${shelf.glow}`,
+                          zIndex:50,
+                          pointerEvents:'none',
+                          animation:'popIn .15s ease',
+                        }}>
+                          <div style={{ fontSize:13, fontWeight:700, color:'rgba(220,200,160,.95)', marginBottom:2, lineHeight:1.3 }}>
+                            {book.title}
+                          </div>
+                          <div style={{ fontSize:11, color:'rgba(168,196,240,.7)', lineHeight:1.4 }}>
+                            {book.subtitle}
+                          </div>
+                          <div style={{ fontSize:10, color:'rgba(201,168,76,.5)', marginTop:4 }}>
+                            Click to open ↗
+                          </div>
+                          {/* Arrow */}
+                          <div style={{ position:'absolute', bottom:-6, left:'50%', transform:'translateX(-50%)',
+                            width:0, height:0,
+                            borderLeft:'6px solid transparent', borderRight:'6px solid transparent',
+                            borderTop:`6px solid ${shelf.accent}55` }}/>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Bookend */}
+                <div style={{
+                  width:14, height:90, flexShrink:0, alignSelf:'flex-end',
+                  background:'linear-gradient(180deg,#C9A84C,#8B6500)',
+                  borderRadius:'0 4px 4px 0',
+                  boxShadow:'2px 0 8px rgba(0,0,0,.4)',
+                  opacity:.7,
+                  marginLeft:2,
+                }}/>
+              </div>
+
+              {/* Shelf shadow / bottom ledge */}
+              <div style={{ position:'absolute', bottom:-10, left:0, right:0, height:10,
+                background:'linear-gradient(180deg,rgba(0,0,0,.5),transparent)',
+                borderRadius:'0 0 6px 6px' }}/>
+            </div>
+          </div>
+        ))}
+
+        {/* Room ambience quote */}
+        <div style={{ textAlign:'center', marginTop:16, padding:'16px 24px',
+          borderTop:'1px solid rgba(201,168,76,.1)' }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
+            fontSize:15, color:'rgba(201,168,76,.4)', lineHeight:1.8 }}>
+            "In ancient libraries, lapis lazuli decorated the covers of healing texts — knowledge was itself considered medicine."
+          </div>
+        </div>
       </div>
     </div>
   );
