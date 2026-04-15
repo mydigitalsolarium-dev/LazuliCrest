@@ -657,6 +657,124 @@ const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
   dur: 45 + (i % 5) * 8,
 }));
 
+function BiometricPulseCanvas() {
+  const cvRef = useRef(null);
+  const mouseRef = useRef({ x: -999, y: -999 });
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const cv = cvRef.current; if (!cv) return;
+    const ctx = cv.getContext('2d');
+    let W = 0, H = 0;
+
+    // Particle definition
+    const COLS = [
+      [42,92,173], [42,92,173], [42,92,173],  // lapis (3x weight)
+      [201,168,76], [201,168,76],               // gold (2x weight)
+      [130,60,200],                             // amethyst accent
+    ];
+    const pts = Array.from({ length: 55 }, (_, i) => ({
+      x: Math.random(), y: Math.random(),       // 0-1 normalized
+      vx: (Math.random()-0.5) * 0.00018,
+      vy: (Math.random()-0.5) * 0.00018,
+      r:  0.8 + Math.random() * 1.8,
+      a:  0.15 + Math.random() * 0.45,
+      col: COLS[i % COLS.length],
+      pulse: Math.random() * Math.PI * 2,       // phase offset for pulse
+    }));
+
+    const resize = () => {
+      W = cv.offsetWidth; H = cv.offsetHeight;
+      cv.width = W; cv.height = H;
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(cv);
+
+    const onMove = (e) => {
+      const rect = cv.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      mouseRef.current = { x: (cx - rect.left) / W, y: (cy - rect.top) / H };
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: true });
+
+    let frame = 0;
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw);
+      if (!W || !H) return;
+      ctx.clearRect(0, 0, W, H);
+      frame++;
+      const mx = mouseRef.current.x, my = mouseRef.current.y;
+
+      for (const p of pts) {
+        // Very gentle mouse attraction
+        const dx = mx - p.x, dy = my - p.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 0.35 && dist > 0) {
+          p.vx += dx * 0.000012;
+          p.vy += dy * 0.000012;
+        }
+        // Dampen velocity
+        p.vx *= 0.998; p.vy *= 0.998;
+        p.x += p.vx; p.y += p.vy;
+        // Wrap around edges
+        if (p.x < 0) p.x = 1; if (p.x > 1) p.x = 0;
+        if (p.y < 0) p.y = 1; if (p.y > 1) p.y = 0;
+
+        p.pulse += 0.012;
+        const pulseFactor = 0.7 + Math.sin(p.pulse) * 0.3;
+        const [r,g,b] = p.col;
+        const alpha = p.a * pulseFactor;
+        const px = p.x * W, py = p.y * H;
+
+        // Glow
+        const grad = ctx.createRadialGradient(px, py, 0, px, py, p.r * 5);
+        grad.addColorStop(0, `rgba(${r},${g},${b},${alpha})`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.beginPath(); ctx.arc(px, py, p.r * 5, 0, Math.PI*2);
+        ctx.fillStyle = grad; ctx.fill();
+
+        // Core dot
+        ctx.beginPath(); ctx.arc(px, py, p.r * pulseFactor, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(alpha * 2, 0.9)})`;
+        ctx.fill();
+      }
+
+      // Connection lines between close particles
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const dx = (pts[i].x - pts[j].x) * W;
+          const dy = (pts[i].y - pts[j].y) * H;
+          const d = Math.hypot(dx, dy);
+          if (d < 120) {
+            const [r,g,b] = pts[i].col;
+            ctx.beginPath();
+            ctx.moveTo(pts[i].x * W, pts[i].y * H);
+            ctx.lineTo(pts[j].x * W, pts[j].y * H);
+            ctx.strokeStyle = `rgba(${r},${g},${b},${(1 - d/120) * 0.08})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      ro.disconnect();
+    };
+  }, []);
+
+  return (
+    <canvas ref={cvRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }}/>
+  );
+}
+
 function AnimatedBackground() {
   return (
     <div style={{ position:'fixed', inset:0, zIndex:0, overflow:'hidden', pointerEvents:'none' }}>
@@ -707,14 +825,11 @@ function AnimatedBackground() {
           textShadow:'0 0 20px rgba(201,168,76,.2)',
         }}>{q.text}</div>
       ))}
-      {/* Named Medical Constellations */}
-      <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }} xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="starGlow">
-            <feGaussianBlur stdDeviation="1.5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
+      {/* Biometric pulse — living lapis & gold particles reacting to mouse */}
+      <BiometricPulseCanvas/>
+      {/* (constellations removed) */}
+      <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', display:'none' }} xmlns="http://www.w3.org/2000/svg">
+        <defs/>
         {/* ORION — The Hunter/Healer (upper left) */}
         <g style={{animation:'constellFade 14s 0s ease-in-out infinite alternate'}}>
           <line x1="9%" y1="12%" x2="13%" y2="16%" stroke="rgba(168,196,240,.25)" strokeWidth="0.7"/>
@@ -916,13 +1031,13 @@ const GLOBAL_CSS = `
   .lz-app-root{background:var(--lz-bg-root);color:var(--lz-text);transition:background .3s,color .3s}
 
   /* ── Light Mode Legibility — override hardcoded dark-theme inline colors ── */
-  /* Cards: solid white, proper shadow */
+  /* Cards: crisp white with subtle gold border */
   [data-theme='light'] .glass-card,[data-theme='light'] .glass-card-static{
     background:rgba(255,255,255,.98) !important;
-    border-color:rgba(26,58,122,.14) !important;
+    border-color:rgba(139,101,0,.18) !important;
     box-shadow:0 2px 20px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.9) !important;
   }
-  [data-theme='light'] .stat-card{background:#fff !important;box-shadow:0 2px 12px rgba(0,0,0,.07) !important;}
+  [data-theme='light'] .stat-card{background:#fff !important;border-color:rgba(139,101,0,.22) !important;box-shadow:0 2px 12px rgba(0,0,0,.07) !important;}
   /* Diary */
   [data-theme='light'] .diary-book{background:#faf7f2 !important;border-color:rgba(26,58,122,.2) !important;}
   /* Sidebar group labels */
@@ -1006,26 +1121,26 @@ const GLOBAL_CSS = `
   .page-fade{animation:fadeUp .32s cubic-bezier(.22,1,.36,1)}
   .slide-in{animation:slideInLeft .28s cubic-bezier(.22,1,.36,1)}
 
-  /* ── Luxury glass cards — lapis gem ─────────────────────── */
+  /* ── Luxury glass cards — Lapis Glass ───────────────────── */
   .glass-card{
-    background:var(--lz-bg-card);
-    backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
-    border:1.5px solid var(--lz-border-card);
+    background:rgba(10,17,40,.87);
+    backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);
+    border:1.5px solid rgba(212,168,67,.28);
     border-radius:20px;
-    box-shadow:var(--lz-shadow-card),inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.2);
+    box-shadow:0 8px 32px rgba(0,0,0,.55),inset 0 0 22px rgba(212,168,67,.07),inset 0 1px 0 rgba(212,168,67,.14),inset 0 -1px 0 rgba(0,0,0,.3);
     transition:all .22s ease
   }
   .glass-card:hover{
-    border-color:var(--lz-border-gold);
-    box-shadow:0 14px 48px rgba(0,0,0,.4),0 0 30px rgba(42,92,173,.1);
+    border-color:rgba(212,168,67,.52);
+    box-shadow:0 14px 48px rgba(0,0,0,.45),inset 0 0 32px rgba(212,168,67,.11),0 0 28px rgba(42,92,173,.1);
     transform:translateY(-2px)
   }
   .glass-card-static{
-    background:var(--lz-bg-card);
-    backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
-    border:1.5px solid var(--lz-border-card);
+    background:rgba(10,17,40,.87);
+    backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);
+    border:1.5px solid rgba(212,168,67,.24);
     border-radius:20px;
-    box-shadow:var(--lz-shadow-card),inset 0 1px 0 rgba(255,255,255,.06);
+    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 0 18px rgba(212,168,67,.06),inset 0 1px 0 rgba(212,168,67,.1);
     transition:border-color .22s,background .3s;will-change:auto;
   }
 
@@ -1056,11 +1171,15 @@ const GLOBAL_CSS = `
   input[type=checkbox]{accent-color:var(--lz-lapis);width:18px;height:18px;cursor:pointer}
   .pill{display:inline-flex;align-items:center;gap:6px;background:var(--lz-pill-bg);border:1.5px solid var(--lz-pill-border);color:var(--lz-pill-text);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
-  /* ── Sidebar — z-index fix for mobile ────────────────────── */
-  .sidebar{width:272px;background:var(--lz-bg-sidebar);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:1.5px solid var(--lz-border-sidebar);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:4px 0 40px rgba(0,0,0,.4),inset -1px 0 0 var(--lz-border-sidebar);transition:transform .3s cubic-bezier(.22,1,.36,1),background .3s}
-  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--lz-text);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
-  .nav-item:hover{background:var(--lz-bg-lapis-soft);color:var(--lz-text);border-color:var(--lz-border-lapis-soft)}
-  .nav-item.active{background:var(--lz-nav-active-bg);color:var(--lz-text-gold);border-color:var(--lz-border-gold);font-weight:600}
+  /* ── Sidebar — Mahogany & Gold ───────────────────────────── */
+  .sidebar{width:272px;background:linear-gradient(175deg,#3D1F16 0%,#2A150F 35%,#1e0e08 65%,#3D1F16 100%);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:2px solid #D4A843;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:10px 0 30px rgba(0,0,0,.6),inset -1px 0 0 rgba(212,168,67,.15),inset 0 0 60px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.22,1,.36,1),background .3s}
+  [data-theme='light'] .sidebar{background:linear-gradient(175deg,#f0e8e0 0%,#e8ddd5 35%,#ddd0c5 65%,#f0e8e0 100%);border-right:2px solid #8B6500;box-shadow:10px 0 20px rgba(0,0,0,.12),inset -1px 0 0 rgba(139,101,0,.2)}
+  .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,228,208,.85);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
+  .nav-item:hover{background:rgba(212,168,67,.1);color:#F0E4D0;border-color:rgba(212,168,67,.22)}
+  .nav-item.active{background:linear-gradient(135deg,rgba(212,168,67,.18),rgba(212,168,67,.08));color:#D4A843;border:1.5px solid rgba(212,168,67,.45);font-weight:700;box-shadow:inset 0 0 12px rgba(212,168,67,.08)}
+  /* Accessibility: gold outline on keyboard focus */
+  *:focus-visible{outline:2px solid #D4A843 !important;outline-offset:2px !important}
+  button:focus-visible,.field:focus,.auth-input:focus{border-color:#D4A843 !important;box-shadow:0 0 0 3px rgba(212,168,67,.18) !important}
 
   .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;overscroll-behavior:contain}
   .privacy-sensitive{transition:filter .3s ease}
@@ -1074,9 +1193,9 @@ const GLOBAL_CSS = `
   .hamburger span{display:block;width:24px;height:2px;background:#C9A84C;border-radius:2px}
   .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99;backdrop-filter:blur(4px)}
 
-  /* ── Stat cards ──────────────────────────────────────────── */
-  .stat-card{background:var(--lz-bg-stat);border:1.5px solid var(--lz-border-gold);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:var(--lz-shadow-stat)}
-  .stat-card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.5);box-shadow:0 16px 48px rgba(0,0,0,.3),0 0 24px rgba(42,92,173,.12)}
+  /* ── Stat cards — Lapis Glass ───────────────────────────── */
+  .stat-card{background:rgba(10,17,40,.88);border:2px solid rgba(212,168,67,.32);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.55),inset 0 0 18px rgba(212,168,67,.08)}
+  .stat-card:hover{transform:translateY(-4px);border-color:rgba(212,168,67,.58);box-shadow:0 16px 48px rgba(0,0,0,.4),inset 0 0 28px rgba(212,168,67,.12),0 0 24px rgba(42,92,173,.12)}
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 
   /* ── Auth inputs ─────────────────────────────────────────── */
@@ -1169,13 +1288,22 @@ const GLOBAL_CSS = `
     );
     background-position:0 52px;
   }
-  @keyframes pageFlip{
-    0%{opacity:1;transform:perspective(800px) rotateY(0deg);}
-    40%{opacity:.15;transform:perspective(800px) rotateY(-18deg) scaleX(.92);}
-    60%{opacity:.15;transform:perspective(800px) rotateY(18deg) scaleX(.92);}
-    100%{opacity:1;transform:perspective(800px) rotateY(0deg);}
+  @keyframes pageFlipOut{
+    0%  {opacity:1;transform:perspective(1200px) rotateY(0deg) scaleX(1);}
+    100%{opacity:0;transform:perspective(1200px) rotateY(-88deg) scaleX(0.08);}
   }
-  .page-turning{animation:pageFlip .45s ease-in-out;}
+  @keyframes pageFlipIn{
+    0%  {opacity:0;transform:perspective(1200px) rotateY(88deg) scaleX(0.08);}
+    100%{opacity:1;transform:perspective(1200px) rotateY(0deg) scaleX(1);}
+  }
+  .page-flip-out{
+    animation:pageFlipOut .22s cubic-bezier(.4,0,.6,1) forwards;
+    transform-origin:left center;
+  }
+  .page-flip-in{
+    animation:pageFlipIn .22s cubic-bezier(.4,0,1,1) forwards;
+    transform-origin:left center;
+  }
   .diary-entry-card{
     background:linear-gradient(145deg,rgba(14,6,28,.92),rgba(10,4,22,.95));
     border:1px solid rgba(42,92,173,.2);
@@ -1695,18 +1823,34 @@ function ZenGarden() {
     }
   }, []);
 
-  /* ── Sand ASMR ── */
+  /* ── Sand ASMR — soft, low-pass filtered whisper ── */
   const sandSound = useCallback(() => {
     if (zenMuted) return;
     try {
       if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext||window.webkitAudioContext)();
-      const ac=audioCtxRef.current;
-      const len=Math.floor(ac.sampleRate*0.042); const buf=ac.createBuffer(1,len,ac.sampleRate); const d=buf.getChannelData(0);
-      for (let i=0;i<len;i++) d[i]=(Math.random()*2-1);
-      const src=ac.createBufferSource(); src.buffer=buf;
-      const lpf=ac.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=1000;
-      const g=ac.createGain(); g.gain.setValueAtTime(.042,ac.currentTime); g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.07);
-      src.connect(lpf); lpf.connect(g); g.connect(ac.destination); src.start();
+      const ac = audioCtxRef.current;
+      // Longer noise burst for a gentle sand-sliding whisper
+      const len = Math.floor(ac.sampleRate * 0.08);
+      const buf = ac.createBuffer(1, len, ac.sampleRate);
+      const d = buf.getChannelData(0);
+      // Brown-noise approximation: integrate white noise for warmer texture
+      let last = 0;
+      for (let i = 0; i < len; i++) {
+        const wn = (Math.random() * 2 - 1) * 0.06;
+        last = (last + wn) * 0.97;
+        d[i] = last;
+      }
+      const src = ac.createBufferSource(); src.buffer = buf;
+      // Very low-pass — muffled, ASMR sand feel
+      const lpf = ac.createBiquadFilter(); lpf.type = 'lowpass'; lpf.frequency.value = 420; lpf.Q.value = 0.5;
+      // Gentle peak resonance for "grain" texture
+      const peak = ac.createBiquadFilter(); peak.type = 'peaking'; peak.frequency.value = 260; peak.gain.value = 4; peak.Q.value = 1.8;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0, ac.currentTime);
+      g.gain.linearRampToValueAtTime(0.022, ac.currentTime + 0.015);  // fade in
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.14); // slow fade out
+      src.connect(peak); peak.connect(lpf); lpf.connect(g); g.connect(ac.destination);
+      src.start();
     } catch {}
   }, [zenMuted]);
 
@@ -1805,6 +1949,14 @@ function ZenGarden() {
   useEffect(()=>{ const s=sandRef.current,f=fxRef.current; if(!s||!f) return; sizeCV(s); sizeCV(f); drawSandTexture(); },[]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(()=>{ initCanvas(); },[sandColor,initCanvas]);
 
+  /* ── History API — Back button stays in-app ── */
+  useEffect(()=>{
+    window.history.pushState({ lzView:'garden' }, '');
+    const onPop = () => { /* state popped — browser now at previous entry; Back works naturally */ };
+    window.addEventListener('popstate', onPop);
+    return ()=>window.removeEventListener('popstate', onPop);
+  },[]);
+
   /* ── RAF animation loop (particles + sparkles) ── */
   useEffect(()=>{
     let lt=0;
@@ -1888,15 +2040,19 @@ function ZenGarden() {
           </div>
         );})}
         {/* Sand canvas */}
-        <canvas ref={sandRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',zIndex:3 }}/>
+        <canvas ref={sandRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',zIndex:3,touchAction:'none' }}/>
         {/* FX canvas */}
-        <canvas ref={fxRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',zIndex:4,pointerEvents:'none' }}/>
+        <canvas ref={fxRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',zIndex:4,pointerEvents:'none',touchAction:'none' }}/>
         {/* Accessories */}
-        {items.map(it=>{ const acc=CATALOG.find(a=>a.id===it.accId); if(!acc) return null; return (
+        {items.map(it=>{ const acc=CATALOG.find(a=>a.id===it.accId); if(!acc) return null;
+          // Dynamic drop shadow based on position — items lower/right cast longer shadows
+          const shX = ((it.x-50)/50)*5, shY = 3+(it.y/100)*7, shB = 7+(it.y/100)*10, shO = 0.38+(it.y/100)*0.28;
+          const accFilter = `drop-shadow(${shX}px ${shY}px ${shB}px rgba(0,0,0,${shO.toFixed(2)}))`;
+          return (
           <div key={it.uid} style={{ position:'absolute',left:`${it.x}%`,top:`${it.y}%`,transform:'translate(-50%,-50%)',zIndex:acc.zi||8,cursor:dragItem?.uid===it.uid?'grabbing':'grab',touchAction:'none' }} onMouseDown={e=>accDown(e,it.uid)} onTouchStart={e=>accDown(e,it.uid)}>
-            {acc.special==='koi'?<KoiPond size={acc.sz}/>
+            {acc.special==='koi'?<div style={{ filter:accFilter }}><KoiPond size={acc.sz}/></div>
               :<div style={{ position:'relative',display:'inline-block' }}>
-                <span style={{ fontSize:acc.sz*.65,lineHeight:1,filter:'drop-shadow(0 2px 8px rgba(0,0,0,.5))' }}>{acc.emoji}</span>
+                <span style={{ fontSize:acc.sz*.65,lineHeight:1,filter:accFilter }}>{acc.emoji}</span>
                 <button onClick={e=>{e.stopPropagation();setItems(p=>p.filter(i=>i.uid!==it.uid));}} style={{ position:'absolute',top:-7,right:-7,width:16,height:16,borderRadius:'50%',background:'rgba(180,40,40,.8)',border:'none',color:'#fff',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s',lineHeight:1 }} onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>×</button>
               </div>}
           </div>
@@ -2739,7 +2895,7 @@ function Diary({ data, upd }) {
   const [view, setView]       = useState('list');   // 'list' | 'write' | number(idx)
   const [editing, setEditing] = useState(null);
   const [newEntry, setNewEntry] = useState({ title:'', text:'', font:DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
-  const [flipping, setFlipping] = useState(false);
+  const [flipPhase, setFlipPhase] = useState('idle'); // 'idle'|'out'|'in'
 
   const MOOD_OPTIONS = ['✍️','😊','😔','😤','🥺','😴','💪','🌸','🙏','❤️'];
   const WITNESSED = [
@@ -2751,8 +2907,11 @@ function Diary({ data, upd }) {
   ];
 
   const flipTo = (target) => {
-    setFlipping(true);
-    setTimeout(() => { setView(target); setFlipping(false); }, 420);
+    if (flipPhase !== 'idle') return;
+    setFlipPhase('out');
+    const t1 = setTimeout(() => { setView(target); setFlipPhase('in'); }, 230);
+    const t2 = setTimeout(() => { setFlipPhase('idle'); }, 460);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   };
 
   const save = () => {
@@ -2797,17 +2956,16 @@ function Diary({ data, upd }) {
     overflow:'hidden',
     boxShadow:'0 0 0 2px rgba(201,168,76,.2), -10px 0 0 rgba(20,8,40,.9), -8px 0 0 rgba(30,12,55,.9), -5px 0 0 rgba(40,18,70,.8), 0 20px 60px rgba(0,0,0,.8)',
     filter:'drop-shadow(0 0 20px rgba(212,175,55,.2))',
-    opacity: flipping ? 0.6 : 1,
-    transition:'opacity .2s',
     transformStyle:'preserve-3d',
     perspective:2000,
   };
+  const bookFlipClass = flipPhase === 'out' ? 'page-flip-out' : flipPhase === 'in' ? 'page-flip-in' : '';
 
   // ── Cover view ────────────────────────────────────────────────
   if (view === 'list') return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
       <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center' }}>📔 My Health Diary</div>
-      <div style={bookWrap}>
+      <div style={bookWrap} className={bookFlipClass}>
         {/* Left — entry list / TOC */}
         <div style={pageStyle('left',false)}>
           {/* Spine stitch marks */}
@@ -2851,7 +3009,7 @@ function Diary({ data, upd }) {
   if (view === 'write') return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
       <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center' }}>📔 My Health Diary</div>
-      <div style={bookWrap}>
+      <div style={bookWrap} className={bookFlipClass}>
         {/* Left — witnessed quote */}
         <div style={pageStyle('left',false)}>
           {[60,130,200,270,340,410].map(y=>(
@@ -2871,7 +3029,7 @@ function Diary({ data, upd }) {
             <select value={newEntry.font} onChange={ev=>setNewEntry(p=>({...p,font:ev.target.value}))} style={{ background:'rgba(255,255,255,.08)', border:'1px solid rgba(201,168,76,.2)', borderRadius:8, color:'rgba(240,232,255,.7)', padding:'6px 10px', fontSize:13, fontFamily:newEntry.font }}>
               {DIARY_FONTS.map(f=><option key={f.value} value={f.value} style={{background:'#1a0e30'}}>{f.label}</option>)}
             </select>
-            <button onClick={()=>flipTo('list')} style={{ padding:'8px', borderRadius:10, border:'1px solid rgba(240,232,255,.1)', background:'transparent', color:'rgba(240,232,255,.4)', fontSize:13, cursor:'pointer' }}>← Back to entries</button>
+            <button onClick={()=>flipTo('list')} style={{ padding:'7px 14px', borderRadius:9, background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.28)', color:'rgba(201,168,76,.7)', fontSize:13, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", letterSpacing:'0.3px' }}>← Back to entries</button>
           </div>
         </div>
         {/* Right — ruled writing page */}
@@ -2896,7 +3054,7 @@ function Diary({ data, upd }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
       <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center' }}>📔 My Health Diary</div>
-      <div style={bookWrap}>
+      <div style={bookWrap} className={bookFlipClass}>
         {/* Left — metadata & witnessed quote */}
         <div style={pageStyle('left',false)}>
           {[60,130,200,270,340,410].map(y=>(
@@ -2912,12 +3070,12 @@ function Diary({ data, upd }) {
             <div style={{ fontSize:13, color:'rgba(201,168,76,.4)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", lineHeight:1.7, textShadow:'0 0 10px rgba(201,168,76,.15)' }}>
               {WITNESSED[idx % WITNESSED.length]}
             </div>
-            <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:4 }}>
-              <button onClick={()=>flipTo('list')} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(240,232,255,.12)', background:'transparent', color:'rgba(240,232,255,.4)', fontSize:12, cursor:'pointer' }}>← All Entries</button>
-              {idx>0 && <button onClick={()=>flipTo(idx-1)} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(42,92,173,.25)', background:'transparent', color:'#A8C4F0', fontSize:12, cursor:'pointer' }}>‹ Prev</button>}
-              {idx<entries.length-1 && <button onClick={()=>flipTo(idx+1)} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(42,92,173,.25)', background:'transparent', color:'#A8C4F0', fontSize:12, cursor:'pointer' }}>Next ›</button>}
-              <button onClick={()=>setEditing({idx,text:e.text||'',title:e.title||'',mood:e.mood||'✍️',font:e.font||DIARY_FONTS[0].value})} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(201,168,76,.25)', background:'transparent', color:'rgba(201,168,76,.6)', fontSize:12, cursor:'pointer' }}>Edit</button>
-              <button onClick={()=>del(idx)} style={{ padding:'6px 12px', borderRadius:8, border:'1px solid rgba(255,80,80,.2)', background:'transparent', color:'rgba(255,100,100,.4)', fontSize:12, cursor:'pointer' }}>Delete</button>
+            <div style={{ display:'flex', gap:7, flexWrap:'wrap', marginTop:8 }}>
+              <button onClick={()=>flipTo('list')} style={{ padding:'6px 13px', borderRadius:8, background:'rgba(201,168,76,.08)', border:'1px solid rgba(201,168,76,.25)', color:'rgba(201,168,76,.65)', fontSize:12, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", letterSpacing:'0.3px' }}>← All Entries</button>
+              {idx>0 && <button onClick={()=>flipTo(idx-1)} style={{ padding:'7px 16px', borderRadius:9, background:'linear-gradient(135deg,#C9A84C 0%,#E8CD72 48%,#A07820 100%)', border:'1.5px solid #D4A843', color:'#1a0a2e', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", letterSpacing:'0.5px', boxShadow:'0 2px 10px rgba(201,168,76,.45),inset 0 1px 0 rgba(255,255,255,.35)', textShadow:'0 1px 0 rgba(255,255,255,.3)' }}>‹ Previous</button>}
+              {idx<entries.length-1 && <button onClick={()=>flipTo(idx+1)} style={{ padding:'7px 16px', borderRadius:9, background:'linear-gradient(135deg,#C9A84C 0%,#E8CD72 48%,#A07820 100%)', border:'1.5px solid #D4A843', color:'#1a0a2e', fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", letterSpacing:'0.5px', boxShadow:'0 2px 10px rgba(201,168,76,.45),inset 0 1px 0 rgba(255,255,255,.35)', textShadow:'0 1px 0 rgba(255,255,255,.3)' }}>Next ›</button>}
+              <button onClick={()=>setEditing({idx,text:e.text||'',title:e.title||'',mood:e.mood||'✍️',font:e.font||DIARY_FONTS[0].value})} style={{ padding:'6px 11px', borderRadius:8, border:'1px solid rgba(201,168,76,.3)', background:'rgba(201,168,76,.1)', color:'rgba(201,168,76,.75)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>Edit</button>
+              <button onClick={()=>del(idx)} style={{ padding:'6px 11px', borderRadius:8, border:'1px solid rgba(255,80,80,.22)', background:'transparent', color:'rgba(255,100,100,.45)', fontSize:12, cursor:'pointer' }}>Delete</button>
             </div>
           </div>
         </div>
@@ -4912,48 +5070,91 @@ const LIBRARY_SHELVES = [
 ];
 
 function ResearchLibrary() {
-  const [darkMode] = React.useState(() => document.documentElement.getAttribute('data-theme') !== 'light');
-  const [openBook, setOpenBook] = React.useState(null); // { url, title }
-  const [hoveredBook, setHoveredBook] = React.useState(null);
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
-  // Push to history so Back button returns to library
+  // bookAnim: null | { shelfId, bookIdx, phase: 1|2|3 }
+  const [bookAnim, setBookAnim] = React.useState(null);
+  const [hoveredBook, setHoveredBook] = React.useState(null); // `${shelfId}-${bookIdx}`
+
+  // ── History management ────────────────────────────────────────
   React.useEffect(() => {
-    window.history.pushState({ libPage: true }, '', window.location.href);
-    const onPop = () => {}; // stay on page — handled by App nav
+    window.history.pushState({ view: 'library' }, '');
+    const onPop = () => {
+      setBookAnim(null);
+      window.history.pushState({ view: 'library' }, '');
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  // Open book with animation then redirect
-  const handleBookClick = React.useCallback((book) => {
-    setOpenBook(book);
-    setTimeout(() => {
-      window.open(book.url, '_blank', 'noopener,noreferrer');
-      setOpenBook(null);
-    }, 520);
+  // ── ESC closes modal ──────────────────────────────────────────
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape' && bookAnim) setBookAnim(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [bookAnim]);
+
+  // ── Click a book spine ────────────────────────────────────────
+  const handleBookClick = React.useCallback((shelfId, bookIdx) => {
+    if (bookAnim) return; // ignore if another book is animating
+    window.history.pushState({ view: 'library-book' }, '');
+    setBookAnim({ shelfId, bookIdx, phase: 1 });
+  }, [bookAnim]);
+
+  // ── Phase transition handler ──────────────────────────────────
+  const handleBookTransitionEnd = React.useCallback((e, shelfId, bookIdx) => {
+    if (e.propertyName !== 'transform') return;
+    setBookAnim(prev => {
+      if (!prev || prev.shelfId !== shelfId || prev.bookIdx !== bookIdx) return prev;
+      if (prev.phase === 1) return { ...prev, phase: 2 };
+      if (prev.phase === 2) return { ...prev, phase: 3 };
+      return prev;
+    });
   }, []);
 
-  // Light mode: clean 2D grid
-  if (!darkMode) {
+  // ── Close modal & reset ───────────────────────────────────────
+  const closeModal = React.useCallback(() => {
+    setBookAnim(null);
+  }, []);
+
+  // ── Derive active shelf + book for the modal ──────────────────
+  const activeShelf = bookAnim ? LIBRARY_SHELVES.find(s => s.id === bookAnim.shelfId) : null;
+  const activeBook  = activeShelf ? activeShelf.books[bookAnim.bookIdx] : null;
+
+  // ── Light mode fallback ───────────────────────────────────────
+  if (!isDark) {
     return (
       <div>
-        <PH emoji="📚" title="Research Library" sub="Curated medical research — click any card to open the source"/>
+        <PH emoji="📚" title="Research Library" sub="Curated medical research — click any card to open the source" />
         {LIBRARY_SHELVES.map(shelf => (
-          <div key={shelf.id} style={{ marginBottom:32 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'var(--lz-lapis)', textTransform:'uppercase', letterSpacing:1.6, marginBottom:14, paddingBottom:6, borderBottom:'2px solid rgba(26,58,122,.15)' }}>
+          <div key={shelf.id} style={{ marginBottom: 32 }}>
+            <div style={{
+              fontSize: 13, fontWeight: 700, color: '#1A3A7A', textTransform: 'uppercase',
+              letterSpacing: 1.6, marginBottom: 14, paddingBottom: 6,
+              borderBottom: '2px solid rgba(26,58,122,.15)',
+            }}>
               {shelf.label}
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 }}>
               {shelf.books.map((book, bi) => (
                 <a key={bi} href={book.url} target="_blank" rel="noopener noreferrer"
-                  style={{ display:'block', padding:'14px 16px', borderRadius:14, background:'#fff',
-                    border:`1.5px solid rgba(26,58,122,.18)`, textDecoration:'none',
-                    boxShadow:'0 2px 12px rgba(0,0,0,.06)', transition:'all .18s',
-                    ':hover':{ transform:'translateY(-2px)' }
-                  }}>
-                  <div style={{ fontSize:22, marginBottom:6 }}>{book.emoji}</div>
-                  <div style={{ fontSize:15, fontWeight:700, color:'#1A1A1A', marginBottom:3 }}>{book.title}</div>
-                  <div style={{ fontSize:12, color:'#6B6B8A', lineHeight:1.4 }}>{book.subtitle}</div>
+                  style={{
+                    display: 'block', padding: '14px 16px', borderRadius: 14,
+                    background: 'linear-gradient(145deg,#fff,#f9f6f0)',
+                    border: '1.5px solid #D4A843',
+                    textDecoration: 'none',
+                    boxShadow: '0 2px 12px rgba(0,0,0,.06)',
+                    transition: 'transform .18s, box-shadow .18s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(212,168,67,.25)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,.06)'; }}
+                >
+                  <div style={{ fontSize: 22, marginBottom: 6 }}>{book.emoji}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#3D1F16', marginBottom: 3, fontFamily: "'Cormorant Garamond',serif" }}>{book.title}</div>
+                  <div style={{ fontSize: 12, color: '#6B6B8A', lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>{book.subtitle}</div>
+                  <div style={{ marginTop: 8, fontSize: 11, color: '#D4A843', fontWeight: 600 }}>Open source →</div>
                 </a>
               ))}
             </div>
@@ -4963,169 +5164,213 @@ function ResearchLibrary() {
     );
   }
 
-  // Dark mode: 3D bookshelf
+  // ── Dark mode: 3D skeuomorphic bookshelf ──────────────────────
   return (
-    <div>
-      <PH emoji="📚" title="Research Library" sub="Gilded research — click any spine to open the source"/>
+    <div style={{ perspective: '1200px' }}>
+      <PH emoji="📚" title="Research Library" sub="Gilded research — pull a spine to open the source" />
 
-      {/* Room atmosphere */}
-      <div style={{ position:'relative', marginBottom:8 }}>
+      <div style={{ position: 'relative', marginBottom: 8 }}>
+        {LIBRARY_SHELVES.map((shelf) => (
+          <div key={shelf.id} style={{ marginBottom: 42, position: 'relative' }}>
 
-        {LIBRARY_SHELVES.map((shelf, si) => (
-          <div key={shelf.id} style={{ marginBottom:38, position:'relative' }}>
-
-            {/* Shelf label */}
-            <div style={{ fontSize:11, fontWeight:700, color:'rgba(201,168,76,.55)', textTransform:'uppercase',
-              letterSpacing:2.2, marginBottom:10, paddingLeft:4 }}>
+            {/* Shelf category label */}
+            <div style={{
+              fontSize: 11, fontWeight: 700,
+              color: 'rgba(212,168,67,.6)',
+              textTransform: 'uppercase', letterSpacing: 2.4,
+              marginBottom: 10, paddingLeft: 6,
+              fontFamily: "'DM Sans',sans-serif",
+            }}>
               {shelf.label}
             </div>
 
             {/* Wooden shelf board */}
             <div style={{
-              position:'relative',
-              background:'linear-gradient(180deg,#3d2600 0%,#5a3800 30%,#4a2e00 60%,#3d2600 100%)',
-              borderRadius:'10px 10px 6px 6px',
-              padding:'22px 18px 0',
-              boxShadow:`0 8px 32px rgba(0,0,0,.6), inset 0 1px 0 rgba(201,168,76,.15), 0 0 40px ${shelf.glow}`,
-              border:'1.5px solid rgba(201,168,76,.12)',
-              minHeight:160,
+              position: 'relative',
+              background: 'linear-gradient(180deg,#5a3500 0%,#3D1F16 50%,#2a1200 100%)',
+              borderRadius: '10px 10px 6px 6px',
+              padding: '24px 20px 0',
+              boxShadow: `inset 0 -4px 12px rgba(0,0,0,.6), 0 8px 32px rgba(0,0,0,.7), 0 0 48px ${shelf.glow}`,
+              border: '1.5px solid rgba(212,168,67,.14)',
+              minHeight: 170,
+              overflow: 'visible',
             }}>
-              {/* Gold rail at top */}
-              <div style={{ position:'absolute', top:0, left:0, right:0, height:4,
-                background:'linear-gradient(90deg,#8B6500,#C9A84C,#E8C96B,#C9A84C,#8B6500)',
-                borderRadius:'10px 10px 0 0', boxShadow:'0 0 12px rgba(201,168,76,.5)' }}/>
+              {/* Gold rail — top */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 5,
+                background: 'linear-gradient(90deg,#6B4E00,#D4A843,#F0C855,#D4A843,#6B4E00)',
+                borderRadius: '10px 10px 0 0',
+                boxShadow: '0 0 14px rgba(212,168,67,.55)',
+              }} />
+              {/* Gold rail — bottom */}
+              <div style={{
+                position: 'absolute', bottom: 14, left: 0, right: 0, height: 3,
+                background: 'linear-gradient(90deg,#6B4E00,#D4A843,#D4A843,#6B4E00)',
+                opacity: .5,
+              }} />
 
               {/* Books row */}
-              <div style={{ display:'flex', gap:6, alignItems:'flex-end', paddingBottom:14,
-                overflowX:'auto', overflowY:'visible', paddingTop:4,
-                scrollbarWidth:'thin', scrollbarColor:'rgba(201,168,76,.3) transparent',
+              <div style={{
+                display: 'flex', gap: 7, alignItems: 'flex-end',
+                paddingBottom: 16, overflowX: 'auto', overflowY: 'visible', paddingTop: 6,
+                scrollbarWidth: 'thin', scrollbarColor: 'rgba(212,168,67,.3) transparent',
               }}>
                 {shelf.books.map((book, bi) => {
-                  const bookKey = `${si}-${bi}`;
+                  const bookKey = `${shelf.id}-${bi}`;
                   const isHovered = hoveredBook === bookKey;
-                  const isOpening = openBook?.url === book.url;
-                  const heightVar = 110 + (bi % 3) * 18; // varied heights
-                  const widthVar  = 52  + (bi % 4) * 10;  // varied widths
+                  const isAnim = bookAnim && bookAnim.shelfId === shelf.id && bookAnim.bookIdx === bi;
+                  const phase = isAnim ? bookAnim.phase : 0;
+
+                  // Varied dimensions — deterministic from index
+                  const heightVar = [128, 145, 118, 138, 110][bi % 5];
+                  const widthVar  = [54,  68,  52,  62,  70][bi % 5];
+
+                  // Phase-based transform
+                  let bookTransform = 'translateY(0) translateZ(0) rotateY(0deg)';
+                  let bookTransition = 'transform .22s cubic-bezier(.22,1,.36,1)';
+                  if (!isAnim && isHovered) {
+                    bookTransform = 'rotateY(-20deg) translateZ(16px) translateY(-6px)';
+                    bookTransition = 'transform .22s cubic-bezier(.22,1,.36,1)';
+                  }
+                  if (phase === 1) {
+                    bookTransform = 'translateY(-50px) translateZ(50px)';
+                    bookTransition = 'transform .2s cubic-bezier(.4,0,.2,1)';
+                  }
+                  if (phase === 2) {
+                    bookTransform = 'translateY(-50px) translateZ(50px) rotateY(-90deg)';
+                    bookTransition = 'transform .4s cubic-bezier(.4,0,.2,1)';
+                  }
+                  if (phase === 3) {
+                    bookTransform = 'translateY(-50px) translateZ(50px) rotateY(-90deg)';
+                    bookTransition = 'none';
+                  }
 
                   return (
                     <div
                       key={bi}
-                      onClick={() => handleBookClick(book)}
-                      onMouseEnter={() => setHoveredBook(bookKey)}
+                      onClick={() => !bookAnim && handleBookClick(shelf.id, bi)}
+                      onMouseEnter={() => !bookAnim && setHoveredBook(bookKey)}
                       onMouseLeave={() => setHoveredBook(null)}
+                      onTransitionEnd={(e) => isAnim && phase < 3 && handleBookTransitionEnd(e, shelf.id, bi)}
                       style={{
-                        position:'relative',
-                        width:widthVar,
-                        height:heightVar,
-                        flexShrink:0,
-                        cursor:'pointer',
-                        transformOrigin:'bottom center',
-                        transform: isOpening
-                          ? 'rotateY(-90deg) scaleX(0.1) translateY(-8px)'
-                          : isHovered
-                            ? 'rotateY(-18deg) translateZ(14px) translateY(-8px) scale(1.04)'
-                            : 'rotateY(0deg) translateZ(0) translateY(0)',
-                        transition: isOpening
-                          ? 'transform .5s cubic-bezier(.22,1,.36,1)'
-                          : 'transform .22s cubic-bezier(.22,1,.36,1)',
-                        transformStyle:'preserve-3d',
-                        perspective:400,
-                        zIndex: isHovered ? 10 : 1,
-                      }}>
-
+                        position: 'relative',
+                        width: widthVar,
+                        height: heightVar,
+                        flexShrink: 0,
+                        cursor: bookAnim ? 'default' : 'pointer',
+                        transformOrigin: 'bottom center',
+                        transform: bookTransform,
+                        transition: bookTransition,
+                        transformStyle: 'preserve-3d',
+                        zIndex: isHovered || isAnim ? 20 : 1,
+                      }}
+                    >
                       {/* Book spine face */}
                       <div style={{
-                        position:'absolute', inset:0,
+                        position: 'absolute', inset: 0,
                         background: shelf.spine,
-                        borderRadius:'3px 6px 6px 3px',
-                        border:`1px solid rgba(201,168,76,.18)`,
-                        borderLeft:`3px solid rgba(0,0,0,.4)`,
+                        borderRadius: '4px 8px 8px 4px',
+                        borderLeft: '4px solid rgba(0,0,0,.5)',
+                        border: `1px solid rgba(212,168,67,.2)`,
+                        borderLeftWidth: 4,
+                        borderLeftColor: 'rgba(0,0,0,.5)',
                         boxShadow: isHovered
-                          ? `4px 0 24px rgba(0,0,0,.5), -1px 0 0 rgba(255,255,255,.06), 0 0 20px ${shelf.glow}`
-                          : `2px 0 8px rgba(0,0,0,.4), -1px 0 0 rgba(255,255,255,.04)`,
-                        overflow:'hidden',
-                        display:'flex',
-                        flexDirection:'column',
-                        alignItems:'center',
-                        justifyContent:'center',
-                        gap:6,
-                        padding:'8px 4px',
+                          ? `4px 0 28px rgba(0,0,0,.55), -1px 0 0 rgba(255,255,255,.07), 0 0 24px ${shelf.glow}`
+                          : `2px 0 10px rgba(0,0,0,.45), -1px 0 0 rgba(255,255,255,.04)`,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        padding: '10px 5px',
                       }}>
                         {/* Gold top stripe */}
-                        <div style={{ position:'absolute', top:0, left:0, right:0, height:5,
-                          background:`linear-gradient(90deg,${shelf.accent},rgba(201,168,76,.6))`,
-                          opacity:.7 }}/>
+                        <div style={{
+                          position: 'absolute', top: 0, left: 0, right: 0, height: 6,
+                          background: `linear-gradient(90deg,${shelf.accent},rgba(212,168,67,.7),${shelf.accent})`,
+                          opacity: .75,
+                        }} />
                         {/* Gold bottom stripe */}
-                        <div style={{ position:'absolute', bottom:0, left:0, right:0, height:5,
-                          background:`linear-gradient(90deg,${shelf.accent},rgba(201,168,76,.6))`,
-                          opacity:.7 }}/>
-                        {/* Velvet texture overlay */}
-                        <div style={{ position:'absolute', inset:0,
-                          backgroundImage:`repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.015) 2px, rgba(255,255,255,.015) 4px)`,
-                          pointerEvents:'none' }}/>
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0, height: 6,
+                          background: `linear-gradient(90deg,${shelf.accent},rgba(212,168,67,.7),${shelf.accent})`,
+                          opacity: .75,
+                        }} />
+                        {/* Velvet texture */}
+                        <div style={{
+                          position: 'absolute', inset: 0, pointerEvents: 'none',
+                          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.018) 2px, rgba(255,255,255,.018) 4px)',
+                        }} />
+                        {/* Faux 3D thickness shadow */}
+                        <div style={{
+                          position: 'absolute', inset: 0, pointerEvents: 'none',
+                          boxShadow: 'inset -3px 0 8px rgba(0,0,0,.35), inset 2px 0 4px rgba(255,255,255,.04)',
+                        }} />
 
                         {/* Emoji */}
-                        <div style={{ fontSize:16, filter:'drop-shadow(0 0 4px rgba(201,168,76,.5))' }}>
+                        <div style={{ fontSize: 15, filter: 'drop-shadow(0 0 5px rgba(212,168,67,.55))', flexShrink: 0 }}>
                           {book.emoji}
                         </div>
 
-                        {/* Title — rotated vertically */}
+                        {/* Spine title */}
                         <div style={{
-                          writingMode:'vertical-rl',
-                          textOrientation:'mixed',
-                          fontSize:11,
-                          fontWeight:700,
-                          color:'rgba(220,200,160,.92)',
-                          fontFamily:"'Cormorant Garamond',serif",
-                          letterSpacing:.8,
-                          lineHeight:1.2,
-                          textAlign:'center',
-                          maxHeight:70,
-                          overflow:'hidden',
-                          textShadow:'0 0 8px rgba(201,168,76,.4)',
+                          writingMode: 'vertical-rl',
+                          textOrientation: 'mixed',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: 'rgba(224,204,164,.92)',
+                          fontFamily: "'Cormorant Garamond',serif",
+                          letterSpacing: .9,
+                          lineHeight: 1.2,
+                          textAlign: 'center',
+                          maxHeight: heightVar - 50,
+                          overflow: 'hidden',
+                          textShadow: '0 0 10px rgba(212,168,67,.45)',
                         }}>
                           {book.title}
                         </div>
 
-                        {/* Glow on hover */}
+                        {/* Hover glow */}
                         {isHovered && (
-                          <div style={{ position:'absolute', inset:0,
-                            background:`radial-gradient(ellipse at 50% 50%, ${shelf.glow} 0%, transparent 70%)`,
-                            borderRadius:'3px 6px 6px 3px',
-                            pointerEvents:'none',
-                            animation:'bookGlow .3s ease forwards' }}/>
+                          <div style={{
+                            position: 'absolute', inset: 0, pointerEvents: 'none',
+                            background: `radial-gradient(ellipse at 50% 40%, ${shelf.glow} 0%, transparent 72%)`,
+                            borderRadius: '4px 8px 8px 4px',
+                          }} />
                         )}
                       </div>
 
-                      {/* Tooltip on hover */}
-                      {isHovered && (
+                      {/* Hover tooltip */}
+                      {isHovered && !bookAnim && (
                         <div style={{
-                          position:'absolute', bottom:'calc(100% + 10px)', left:'50%',
-                          transform:'translateX(-50%)',
-                          background:'rgba(8,3,22,.97)',
-                          border:`1px solid ${shelf.accent}55`,
-                          borderRadius:10,
-                          padding:'8px 12px',
-                          width:160,
-                          boxShadow:`0 8px 32px rgba(0,0,0,.6), 0 0 16px ${shelf.glow}`,
-                          zIndex:50,
-                          pointerEvents:'none',
-                          animation:'popIn .15s ease',
+                          position: 'absolute', bottom: 'calc(100% + 12px)', left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: 'rgba(6,2,18,.97)',
+                          border: `1px solid ${shelf.accent}66`,
+                          borderRadius: 11,
+                          padding: '9px 13px',
+                          width: 168,
+                          boxShadow: `0 10px 36px rgba(0,0,0,.65), 0 0 18px ${shelf.glow}`,
+                          zIndex: 80,
+                          pointerEvents: 'none',
+                          fontFamily: "'DM Sans',sans-serif",
                         }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:'rgba(220,200,160,.95)', marginBottom:2, lineHeight:1.3 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(224,204,164,.95)', marginBottom: 3, lineHeight: 1.3 }}>
                             {book.title}
                           </div>
-                          <div style={{ fontSize:11, color:'rgba(168,196,240,.7)', lineHeight:1.4 }}>
+                          <div style={{ fontSize: 11, color: 'rgba(168,196,240,.75)', lineHeight: 1.45 }}>
                             {book.subtitle}
                           </div>
-                          <div style={{ fontSize:10, color:'rgba(201,168,76,.5)', marginTop:4 }}>
-                            Click to open ↗
+                          <div style={{ fontSize: 10, color: 'rgba(212,168,67,.55)', marginTop: 5, letterSpacing: .5 }}>
+                            Pull to open ↗
                           </div>
-                          {/* Arrow */}
-                          <div style={{ position:'absolute', bottom:-6, left:'50%', transform:'translateX(-50%)',
-                            width:0, height:0,
-                            borderLeft:'6px solid transparent', borderRight:'6px solid transparent',
-                            borderTop:`6px solid ${shelf.accent}55` }}/>
+                          <div style={{
+                            position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
+                            width: 0, height: 0,
+                            borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                            borderTop: `6px solid ${shelf.accent}55`,
+                          }} />
                         </div>
                       )}
                     </div>
@@ -5134,32 +5379,291 @@ function ResearchLibrary() {
 
                 {/* Bookend */}
                 <div style={{
-                  width:14, height:90, flexShrink:0, alignSelf:'flex-end',
-                  background:'linear-gradient(180deg,#C9A84C,#8B6500)',
-                  borderRadius:'0 4px 4px 0',
-                  boxShadow:'2px 0 8px rgba(0,0,0,.4)',
-                  opacity:.7,
-                  marginLeft:2,
-                }}/>
+                  width: 16, height: 94, flexShrink: 0, alignSelf: 'flex-end',
+                  background: 'linear-gradient(180deg,#D4A843 0%,#8B6500 60%,#5a4000 100%)',
+                  borderRadius: '0 5px 5px 0',
+                  boxShadow: '3px 0 10px rgba(0,0,0,.45)',
+                  opacity: .75,
+                  marginLeft: 3,
+                }} />
               </div>
 
-              {/* Shelf shadow / bottom ledge */}
-              <div style={{ position:'absolute', bottom:-10, left:0, right:0, height:10,
-                background:'linear-gradient(180deg,rgba(0,0,0,.5),transparent)',
-                borderRadius:'0 0 6px 6px' }}/>
+              {/* Shelf shadow ledge */}
+              <div style={{
+                position: 'absolute', bottom: -11, left: 0, right: 0, height: 11,
+                background: 'linear-gradient(180deg,rgba(0,0,0,.55),transparent)',
+                borderRadius: '0 0 6px 6px',
+              }} />
             </div>
           </div>
         ))}
 
-        {/* Room ambience quote */}
-        <div style={{ textAlign:'center', marginTop:16, padding:'16px 24px',
-          borderTop:'1px solid rgba(201,168,76,.1)' }}>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
-            fontSize:15, color:'rgba(201,168,76,.4)', lineHeight:1.8 }}>
+        {/* Ambience quote */}
+        <div style={{
+          textAlign: 'center', marginTop: 18, padding: '18px 24px',
+          borderTop: '1px solid rgba(212,168,67,.1)',
+        }}>
+          <div style={{
+            fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic',
+            fontSize: 15, color: 'rgba(212,168,67,.38)', lineHeight: 1.85,
+          }}>
             "In ancient libraries, lapis lazuli decorated the covers of healing texts — knowledge was itself considered medicine."
           </div>
         </div>
       </div>
+
+      {/* ── Open Book Modal (phase 3) ────────────────────────────── */}
+      {bookAnim && bookAnim.phase === 3 && activeShelf && activeBook && (
+        <div
+          onClick={closeModal}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,.82)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
+          }}
+        >
+          {/* Close button */}
+          <button
+            onClick={closeModal}
+            style={{
+              position: 'absolute', top: 22, right: 26,
+              background: 'rgba(212,168,67,.15)',
+              border: '1px solid rgba(212,168,67,.4)',
+              borderRadius: '50%',
+              width: 40, height: 40,
+              color: '#D4A843',
+              fontSize: 20,
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'sans-serif',
+              zIndex: 10001,
+              transition: 'background .15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,168,67,.3)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,168,67,.15)'}
+          >
+            ✕
+          </button>
+
+          {/* The open book */}
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              display: 'flex',
+              width: '100%',
+              maxWidth: 780,
+              height: 480,
+              borderRadius: 8,
+              overflow: 'hidden',
+              boxShadow: `0 40px 120px rgba(0,0,0,.85), 0 0 60px ${activeShelf.glow}`,
+              animation: 'bookModalOpen .4s cubic-bezier(.22,1,.36,1) forwards',
+            }}
+          >
+            {/* Left page — leather / decorative */}
+            <div style={{
+              flex: '0 0 50%',
+              background: `linear-gradient(145deg,#1a0e06 0%,#2a1500 50%,#160b04 100%)`,
+              padding: '36px 32px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              borderRight: '2px solid rgba(212,168,67,.2)',
+              overflow: 'hidden',
+            }}>
+              {/* Leather texture */}
+              <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                backgroundImage: `repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 6px)`,
+              }} />
+              {/* Decorative gold border */}
+              <div style={{
+                position: 'absolute', inset: 14,
+                border: '1px solid rgba(212,168,67,.3)',
+                borderRadius: 4,
+                pointerEvents: 'none',
+              }} />
+              <div style={{
+                position: 'absolute', inset: 18,
+                border: '1px solid rgba(212,168,67,.15)',
+                borderRadius: 2,
+                pointerEvents: 'none',
+              }} />
+
+              {/* Ambient glow from shelf color */}
+              <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                background: `radial-gradient(ellipse at 50% 30%, ${activeShelf.glow} 0%, transparent 65%)`,
+              }} />
+
+              {/* Content */}
+              <div style={{ position: 'relative', textAlign: 'center', zIndex: 1 }}>
+                <div style={{ fontSize: 48, marginBottom: 18, filter: `drop-shadow(0 0 16px ${activeShelf.glow})` }}>
+                  {activeBook.emoji}
+                </div>
+                <div style={{
+                  fontFamily: "'Cormorant Garamond',serif",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'rgba(212,168,67,.55)',
+                  textTransform: 'uppercase',
+                  letterSpacing: 2.5,
+                  marginBottom: 14,
+                }}>
+                  Research Collection
+                </div>
+                <div style={{
+                  fontFamily: "'Cormorant Garamond',serif",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: 'rgba(224,204,164,.85)',
+                  lineHeight: 1.4,
+                  maxWidth: 220,
+                  margin: '0 auto',
+                }}>
+                  {activeShelf.label}
+                </div>
+                <div style={{
+                  marginTop: 24,
+                  width: 48, height: 2,
+                  background: 'linear-gradient(90deg,transparent,rgba(212,168,67,.6),transparent)',
+                  margin: '24px auto 0',
+                }} />
+                <div style={{
+                  fontFamily: "'Cormorant Garamond',serif",
+                  fontStyle: 'italic',
+                  fontSize: 13,
+                  color: 'rgba(212,168,67,.35)',
+                  marginTop: 16,
+                  lineHeight: 1.7,
+                }}>
+                  "Knowledge is the oldest medicine."
+                </div>
+              </div>
+            </div>
+
+            {/* Right page — parchment */}
+            <div style={{
+              flex: '0 0 50%',
+              background: 'linear-gradient(145deg,#f5efe0 0%,#ede4cc 50%,#f0e9d5 100%)',
+              padding: '40px 36px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              {/* Paper texture */}
+              <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                backgroundImage: 'repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(0,0,0,.04) 27px,rgba(0,0,0,.04) 28px)',
+                backgroundPosition: '0 40px',
+              }} />
+              {/* Page curl shadow */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none',
+                boxShadow: 'inset 8px 0 20px rgba(0,0,0,.08)',
+              }} />
+
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{
+                  fontFamily: "'DM Sans',sans-serif",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'rgba(61,31,22,.45)',
+                  textTransform: 'uppercase',
+                  letterSpacing: 2,
+                  marginBottom: 14,
+                }}>
+                  {activeShelf.label}
+                </div>
+
+                <div style={{
+                  fontFamily: "'Cormorant Garamond',serif",
+                  fontSize: 26,
+                  fontWeight: 700,
+                  color: '#2a1200',
+                  lineHeight: 1.25,
+                  marginBottom: 14,
+                }}>
+                  {activeBook.title}
+                </div>
+
+                <div style={{
+                  width: 40, height: 2,
+                  background: '#D4A843',
+                  marginBottom: 16,
+                  borderRadius: 2,
+                }} />
+
+                <div style={{
+                  fontFamily: "'Cormorant Garamond',serif",
+                  fontSize: 17,
+                  fontStyle: 'italic',
+                  color: 'rgba(61,31,22,.75)',
+                  lineHeight: 1.6,
+                  marginBottom: 20,
+                }}>
+                  {activeBook.subtitle}
+                </div>
+
+                <div style={{
+                  fontFamily: "'DM Sans',sans-serif",
+                  fontSize: 14,
+                  color: 'rgba(61,31,22,.6)',
+                  lineHeight: 1.7,
+                }}>
+                  This curated resource opens peer-reviewed research and trusted medical sources — selected to support informed conversations with your care team.
+                </div>
+              </div>
+
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-gold"
+                  onClick={() => { window.open(activeBook.url, '_blank', 'noopener,noreferrer'); closeModal(); }}
+                  style={{
+                    fontFamily: "'DM Sans',sans-serif",
+                    fontSize: 15,
+                    fontWeight: 700,
+                    padding: '12px 24px',
+                    borderRadius: 10,
+                    cursor: 'pointer',
+                    letterSpacing: .5,
+                  }}
+                >
+                  Open Source →
+                </button>
+                <button
+                  onClick={closeModal}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(61,31,22,.2)',
+                    borderRadius: 10,
+                    padding: '12px 18px',
+                    fontFamily: "'DM Sans',sans-serif",
+                    fontSize: 14,
+                    color: 'rgba(61,31,22,.55)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Keyframe injection */}
+          <style>{`
+            @keyframes bookModalOpen {
+              from { transform: scale(0.3) rotateY(-15deg); opacity: 0; }
+              to   { transform: scale(1)   rotateY(0deg);   opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }
