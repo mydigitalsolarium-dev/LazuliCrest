@@ -276,11 +276,21 @@ export default function HydrationFridge({ data, upd }) {
         </div>
 
         {showCustom && (
-          <div style={{ background:'rgba(255,255,255,.04)', borderRadius:14, padding:'14px 16px', marginBottom:14, border:'1px solid rgba(201,168,76,.15)' }}>
+          <div style={{ background:'rgba(255,255,255,.05)', borderRadius:14, padding:'14px 16px', marginBottom:14, border:'1.5px solid rgba(201,168,76,.28)' }}>
+            <div style={{ fontSize:12, color:'rgba(201,168,76,.6)', fontWeight:700, textTransform:'uppercase', letterSpacing:1.2, marginBottom:9, fontFamily:"'DM Sans',sans-serif" }}>Add Custom Drink</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr auto auto', gap:9, marginBottom:10, alignItems:'center' }}>
-              <input className="field" placeholder="Drink name" value={customForm.label} onChange={e=>setCustomForm(f=>({...f,label:e.target.value}))} style={{ margin:0, fontSize:15 }}/>
-              <input className="field" placeholder="Icon" value={customForm.icon} onChange={e=>setCustomForm(f=>({...f,icon:e.target.value}))} style={{ margin:0, width:54, fontSize:15, textAlign:'center' }}/>
-              <input className="field" type="number" placeholder="fl oz" value={customForm.ml} onChange={e=>setCustomForm(f=>({...f,ml:e.target.value}))} style={{ margin:0, width:72, fontSize:15 }}/>
+              <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', textTransform:'uppercase', letterSpacing:.8, marginBottom:0 }}>Drink Name</label>
+                <input className="field" placeholder="e.g. Green tea" value={customForm.label} onChange={e=>setCustomForm(f=>({...f,label:e.target.value}))} style={{ margin:0, fontSize:15 }}/>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', textTransform:'uppercase', letterSpacing:.8, marginBottom:0 }}>Icon</label>
+                <input className="field" placeholder="🫖" value={customForm.icon} onChange={e=>setCustomForm(f=>({...f,icon:e.target.value}))} style={{ margin:0, width:60, fontSize:20, textAlign:'center', background:'rgba(42,92,173,.18)', border:'2px solid rgba(42,92,173,.5)', borderRadius:10 }}/>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                <label style={{ fontSize:11, color:'rgba(168,196,240,.55)', textTransform:'uppercase', letterSpacing:.8, marginBottom:0 }}>Amount</label>
+                <input className="field" type="number" placeholder="8" value={customForm.ml} onChange={e=>setCustomForm(f=>({...f,ml:e.target.value}))} style={{ margin:0, width:80, fontSize:15 }}/>
+              </div>
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <button className="btn btn-gold" style={{ fontSize:14 }} onClick={saveCustomDrink}>Add to fridge</button>

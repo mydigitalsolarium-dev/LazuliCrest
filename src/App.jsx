@@ -481,6 +481,8 @@ export default function App() {
 
   const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  // Credits visible across sidebar + topbar — updated whenever Advocate gets a response
+  const [appCreditsLeft, setAppCreditsLeft] = useState(() => { try { const v = localStorage.getItem('lz_credits_left'); return v ? parseInt(v, 10) : null; } catch { return null; } });
   const { insight: bgInsight, reflecting } = useBackgroundAnalysis(data, user?.uid);
 
   // ── Intercept ?share= links — no login needed ──────────────
@@ -507,7 +509,7 @@ export default function App() {
 
       <div style={{ display:'flex', maxWidth:1280, margin:'0 auto', minHeight:'100vh', position:'relative', zIndex:1 }}>
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
-        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} onShowAuth={()=>setShowAuth(true)} darkMode={darkMode} toggleDarkMode={toggleDarkMode}/>
+        <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} onShowAuth={()=>setShowAuth(true)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} creditsLeft={appCreditsLeft}/>
 
         <main className={`main-content${privacyOn?' privacy-on':''}`}>
           <div className="mobile-topbar">
@@ -520,6 +522,11 @@ export default function App() {
             </div>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               {saving && <div style={{ width:6, height:6, borderRadius:'50%', background:'#C9A84C', animation:'pulseGlow 1s infinite' }}/>}
+              {user && appCreditsLeft !== null && (
+                <button onClick={()=>go('treasury')} title="Lazuli AI Credits" style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 9px', borderRadius:16, border:'1px solid rgba(201,168,76,.35)', background:'rgba(201,168,76,.09)', color:'#C9A84C', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", lineHeight:1, whiteSpace:'nowrap' }}>
+                  🪙 {appCreditsLeft}
+                </button>
+              )}
               <button onClick={toggleDarkMode} title={darkMode?'Switch to light mode':'Switch to dark mode'} style={{ padding:'5px 11px', borderRadius:20, border:`1px solid ${darkMode?'rgba(201,168,76,.3)':'rgba(26,58,122,.35)'}`, background:darkMode?'rgba(201,168,76,.07)':'rgba(26,58,122,.1)', color:darkMode?'#C9A84C':'#8B6500', fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", lineHeight:1 }}>
                 {darkMode?'☀️':'🌙'}
               </button>
@@ -562,7 +569,7 @@ export default function App() {
             {tab==='mindfulness'  && <Mindfulness/>}
             {tab==='diet'         && <AIDiet       data={data} upd={upd} user={user}/>}
             {tab==='documents'    && <Documents    data={data} upd={upd}/>}
-            {tab==='advocate'     && <Advocate     data={data} user={user}/>}
+            {tab==='advocate'     && <Advocate     data={data} user={user} onCreditsUpdate={setAppCreditsLeft}/>}
             {tab==='treasury'     && <Treasury user={user}/>}
             {tab==='profile'      && <Profile      data={data} upd={upd} user={user}/>}
             {tab==='share'        && <SharePrivacy data={data} upd={upd} user={user}/>}
@@ -1216,35 +1223,35 @@ const GLOBAL_CSS = `
     --lz-nav-icon:rgba(200,180,255,.65);
   }
   [data-theme='light']{
-    --lz-bg-root:#FBF4DC;
-    --lz-bg-card:#FEF9E7;
-    --lz-bg-card-alt:#FDF6E0;
+    --lz-bg-root:#F3F4F6;
+    --lz-bg-card:#FFFFFF;
+    --lz-bg-card-alt:#F9FAFB;
     --lz-bg-sidebar:#B8860B;
-    --lz-bg-field:#FEF9E7;
-    --lz-bg-field-focus:#FEF5D4;
-    --lz-bg-lapis-soft:rgba(184,134,11,.12);
-    --lz-bg-stat:#FEF9E7;
+    --lz-bg-field:#F9FAFB;
+    --lz-bg-field-focus:#EFF6FF;
+    --lz-bg-lapis-soft:rgba(37,99,235,.08);
+    --lz-bg-stat:#FFFFFF;
     --lz-bg-topbar:#B8860B;
-    --lz-text:#050505;
-    --lz-text-soft:#1A1A1A;
-    --lz-text-muted:rgba(5,5,5,.55);
-    --lz-text-gold:#7A5000;
-    --lz-border-card:#B8860B;
-    --lz-border-lapis:#B8860B;
-    --lz-border-lapis-soft:rgba(184,134,11,.45);
-    --lz-border-gold:#B8860B;
+    --lz-text:#111827;
+    --lz-text-soft:#374151;
+    --lz-text-muted:#6B7280;
+    --lz-text-gold:#1D4ED8;
+    --lz-border-card:#E5E7EB;
+    --lz-border-lapis:#BFDBFE;
+    --lz-border-lapis-soft:#E0E7FF;
+    --lz-border-gold:#D1D5DB;
     --lz-border-sidebar:#050505;
-    --lz-gold:#B8860B;
-    --lz-gold-btn:linear-gradient(135deg,#8B6500,#B8860B);
-    --lz-lapis:#7A5000;
-    --lz-lapis-btn:linear-gradient(135deg,#6B4400,#8B6000);
-    --lz-shadow-card:0 10px 28px rgba(0,0,0,.35),0 3px 10px rgba(0,0,0,.2);
-    --lz-shadow-stat:0 8px 22px rgba(0,0,0,.3),0 2px 8px rgba(0,0,0,.16);
-    --lz-pill-bg:rgba(184,134,11,.15);
-    --lz-pill-border:#B8860B;
-    --lz-pill-text:#050505;
+    --lz-gold:#C9A84C;
+    --lz-gold-btn:linear-gradient(135deg,#C9A84C,#E8C96B);
+    --lz-lapis:#1D4ED8;
+    --lz-lapis-btn:linear-gradient(135deg,#1E3A8A,#2563EB);
+    --lz-shadow-card:0 2px 8px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
+    --lz-shadow-stat:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --lz-pill-bg:rgba(37,99,235,.08);
+    --lz-pill-border:#BFDBFE;
+    --lz-pill-text:#1D4ED8;
     --lz-nav-active-bg:rgba(0,0,0,.22);
-    --lz-nav-icon:#050505;
+    --lz-nav-icon:#374151;
   }
   /* ═══ SUNLIGHT MODE — HIGH-CONTRAST PARCHMENT ════════════════════════ */
   /* Kill the dark animated background */
@@ -1270,39 +1277,43 @@ const GLOBAL_CSS = `
   [data-theme='light'] .lz-app-root textarea,
   [data-theme='light'] .lz-app-root input,
   [data-theme='light'] .lz-app-root select {
-    color:#050505 !important;
+    color:#111827 !important;
   }
   /* Buttons inherit except ones that have intentional colored backgrounds */
-  [data-theme='light'] .lz-app-root button { color:#050505 !important; }
+  [data-theme='light'] .lz-app-root button { color:#111827 !important; }
   /* Keep gold accent text where used as decorative headings — override back to amber */
-  [data-theme='light'] .lz-app-root .matriarch-quote { color:#7A5000 !important; }
+  [data-theme='light'] .lz-app-root .matriarch-quote { color:#92400E !important; }
   /* Danger button text must stay legible when hovered red */
   [data-theme='light'] .btn-danger:hover { color:#fff !important; }
   /* Placeholders */
   [data-theme='light'] .lz-app-root input::placeholder,
-  [data-theme='light'] .lz-app-root textarea::placeholder { color:rgba(5,5,5,.42) !important; }
+  [data-theme='light'] .lz-app-root textarea::placeholder { color:#9CA3AF !important; }
 
-  /* ── CARDS — Bright Parchment + thick gold border + heavy drop-shadow ── */
+  /* ── CARDS — Clean White Minimalist (light mode) ── */
   [data-theme='light'] .glass-card,
   [data-theme='light'] .glass-card-static {
-    background:#FEF9E7 !important;
-    border:2px solid #B8860B !important;
-    box-shadow:0 10px 28px rgba(0,0,0,.38), 0 3px 10px rgba(0,0,0,.22) !important;
-    color:#050505 !important;
+    background:#FFFFFF !important;
+    border:1px solid #E5E7EB !important;
+    box-shadow:0 2px 8px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04) !important;
+    color:#111827 !important;
     backdrop-filter:none !important;
+    border-radius:8px !important;
   }
   [data-theme='light'] .glass-card:hover {
-    box-shadow:0 16px 40px rgba(0,0,0,.45), 0 6px 16px rgba(0,0,0,.28) !important;
-    transform:translateY(-3px);
+    box-shadow:0 6px 20px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.06) !important;
+    border-color:#D1D5DB !important;
+    transform:translateY(-2px);
   }
   [data-theme='light'] .stat-card {
-    background:#FEF9E7 !important;
-    border:2px solid #B8860B !important;
-    color:#050505 !important;
-    box-shadow:0 8px 22px rgba(0,0,0,.32), 0 2px 8px rgba(0,0,0,.18) !important;
+    background:#FFFFFF !important;
+    border:1px solid #E5E7EB !important;
+    color:#111827 !important;
+    box-shadow:0 2px 6px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04) !important;
+    border-radius:8px !important;
   }
   [data-theme='light'] .stat-card:hover {
-    box-shadow:0 14px 34px rgba(0,0,0,.42), 0 4px 12px rgba(0,0,0,.24) !important;
+    box-shadow:0 6px 18px rgba(0,0,0,.1) !important;
+    border-color:#D1D5DB !important;
   }
 
   /* ── SIDEBAR — Deep Midnight Teal (dark bg → light text) ── */
@@ -1325,8 +1336,8 @@ const GLOBAL_CSS = `
   [data-theme='light'] .mobile-topbar { background:linear-gradient(90deg,#041C18,#072820) !important; border-bottom:1.5px solid #C9A84C !important; }
 
   /* ── MAIN CONTENT & PAGE INNER ── */
-  [data-theme='light'] .main-content { background:#FBF4DC; color:#050505 !important; }
-  [data-theme='light'] .page-inner { color:#050505 !important; }
+  [data-theme='light'] .main-content { background:#F3F4F6; color:#111827 !important; }
+  [data-theme='light'] .page-inner { color:#111827 !important; }
 
   /* ── ALL INLINE DARK BACKGROUNDS → parchment ── */
   [data-theme='light'] .main-content div[style*="background:rgba(4,"],
@@ -1344,16 +1355,16 @@ const GLOBAL_CSS = `
   [data-theme='light'] .main-content div[style*="background:rgba(22,"],
   [data-theme='light'] .main-content div[style*="background:rgba(30,"],
   [data-theme='light'] .main-content div[style*="background:rgba(32,"] {
-    background:#FEF9E7 !important;
-    color:#050505 !important;
+    background:#FFFFFF !important;
+    color:#111827 !important;
   }
   [data-theme='light'] .main-content div[style*="background:linear-gradient"] {
-    background:#FEF9E7 !important;
+    background:#FFFFFF !important;
   }
-  /* Flip rgba(255,255,255, near-transparent) overlays to visible parchment tint */
+  /* Flip rgba(255,255,255, near-transparent) overlays to light gray tint */
   [data-theme='light'] .main-content [style*="background:rgba(255,255,255,.0"],
   [data-theme='light'] .main-content [style*="background:rgba(255,255,255,.1"] {
-    background:rgba(184,134,11,.08) !important;
+    background:rgba(37,99,235,.05) !important;
   }
 
   /* ── FORM FIELDS ── */
@@ -1413,29 +1424,29 @@ const GLOBAL_CSS = `
   .page-fade{animation:fadeUp .32s cubic-bezier(.22,1,.36,1)}
   .slide-in{animation:slideInLeft .28s cubic-bezier(.22,1,.36,1)}
 
-  /* ── Luxury cards — Deep Mahogany Physical Texture ──────── */
+  /* ── Cards — High-Contrast Lapis Minimalist ──────────── */
   .glass-card{
-    background:linear-gradient(145deg,rgba(61,31,22,.93) 0%,rgba(45,18,8,.97) 100%);
+    background:linear-gradient(145deg,rgba(10,20,54,.94) 0%,rgba(6,13,40,.97) 100%);
     backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
-    border:2px solid rgba(212,168,67,.36);
-    border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.65),inset 0 0 32px rgba(201,168,76,.11),inset 0 1px 0 rgba(212,168,67,.22),inset 0 -2px 0 rgba(0,0,0,.45);
+    border:1px solid rgba(42,92,173,.38);
+    border-radius:8px;
+    box-shadow:0 4px 20px rgba(0,0,0,.48),inset 0 1px 0 rgba(168,196,240,.08);
     transition:all .22s ease;
-    color:#FFFFF0;
+    color:#F0E8FF;
   }
   .glass-card:hover{
-    border-color:rgba(212,168,67,.62);
-    box-shadow:0 18px 56px rgba(0,0,0,.55),inset 0 0 42px rgba(201,168,76,.16),0 0 28px rgba(201,168,76,.14);
+    border-color:rgba(201,168,76,.48);
+    box-shadow:0 10px 36px rgba(0,0,0,.52),0 0 20px rgba(201,168,76,.1);
     transform:translateY(-2px)
   }
   .glass-card-static{
-    background:linear-gradient(145deg,rgba(58,28,18,.91) 0%,rgba(40,16,6,.95) 100%);
+    background:linear-gradient(145deg,rgba(8,16,48,.92) 0%,rgba(4,10,32,.96) 100%);
     backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
-    border:2px solid rgba(212,168,67,.28);
-    border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.58),inset 0 0 26px rgba(201,168,76,.09),inset 0 1px 0 rgba(212,168,67,.16);
+    border:1px solid rgba(42,92,173,.28);
+    border-radius:8px;
+    box-shadow:0 4px 18px rgba(0,0,0,.44),inset 0 1px 0 rgba(168,196,240,.05);
     transition:border-color .22s,background .3s;will-change:auto;
-    color:#FFFFF0;
+    color:#F0E8FF;
   }
 
   .matriarch-quote{font-family:'Cormorant Garamond',serif;font-style:italic;color:#C9A84C;line-height:1.8;font-size:18px;text-shadow:0 0 10px rgba(201,168,76,.25)}
@@ -2016,7 +2027,7 @@ function DailyQuoteSidebar() {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
-function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn, onShowAuth, darkMode, toggleDarkMode }) {
+function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn, onShowAuth, darkMode, toggleDarkMode, creditsLeft }) {
   const isCare      = data.profile?.accountType === 'caree';
   const displayName = user ? (isCare ? data.profile?.careeName||'Your Caree' : (user.displayName||'Your Account')) : 'Guest';
   const [factIdx, setFactIdx] = useState(0);
@@ -2084,6 +2095,14 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
         <button onClick={()=>setPrivacyOn(p=>!p)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:`1.5px solid ${privacyOn?'rgba(201,168,76,.5)':'rgba(42,92,173,.3)'}`, background:privacyOn?'rgba(201,168,76,.1)':'rgba(42,92,173,.08)', color:privacyOn?'#C9A84C':'rgba(168,196,240,.6)', fontWeight:600, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', marginBottom:6 }}>
           {privacyOn ? '🔓 Show Details' : '🔒 Privacy Screen'}
         </button>
+        {user && creditsLeft !== null && (
+          <button onClick={()=>setTab('treasury')} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 14px', borderRadius:12, border:'1px solid rgba(201,168,76,.28)', background:'rgba(201,168,76,.07)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'background .18s' }}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(201,168,76,.14)'}
+            onMouseLeave={e=>e.currentTarget.style.background='rgba(201,168,76,.07)'}>
+            <span style={{ fontSize:13, color:'rgba(201,168,76,.7)', fontWeight:600 }}>🪙 AI Credits</span>
+            <span style={{ fontSize:14, fontWeight:800, color:'#C9A84C' }}>{creditsLeft}</span>
+          </button>
+        )}
         {user
           ? <button onClick={()=>signOut(auth)} className="btn btn-subtle" style={{ width:'100%', justifyContent:'center', fontSize:16, padding:'9px' }}>Sign out</button>
           : <button onClick={onShowAuth} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'9px 14px', borderRadius:12, border:'1.5px solid rgba(201,168,76,.4)', background:'rgba(201,168,76,.1)', color:'#C9A84C', fontWeight:700, fontSize:15, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>Sign In / Sign Up</button>
@@ -5172,7 +5191,7 @@ ${(d.medications||[]).filter(m=>m.active).map(m=>`- ${m.name} ${m.dose} (${m.fre
 Recent appointments:
 ${(d.appointments||[]).slice(0,5).map(a=>`- ${a.date}: ${a.provider}${a.postNotes?' — '+a.postNotes.slice(0,60):''}`).join('\n')||'None'}
 
-Be warm, validating, specific to their data. You are on their side, always. Start every response by acknowledging the person first.`;
+Be warm, validating, and specific to their data. For the very first message in a new conversation, open with genuine warmth — acknowledge their situation and let them know you're with them. In an ongoing conversation, respond naturally like you're already mid-conversation with a trusted friend — no formal openers or repeated reassurances needed each turn. NEVER use phrases like "I believe you", "no one believes you", or anything that implies their experience has been doubted. Just be present, real, and caring — like a knowledgeable friend who genuinely gets it.`;
 
 const STARTERS = [
   'Help me prepare for my next doctor appointment',
@@ -5234,7 +5253,7 @@ function GelKeyboard({ active }) {
   );
 }
 
-function Advocate({ data, user }) {
+function Advocate({ data, user, onCreditsUpdate }) {
   const [msgs,setMsgs]         = useState([]);
   const [input,setInput]       = useState('');
   const [loading,setLoading]   = useState(false);
@@ -5243,6 +5262,7 @@ function Advocate({ data, user }) {
   const [dailyCount,setDailyCount] = useState(0);
   const [aiTyping,setAiTyping] = useState(false);
   const [shareStatus,setShareStatus] = useState('idle');
+  const [creditsLeft,setCreditsLeft] = useState(null);
   const [voiceCallActive, setVoiceCallActive] = useState(false);
   const [voiceSpeaking, setVoiceSpeaking]     = useState(false);
   const bottomRef = useRef();
@@ -5296,6 +5316,8 @@ function Advocate({ data, user }) {
         }),
       });
       const json = await res.json();
+      const credHeader = res.headers.get('X-Credits-Left');
+      if (credHeader !== null) { const c = parseInt(credHeader, 10); setCreditsLeft(c); if (onCreditsUpdate) onCreditsUpdate(c); try { localStorage.setItem('lz_credits_left', String(c)); } catch {} }
       if (res.status === 429 || json.limitReached) { setLimitHit(true); setError(json.error||'Daily limit reached.'); setLoading(false); return; }
       if (!res.ok) { setError(json.error||'Something went wrong.'); setLoading(false); return; }
       const reply = json.content?.[0]?.text || json.text || '';
@@ -5320,7 +5342,14 @@ function Advocate({ data, user }) {
       {/* Header */}
       <div className="ai-chat-header" style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10, flexShrink:0 }}>
         <div>
-          <div className="ai-header-title" style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 AI Advocate</div>
+          <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+            <div className="ai-header-title" style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 AI Advocate</div>
+            {(creditsLeft !== null || localStorage.getItem('lz_credits_left')) && (
+              <div style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:20, background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', fontSize:12, color:'#C9A84C', fontWeight:700, fontFamily:"'DM Sans',sans-serif", marginBottom:3, whiteSpace:'nowrap' }}>
+                🪙 {creditsLeft ?? localStorage.getItem('lz_credits_left')} credits
+              </div>
+            )}
+          </div>
           <div className="ai-header-sub" style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
         <div className="ai-header-btns" style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
@@ -6712,8 +6741,8 @@ function Treasury({ user }) {
         </div>
       </div>
 
-      {/* Admin section */}
-      {uid && (
+      {/* Admin section — visible only to site owner accounts */}
+      {(uid === 'BEhLyvqZeCVy2SRFhsKCZ0fbqrC2' || user?.email === 'irenamayari@gmail.com') && (
         <div className="glass-card-static" style={{ padding:'18px 22px', borderColor:'rgba(201,168,76,.25)' }}>
           <div style={{ fontSize:11, color:'rgba(201,168,76,.45)', textTransform:'uppercase', letterSpacing:2, marginBottom:10, fontFamily:"'DM Sans',sans-serif" }}>⚙ Admin / Developer Info</div>
           <div style={{ fontSize:13, color:'rgba(240,232,255,.5)', marginBottom:10, lineHeight:1.6 }}>
