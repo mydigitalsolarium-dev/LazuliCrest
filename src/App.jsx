@@ -1214,151 +1214,161 @@ const GLOBAL_CSS = `
     --lz-nav-icon:rgba(200,180,255,.65);
   }
   [data-theme='light']{
-    --lz-bg-root:#F9F9F7;
-    --lz-bg-card:rgba(255,255,255,.97);
-    --lz-bg-card-alt:rgba(248,246,242,.98);
-    --lz-bg-sidebar:#EEE9F8;
-    --lz-bg-field:rgba(26,58,122,.05);
-    --lz-bg-field-focus:rgba(155,104,0,.06);
-    --lz-bg-lapis-soft:rgba(26,58,122,.08);
-    --lz-bg-stat:rgba(255,255,255,.97);
-    --lz-bg-topbar:rgba(248,246,242,.98);
-    --lz-text:#1A1A1A;
-    --lz-text-soft:#3A3A5C;
-    --lz-text-muted:#6B6B8A;
-    --lz-text-gold:#8B6500;
-    --lz-border-card:rgba(26,58,122,.18);
-    --lz-border-lapis:rgba(26,58,122,.35);
-    --lz-border-lapis-soft:rgba(26,58,122,.2);
-    --lz-border-gold:rgba(155,104,0,.35);
-    --lz-border-sidebar:rgba(26,58,122,.18);
-    --lz-gold:#8B6500;
-    --lz-gold-btn:linear-gradient(135deg,#8B6500,#C9A84C);
-    --lz-lapis:#1A3A7A;
-    --lz-lapis-btn:linear-gradient(135deg,#0F2460,#1A3A7A);
-    --lz-shadow-card:0 4px 24px rgba(0,0,0,.1);
-    --lz-shadow-stat:0 2px 12px rgba(0,0,0,.08);
-    --lz-pill-bg:rgba(26,58,122,.1);
-    --lz-pill-border:rgba(26,58,122,.3);
-    --lz-pill-text:#1A3A7A;
-    --lz-nav-active-bg:linear-gradient(135deg,rgba(26,58,122,.14),rgba(26,58,122,.06));
-    --lz-nav-icon:#6B6B8A;
+    --lz-bg-root:#FBF4DC;
+    --lz-bg-card:#FEF9E7;
+    --lz-bg-card-alt:#FDF6E0;
+    --lz-bg-sidebar:#B8860B;
+    --lz-bg-field:#FEF9E7;
+    --lz-bg-field-focus:#FEF5D4;
+    --lz-bg-lapis-soft:rgba(184,134,11,.12);
+    --lz-bg-stat:#FEF9E7;
+    --lz-bg-topbar:#B8860B;
+    --lz-text:#050505;
+    --lz-text-soft:#1A1A1A;
+    --lz-text-muted:rgba(5,5,5,.55);
+    --lz-text-gold:#7A5000;
+    --lz-border-card:#B8860B;
+    --lz-border-lapis:#B8860B;
+    --lz-border-lapis-soft:rgba(184,134,11,.45);
+    --lz-border-gold:#B8860B;
+    --lz-border-sidebar:#050505;
+    --lz-gold:#B8860B;
+    --lz-gold-btn:linear-gradient(135deg,#8B6500,#B8860B);
+    --lz-lapis:#7A5000;
+    --lz-lapis-btn:linear-gradient(135deg,#6B4400,#8B6000);
+    --lz-shadow-card:0 10px 28px rgba(0,0,0,.35),0 3px 10px rgba(0,0,0,.2);
+    --lz-shadow-stat:0 8px 22px rgba(0,0,0,.3),0 2px 8px rgba(0,0,0,.16);
+    --lz-pill-bg:rgba(184,134,11,.15);
+    --lz-pill-border:#B8860B;
+    --lz-pill-text:#050505;
+    --lz-nav-active-bg:rgba(0,0,0,.22);
+    --lz-nav-icon:#050505;
   }
-  /* light mode — tone down the animated background */
+  /* ═══ SUNLIGHT MODE — HIGH-CONTRAST PARCHMENT ════════════════════════ */
+  /* Kill the dark animated background */
   [data-theme='light'] .aurora-orb,[data-theme='light'] .float-sym,[data-theme='light'] .float-quote{display:none !important}
   [data-theme='light'] #lz-animated-bg{opacity:0 !important}
-  /* app root theming */
+  /* App root base */
   .lz-app-root{background:var(--lz-bg-root);color:var(--lz-text);transition:background .3s,color .3s}
+  [data-theme='light'] .lz-app-root{background:#FBF4DC;}
 
-  /* ── Light Mode Legibility — override hardcoded dark-theme inline colors ── */
-  /* Cards: crisp white with subtle gold border */
-  [data-theme='light'] .glass-card,[data-theme='light'] .glass-card-static{
-    background:#F5F5DC !important;
-    border:2px solid #D4A843 !important;
-    box-shadow:0 4px 24px rgba(0,0,0,.1),inset 0 0 18px rgba(212,168,67,.07) !important;
-    color:#0F0F0F !important;
+  /* ── NUCLEAR TEXT RULE: every element inside the app gets charcoal black ── */
+  /* This beats every inline style rgba() or #fff that React renders */
+  [data-theme='light'] .lz-app-root div,
+  [data-theme='light'] .lz-app-root span,
+  [data-theme='light'] .lz-app-root p,
+  [data-theme='light'] .lz-app-root h1,
+  [data-theme='light'] .lz-app-root h2,
+  [data-theme='light'] .lz-app-root h3,
+  [data-theme='light'] .lz-app-root h4,
+  [data-theme='light'] .lz-app-root li,
+  [data-theme='light'] .lz-app-root td,
+  [data-theme='light'] .lz-app-root th,
+  [data-theme='light'] .lz-app-root label,
+  [data-theme='light'] .lz-app-root textarea,
+  [data-theme='light'] .lz-app-root input,
+  [data-theme='light'] .lz-app-root select {
+    color:#050505 !important;
   }
-  [data-theme='light'] .stat-card{background:#F5F5DC !important;border:2px solid #D4A843 !important;color:#0F0F0F !important;box-shadow:0 2px 16px rgba(0,0,0,.09),inset 0 0 12px rgba(212,168,67,.05) !important;}
-  /* Diary */
-  [data-theme='light'] .diary-book{background:#faf7f2 !important;border-color:rgba(26,58,122,.2) !important;}
-  /* Sidebar group labels */
-  [data-theme='light'] .nav-group-label{color:#6B6B8A !important}
-  /* Hamburger lines: dark in light mode */
-  [data-theme='light'] .hamburger span{background:#1A3A7A !important}
-  /* Progress bar tracks */
-  [data-theme='light'] [class*="progress-track"]{background:rgba(26,58,122,.1) !important;}
-  /* Danger button — stays red but darker */
-  [data-theme='light'] .btn-danger{background:rgba(200,30,30,.1) !important;border-color:rgba(200,30,30,.4) !important;color:#b91c1c !important;}
-  [data-theme='light'] .btn-danger:hover{background:#ef4444 !important;color:#fff !important;border-color:#ef4444 !important;}
-  /* Matriarch tag (subtle caps label) */
-  [data-theme='light'] .matriarch-tag{color:rgba(26,58,122,.45) !important;}
-  /* Scrollbar in light mode */
-  [data-theme='light'] ::-webkit-scrollbar-thumb{background:rgba(26,58,122,.25);}
-  /* Make sure any opaque dark backgrounds in cards become white */
-  [data-theme='light'] .glass-card [style*="background:rgba(8"],
-  [data-theme='light'] .glass-card-static [style*="background:rgba(8"],
-  [data-theme='light'] .glass-card [style*="background:rgba(22"],
-  [data-theme='light'] .glass-card-static [style*="background:rgba(22"]{
-    background:rgba(26,58,122,.05) !important;
+  /* Buttons inherit except ones that have intentional colored backgrounds */
+  [data-theme='light'] .lz-app-root button { color:#050505 !important; }
+  /* Keep gold accent text where used as decorative headings — override back to amber */
+  [data-theme='light'] .lz-app-root .matriarch-quote { color:#7A5000 !important; }
+  /* Danger button text must stay legible when hovered red */
+  [data-theme='light'] .btn-danger:hover { color:#fff !important; }
+  /* Placeholders */
+  [data-theme='light'] .lz-app-root input::placeholder,
+  [data-theme='light'] .lz-app-root textarea::placeholder { color:rgba(5,5,5,.42) !important; }
+
+  /* ── CARDS — Bright Parchment + thick gold border + heavy drop-shadow ── */
+  [data-theme='light'] .glass-card,
+  [data-theme='light'] .glass-card-static {
+    background:#FEF9E7 !important;
+    border:2px solid #B8860B !important;
+    box-shadow:0 10px 28px rgba(0,0,0,.38), 0 3px 10px rgba(0,0,0,.22) !important;
+    color:#050505 !important;
+    backdrop-filter:none !important;
   }
-  /* Stat card label row (4th child = muted label text) */
-  [data-theme='light'] .stat-card>div:last-child{color:rgba(26,58,122,.55) !important;}
-  /* Guest banner */
-  [data-theme='light'] .guest-banner{background:rgba(26,58,122,.08) !important;border-color:rgba(26,58,122,.2) !important;}
-  [data-theme='light'] .guest-banner .guest-text{color:#1A3A7A !important;}
-  /* Pill */
-  [data-theme='light'] .pill{background:rgba(26,58,122,.1) !important;border-color:rgba(26,58,122,.25) !important;color:#1A3A7A !important;}
-  /* Auth card */
-  [data-theme='light'] .auth-input{background:rgba(26,58,122,.04) !important;border-color:rgba(26,58,122,.25) !important;color:#1A1A1A !important;}
-  [data-theme='light'] .auth-input::placeholder{color:#6B6B8A !important;}
-  /* Field */
-  [data-theme='light'] .field{background:rgba(26,58,122,.04) !important;border-color:rgba(26,58,122,.22) !important;color:#1A1A1A !important;}
-  [data-theme='light'] .field::placeholder{color:#6B6B8A !important;}
-  [data-theme='light'] select.field option{background:#F9F9F7 !important;color:#1A1A1A !important;}
-  /* ── Light mode: force ALL inline dark-theme text colors to be legible ── */
-  /* Light lavender (rgba(240,232,255,...)) — unreadable on white */
-  [data-theme='light'] div[style*="color:rgba(240,232"],
-  [data-theme='light'] span[style*="color:rgba(240,232"],
-  [data-theme='light'] p[style*="color:rgba(240,232"],
-  [data-theme='light'] h1[style*="color:rgba(240,232"],
-  [data-theme='light'] h2[style*="color:rgba(240,232"],
-  [data-theme='light'] h3[style*="color:rgba(240,232"],
-  [data-theme='light'] button[style*="color:rgba(240,232"]{color:#1A1A2E !important;}
-  /* Steel blue (rgba(168,196,240,...)) — unreadable on white */
-  [data-theme='light'] div[style*="color:rgba(168,196"],
-  [data-theme='light'] span[style*="color:rgba(168,196"],
-  [data-theme='light'] p[style*="color:rgba(168,196"],
-  [data-theme='light'] h1[style*="color:rgba(168,196"],
-  [data-theme='light'] h2[style*="color:rgba(168,196"],
-  [data-theme='light'] h3[style*="color:rgba(168,196"]{color:#3A4A7A !important;}
-  /* Pure white inline text */
-  [data-theme='light'] div[style*="color:#fff"],
-  [data-theme='light'] span[style*="color:#fff"],
-  [data-theme='light'] p[style*="color:#fff"],
-  [data-theme='light'] button[style*="color:#fff"]{color:#1A1A1A !important;}
-  [data-theme='light'] div[style*="color:white"],
-  [data-theme='light'] span[style*="color:white"]{color:#1A1A1A !important;}
-  /* rgba(255,255,255,...) white-ish text */
-  [data-theme='light'] div[style*="color:rgba(255,255,255"],
-  [data-theme='light'] span[style*="color:rgba(255,255,255"],
-  [data-theme='light'] p[style*="color:rgba(255,255,255"]{color:#2A2A4A !important;}
-  /* Dark card / panel backgrounds — make white/near-white */
-  [data-theme='light'] div[style*="background:rgba(4,"],
-  [data-theme='light'] div[style*="background:rgba(5,"],
-  [data-theme='light'] div[style*="background:rgba(8,"],
-  [data-theme='light'] div[style*="background:rgba(10,"],
-  [data-theme='light'] div[style*="background:rgba(14,"],
-  [data-theme='light'] div[style*="background:rgba(16,"]{
-    background:rgba(255,255,255,.96) !important;
-    border-color:rgba(26,58,122,.14) !important;
-    color:#1A1A1A !important;
+  [data-theme='light'] .glass-card:hover {
+    box-shadow:0 16px 40px rgba(0,0,0,.45), 0 6px 16px rgba(0,0,0,.28) !important;
+    transform:translateY(-3px);
   }
-  /* rgba(22,...) and rgba(32,...) dark backgrounds */
-  [data-theme='light'] div[style*="background:rgba(22,"],
-  [data-theme='light'] div[style*="background:rgba(32,"]{background:rgba(248,247,252,.97) !important;border-color:rgba(26,58,122,.12) !important;}
-  /* Chart / progress bar tracks */
-  [data-theme='light'] [style*="background:rgba(255,255,255,.06"]{background:rgba(26,58,122,.08) !important;}
-  [data-theme='light'] [style*="background:rgba(255,255,255,.05"]{background:rgba(26,58,122,.06) !important;}
-  [data-theme='light'] [style*="background:rgba(255,255,255,.04"]{background:rgba(26,58,122,.05) !important;}
-  [data-theme='light'] [style*="background:rgba(255,255,255,.03"]{background:rgba(26,58,122,.04) !important;}
-  /* Nav items in light mode */
-  [data-theme='light'] .nav-item{color:#2A2A4A !important;}
-  [data-theme='light'] .nav-item:hover{color:#1A1A1A !important;background:rgba(139,101,0,.08) !important;}
-  [data-theme='light'] .nav-item.active{color:#6B4800 !important;background:linear-gradient(135deg,rgba(139,101,0,.15),rgba(139,101,0,.06)) !important;border-color:rgba(139,101,0,.35) !important;}
-  /* Main content area base text */
-  [data-theme='light'] .main-content{color:#1A1A1A !important;}
-  [data-theme='light'] .page-inner{color:#1A1A1A;}
-  /* Textarea in diary — dark text on light paper */
-  [data-theme='light'] .diary-textarea{color:#2A1A0A !important;background:rgba(255,252,245,.9) !important;}
-  /* Enforce Onyx Black text on all parchment cards */
-  [data-theme='light'] .glass-card{color:#0F0F0F !important;}
-  [data-theme='light'] .glass-card-static{color:#0F0F0F !important;}
-  [data-theme='light'] .stat-card{color:#0F0F0F !important;}
-  [data-theme='light'] .glass-card *:not(canvas):not(svg):not(path):not(button){color:#0F0F0F !important;}
-  [data-theme='light'] .glass-card-static *:not(canvas):not(svg):not(path):not(button){color:#0F0F0F !important;}
-  /* Force legibility on any remaining gold text (--lz-text-gold in light = #8B6500, fine) */
-  /* Override the mobile topbar & sidebar toggle area */
-  [data-theme='light'] .mobile-topbar{background:rgba(238,233,248,.98) !important;}
+  [data-theme='light'] .stat-card {
+    background:#FEF9E7 !important;
+    border:2px solid #B8860B !important;
+    color:#050505 !important;
+    box-shadow:0 8px 22px rgba(0,0,0,.32), 0 2px 8px rgba(0,0,0,.18) !important;
+  }
+  [data-theme='light'] .stat-card:hover {
+    box-shadow:0 14px 34px rgba(0,0,0,.42), 0 4px 12px rgba(0,0,0,.24) !important;
+  }
+
+  /* ── SIDEBAR — Rich Gold with black icons ── */
+  [data-theme='light'] .sidebar {
+    background:linear-gradient(175deg,#A07810 0%,#B8860B 35%,#987008 65%,#7A5206 100%) !important;
+    border-right:3px solid #050505 !important;
+    box-shadow:6px 0 24px rgba(0,0,0,.45) !important;
+  }
+  [data-theme='light'] .nav-item { color:#050505 !important; font-weight:600 !important; }
+  [data-theme='light'] .nav-item:hover { background:rgba(0,0,0,.14) !important; color:#050505 !important; border-color:rgba(0,0,0,.2) !important; }
+  [data-theme='light'] .nav-item.active { background:rgba(0,0,0,.22) !important; color:#050505 !important; border-color:rgba(0,0,0,.35) !important; font-weight:700 !important; }
+  [data-theme='light'] .nav-group-label { color:rgba(0,0,0,.55) !important; }
+  [data-theme='light'] .hamburger span { background:#050505 !important; }
+  [data-theme='light'] .mobile-topbar { background:#B8860B !important; border-bottom:2px solid #050505 !important; }
+
+  /* ── MAIN CONTENT & PAGE INNER ── */
+  [data-theme='light'] .main-content { background:#FBF4DC; color:#050505 !important; }
+  [data-theme='light'] .page-inner { color:#050505 !important; }
+
+  /* ── ALL INLINE DARK BACKGROUNDS → parchment ── */
+  [data-theme='light'] .main-content div[style*="background:rgba(4,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(5,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(6,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(7,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(8,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(9,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(10,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(12,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(14,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(16,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(18,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(20,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(22,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(30,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(32,"] {
+    background:#FEF9E7 !important;
+    color:#050505 !important;
+  }
+  [data-theme='light'] .main-content div[style*="background:linear-gradient"] {
+    background:#FEF9E7 !important;
+  }
+  /* Flip rgba(255,255,255, near-transparent) overlays to visible parchment tint */
+  [data-theme='light'] .main-content [style*="background:rgba(255,255,255,.0"],
+  [data-theme='light'] .main-content [style*="background:rgba(255,255,255,.1"] {
+    background:rgba(184,134,11,.08) !important;
+  }
+
+  /* ── FORM FIELDS ── */
+  [data-theme='light'] .field { background:#FEF9E7 !important; color:#050505 !important; border-color:#B8860B !important; }
+  [data-theme='light'] .auth-input { background:#FEF9E7 !important; color:#050505 !important; border-color:#B8860B !important; }
+  [data-theme='light'] select.field option { background:#FEF9E7 !important; color:#050505 !important; }
+  [data-theme='light'] .diary-textarea { color:#050505 !important; background:#FEF9E7 !important; }
+
+  /* ── BUTTONS (non-filled) ── */
+  [data-theme='light'] .btn-ghost { background:#FEF9E7 !important; border-color:#B8860B !important; color:#050505 !important; }
+  [data-theme='light'] .btn-subtle { background:#FEF9E7 !important; border-color:#B8860B !important; color:#050505 !important; }
+  [data-theme='light'] .btn-danger { background:rgba(200,30,30,.1) !important; border-color:rgba(200,30,30,.5) !important; color:#9B1515 !important; }
+  [data-theme='light'] .btn-lapis { color:#050505 !important; }
+  [data-theme='light'] .pill { background:rgba(184,134,11,.15) !important; border-color:#B8860B !important; color:#050505 !important; }
+
+  /* ── MISC ── */
+  [data-theme='light'] .diary-book { background:#faf7f2 !important; border-color:#B8860B !important; }
+  [data-theme='light'] .matriarch-tag { color:rgba(0,0,0,.5) !important; }
+  [data-theme='light'] .guest-banner { background:rgba(184,134,11,.12) !important; border-color:#B8860B !important; }
+  [data-theme='light'] .guest-banner .guest-text { color:#050505 !important; }
+  [data-theme='light'] ::-webkit-scrollbar-thumb { background:#B8860B; }
+  [data-theme='light'] ::-webkit-scrollbar-track { background:#FEF9E7; }
+  [data-theme='light'] [class*="progress-track"] { background:rgba(184,134,11,.18) !important; }
 
   @keyframes fadeOut{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
