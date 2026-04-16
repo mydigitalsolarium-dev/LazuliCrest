@@ -1305,18 +1305,24 @@ const GLOBAL_CSS = `
     box-shadow:0 14px 34px rgba(0,0,0,.42), 0 4px 12px rgba(0,0,0,.24) !important;
   }
 
-  /* ── SIDEBAR — Rich Gold with black icons ── */
+  /* ── SIDEBAR — Deep Midnight Teal (dark bg → light text) ── */
   [data-theme='light'] .sidebar {
-    background:linear-gradient(175deg,#A07810 0%,#B8860B 35%,#987008 65%,#7A5206 100%) !important;
-    border-right:3px solid #050505 !important;
-    box-shadow:6px 0 24px rgba(0,0,0,.45) !important;
+    background:linear-gradient(175deg,#041C18 0%,#072820 35%,#052218 65%,#031410 100%) !important;
+    border-right:2px solid #C9A84C !important;
+    box-shadow:10px 0 32px rgba(0,0,0,.65) !important;
   }
-  [data-theme='light'] .nav-item { color:#050505 !important; font-weight:600 !important; }
-  [data-theme='light'] .nav-item:hover { background:rgba(0,0,0,.14) !important; color:#050505 !important; border-color:rgba(0,0,0,.2) !important; }
-  [data-theme='light'] .nav-item.active { background:rgba(0,0,0,.22) !important; color:#050505 !important; border-color:rgba(0,0,0,.35) !important; font-weight:700 !important; }
-  [data-theme='light'] .nav-group-label { color:rgba(0,0,0,.55) !important; }
-  [data-theme='light'] .hamburger span { background:#050505 !important; }
-  [data-theme='light'] .mobile-topbar { background:#B8860B !important; border-bottom:2px solid #050505 !important; }
+  /* Override nuclear text rule for sidebar — keep text LIGHT on dark bg */
+  [data-theme='light'] .sidebar div,
+  [data-theme='light'] .sidebar span,
+  [data-theme='light'] .sidebar p,
+  [data-theme='light'] .sidebar label { color:rgba(240,228,208,.82) !important; }
+  [data-theme='light'] .sidebar button { color:rgba(240,228,208,.82) !important; }
+  [data-theme='light'] .nav-item { color:rgba(240,228,208,.82) !important; font-weight:500 !important; }
+  [data-theme='light'] .nav-item:hover { background:rgba(201,168,76,.13) !important; color:#F0E4D0 !important; border-color:rgba(201,168,76,.28) !important; }
+  [data-theme='light'] .nav-item.active { background:linear-gradient(135deg,rgba(201,168,76,.22),rgba(201,168,76,.1)) !important; color:#C9A84C !important; border-color:rgba(201,168,76,.48) !important; font-weight:700 !important; }
+  [data-theme='light'] .nav-group-label { color:rgba(201,168,76,.5) !important; }
+  [data-theme='light'] .hamburger span { background:#C9A84C !important; }
+  [data-theme='light'] .mobile-topbar { background:linear-gradient(90deg,#041C18,#072820) !important; border-bottom:1.5px solid #C9A84C !important; }
 
   /* ── MAIN CONTENT & PAGE INNER ── */
   [data-theme='light'] .main-content { background:#FBF4DC; color:#050505 !important; }
@@ -1461,7 +1467,7 @@ const GLOBAL_CSS = `
 
   /* ── Sidebar — Deep Lapis & Gold ────────────────────────── */
   .sidebar{width:272px;background:linear-gradient(175deg,#0C0A1E 0%,#080616 35%,#05040F 65%,#0C0A1E 100%);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-right:2px solid #D4A843;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:10px 0 30px rgba(0,0,0,.7),inset -1px 0 0 rgba(212,168,67,.18),inset 0 0 80px rgba(42,92,173,.04);transition:transform .3s cubic-bezier(.22,1,.36,1),background .3s}
-  [data-theme='light'] .sidebar{background:linear-gradient(175deg,#EEE9F8 0%,#E6E0F5 35%,#DDD7EF 65%,#EEE9F8 100%);border-right:2px solid #8B6500;box-shadow:10px 0 20px rgba(0,0,0,.12),inset -1px 0 0 rgba(139,101,0,.2)}
+  [data-theme='light'] .sidebar{background:linear-gradient(175deg,#041C18 0%,#072820 35%,#052218 65%,#031410 100%);border-right:2px solid #C9A84C;box-shadow:10px 0 32px rgba(0,0,0,.65)}
   .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,228,208,.85);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
   .nav-item:hover{background:rgba(212,168,67,.1);color:#F0E4D0;border-color:rgba(212,168,67,.22)}
   .nav-item.active{background:linear-gradient(135deg,rgba(212,168,67,.18),rgba(212,168,67,.08));color:#D4A843;border:1.5px solid rgba(212,168,67,.45);font-weight:700;box-shadow:inset 0 0 12px rgba(212,168,67,.08)}
@@ -1469,7 +1475,7 @@ const GLOBAL_CSS = `
   *:focus-visible{outline:2px solid #D4A843 !important;outline-offset:2px !important}
   button:focus-visible,.field:focus,.auth-input:focus{border-color:#D4A843 !important;box-shadow:0 0 0 3px rgba(212,168,67,.18) !important}
 
-  .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;min-width:0;overscroll-behavior:contain}
+  .main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;min-width:0;overscroll-behavior:contain}
   .privacy-sensitive{transition:filter .3s ease}
   .privacy-on .privacy-sensitive{filter:blur(8px)}
   .privacy-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;borderRadius:20px;border:1.5px solid rgba(42,92,173,.35);background:rgba(4,14,52,.8);color:rgba(168,196,240,.7);fontSize:14px;fontWeight:600;cursor:pointer;fontFamily:'DM Sans',sans-serif;transition:all .18s;backdropFilter:blur(8px)}
@@ -1684,6 +1690,76 @@ const GLOBAL_CSS = `
 
   /* ── Diary book ruled lines ─── */
   .diary-right-lines { background-image: repeating-linear-gradient(to bottom, transparent, transparent 33px, rgba(42,92,173,.08) 33px, rgba(42,92,173,.08) 34px); }
+
+  /* ── Sidebar profile card — animated aurora ── */
+  @keyframes lzProfileAura {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .sidebar-profile-card {
+    background: linear-gradient(135deg, #0D2447 0%, #1A3A6B 25%, #122D58 50%, #0A1E3D 75%, #0D2447 100%);
+    background-size: 300% 300%;
+    animation: lzProfileAura 9s ease infinite;
+    border: 1px solid rgba(201,168,76,.38);
+    border-radius: 13px;
+    padding: 11px 13px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 3px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(201,168,76,.12);
+  }
+  .sidebar-profile-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(201,168,76,.09) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  /* ── Lazuli History box — lapis 3D shimmer ── */
+  @keyframes lzLapisShimmer {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes lzLapisPulse {
+    0%,100% { box-shadow: 0 2px 10px rgba(42,92,173,.28), inset 0 0 18px rgba(201,168,76,.05); }
+    50%      { box-shadow: 0 4px 18px rgba(42,92,173,.48), inset 0 0 26px rgba(201,168,76,.11); }
+  }
+  .lazuli-history-box {
+    background: linear-gradient(135deg, #091A3E 0%, #0D2855 30%, #07173A 55%, #122D5A 80%, #091A3E 100%);
+    background-size: 400% 400%;
+    animation: lzLapisShimmer 14s ease infinite, lzLapisPulse 7s ease-in-out infinite;
+    border: 1px solid rgba(201,168,76,.32);
+    border-radius: 11px;
+    padding: 9px 12px;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(42,92,173,.28), inset 0 0 18px rgba(201,168,76,.05);
+    transform: perspective(600px) rotateX(1deg);
+    transition: transform .3s ease;
+  }
+  .lazuli-history-box:hover { transform: perspective(600px) rotateX(0deg) translateY(-1px); }
+  .lazuli-history-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(45deg, transparent 0px, transparent 10px, rgba(201,168,76,.025) 10px, rgba(201,168,76,.025) 11px);
+    pointer-events: none;
+  }
+  .lazuli-history-box::after {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 60%;
+    height: 140%;
+    background: radial-gradient(ellipse, rgba(42,92,173,.18) 0%, transparent 65%);
+    animation: lzLapisShimmer 10s ease-in-out infinite reverse;
+    pointer-events: none;
+  }
 `;
 
 // ─── Splash ───────────────────────────────────────────────────
@@ -1930,24 +2006,24 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
           </div>
           {saving && <div style={{ marginLeft:'auto', width:6, height:6, borderRadius:'50%', background:'#C9A84C', animation:'pulseGlow 1s infinite' }}/>}
         </div>
-        <div style={{ background:'linear-gradient(135deg,rgba(42,92,173,.12),rgba(201,168,76,.05))', border:'1px solid rgba(42,92,173,.2)', borderRadius:13, padding:'11px 13px', marginBottom:12 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#1E3A8A,#C9A84C)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:700, color:'#fff', flexShrink:0 }}>
+        <div className="sidebar-profile-card">
+          <div style={{ display:'flex', alignItems:'center', gap:8, position:'relative', zIndex:1 }}>
+            <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#1E3A8A,#C9A84C)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:700, color:'#fff', flexShrink:0, boxShadow:'0 0 10px rgba(201,168,76,.3)' }}>
               {(displayName||'?')[0].toUpperCase()}
             </div>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontWeight:600, fontSize:16, color:'#F0E8FF', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{displayName}</div>
-              {isCare && <div style={{ fontSize:9, color:'rgba(201,168,76,.6)', fontWeight:600, letterSpacing:1 }}>CARE MODE</div>}
-              {!isCare && user && <div style={{ fontSize:16, color:'rgba(168,196,240,.45)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</div>}
-              {!user && <div style={{ fontSize:16, color:'rgba(168,196,240,.45)' }}>Browsing as guest</div>}
+              {isCare && <div style={{ fontSize:9, color:'rgba(201,168,76,.7)', fontWeight:700, letterSpacing:1 }}>CARE MODE</div>}
+              {!isCare && user && <div style={{ fontSize:13, color:'rgba(168,196,240,.55)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</div>}
+              {!user && <div style={{ fontSize:13, color:'rgba(168,196,240,.5)' }}>Browsing as guest</div>}
             </div>
           </div>
-          {data.profile?.conditions && <div style={{ marginTop:7, fontSize:16, color:'rgba(168,196,240,.5)', fontWeight:500 }}>{data.profile.conditions.split(',')[0].trim()}{data.profile.conditions.includes(',')?' + more':''}</div>}
+          {data.profile?.conditions && <div style={{ marginTop:7, fontSize:13, color:'rgba(168,196,240,.6)', fontWeight:500, position:'relative', zIndex:1 }}>{data.profile.conditions.split(',')[0].trim()}{data.profile.conditions.includes(',')?' + more':''}</div>}
         </div>
         {/* Lazuli lapis fact */}
-        <div style={{ background:'rgba(42,92,173,.07)', border:'1px solid rgba(42,92,173,.15)', borderRadius:11, padding:'9px 12px', marginBottom:8 }}>
-          <div style={{ fontSize:9, fontWeight:700, color:'rgba(201,168,76,.55)', letterSpacing:2, textTransform:'uppercase', marginBottom:4 }}>✦ Lazuli History</div>
-          <div style={{ fontSize:16, color:'rgba(168,196,240,.75)', lineHeight:1.6, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", transition:'opacity .5s' }}>{LAZULI_FACTS[factIdx]}</div>
+        <div className="lazuli-history-box">
+          <div style={{ fontSize:9, fontWeight:700, color:'rgba(201,168,76,.72)', letterSpacing:2, textTransform:'uppercase', marginBottom:4, position:'relative', zIndex:1 }}>✦ Lazuli History</div>
+          <div style={{ fontSize:13, color:'rgba(168,196,240,.88)', lineHeight:1.65, fontFamily:"'DM Sans',sans-serif", fontWeight:400, transition:'opacity .5s', position:'relative', zIndex:1 }}>{LAZULI_FACTS[factIdx]}</div>
         </div>
       </div>
       <nav style={{ padding:'4px 8px', overflowY:'auto' }}>
@@ -5231,8 +5307,8 @@ function Advocate({ data, user }) {
       {/* Status pills — subtle, not alarming */}
       {limitHit && <div style={{ padding:'10px 14px', background:'rgba(201,168,76,.06)', border:'1px solid rgba(201,168,76,.18)', borderRadius:12, fontSize:14, color:'rgba(201,168,76,.75)', lineHeight:1.6, flexShrink:0, display:'flex', gap:8, alignItems:'center' }}>💙 <span>Daily credits used — limit resets at midnight.</span></div>}
       {!limitHit && dailyCount>0 && <div style={{ fontSize:12, color:'rgba(240,232,255,.18)', textAlign:'right', flexShrink:0 }}>{dailyCount} msgs today</div>}
-      {error && !limitHit && <div style={{ padding:'8px 14px', background:'rgba(42,92,173,.06)', border:'1px solid rgba(42,92,173,.15)', borderRadius:10, fontSize:13, color:'rgba(168,196,240,.5)', lineHeight:1.5, flexShrink:0, display:'flex', gap:6, alignItems:'center' }}>
-        <span style={{ opacity:.5 }}>◌</span> <span>Lazuli had trouble connecting — please try again.</span>
+      {error && !limitHit && <div style={{ padding:'10px 14px', background:'rgba(255,80,80,.07)', border:'1px solid rgba(255,80,80,.25)', borderRadius:10, fontSize:13, color:'rgba(255,160,160,.85)', lineHeight:1.6, flexShrink:0 }}>
+        ⚠ {error}
       </div>}
 
       {/* GEL PC SHELL */}
