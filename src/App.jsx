@@ -508,9 +508,6 @@ export default function App() {
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
         <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} onShowAuth={()=>setShowAuth(true)} darkMode={darkMode} toggleDarkMode={toggleDarkMode}/>
 
-        {privacyOn && (
-          <div style={{ position:'fixed', inset:0, zIndex:200, backdropFilter:'blur(18px) brightness(.4)', WebkitBackdropFilter:'blur(18px) brightness(.4)', pointerEvents:'none' }}/>
-        )}
         <main className={`main-content${privacyOn?' privacy-on':''}`}>
           <div className="mobile-topbar">
             <button className="hamburger" onClick={()=>setSideOpen(o=>!o)}>
@@ -660,73 +657,223 @@ const FLOAT_QUOTES = CHRONIC_ILLNESS_QUOTES.map((q,i) => ({
   dur: 45 + (i % 5) * 8,
 }));
 
-// ─── DNA Helix Background ─────────────────────────────────────
-function DNAHelixBg() {
-  const instances = [
-    { left:'5%',  top:'8%',  scale:0.75, opacity:0.11, duration:28, delay:0,  anim:'dnaFloat',    c1:'#2A5CAD', c2:'#D4A843' },
-    { left:'87%', top:'4%',  scale:1.05, opacity:0.09, duration:36, delay:6,  anim:'dnaFloatAlt', c1:'#D4A843', c2:'#7B5EA7' },
-    { left:'46%', top:'62%', scale:0.6,  opacity:0.08, duration:24, delay:13, anim:'dnaFloat',    c1:'#27AE60', c2:'#2A5CAD' },
-    { left:'70%', top:'32%', scale:0.88, opacity:0.10, duration:40, delay:3,  anim:'dnaFloatAlt', c1:'#7B5EA7', c2:'#D4A843' },
-    { left:'16%', top:'72%', scale:0.65, opacity:0.09, duration:32, delay:18, anim:'dnaFloat',    c1:'#2A5CAD', c2:'#27AE60' },
-    { left:'58%', top:'20%', scale:0.50, opacity:0.07, duration:20, delay:9,  anim:'dnaFloatAlt', c1:'#D4A843', c2:'#2A5CAD' },
-  ];
+// ─── DNA & Medical Canvas Background ─────────────────────────
+function DNAHelixCanvas() {
+  const cvRef = useRef(null);
+  const mouseRef = useRef({ x:-999, y:-999 });
+  const rafRef  = useRef(null);
 
-  // Generate double-helix SVG path data (3 turns, 220px tall)
-  const STEPS = 52, H = 220, AMP = 12, CX = 16;
-  const pts1 = [], pts2 = [];
-  for (let i = 0; i <= STEPS; i++) {
-    const t = i / STEPS;
-    const y = t * H;
-    pts1.push(`${(CX + AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1)},${y.toFixed(1)}`);
-    pts2.push(`${(CX - AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1)},${y.toFixed(1)}`);
-  }
-  const d1 = 'M ' + pts1.join(' L ');
-  const d2 = 'M ' + pts2.join(' L ');
+  useEffect(() => {
+    const cv = cvRef.current; if (!cv) return;
+    const ctx = cv.getContext('2d');
+    let W = 0, H = 0;
 
-  // Rungs every quarter-turn
-  const rungEvery = Math.floor(STEPS / 12);
-  const rungs = [];
-  for (let i = 0; i <= STEPS; i += rungEvery) {
-    const t = i / STEPS, y = (t * H).toFixed(1);
-    rungs.push({
-      x1: (CX + AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1),
-      x2: (CX - AMP * Math.sin(t * 3 * 2 * Math.PI)).toFixed(1),
-      y,
-    });
-  }
+    const PALETTE = [
+      [42,92,173],[42,92,173],   // lapis
+      [201,168,76],[201,168,76], // gold
+      [123,94,167],              // amethyst
+      [39,174,96],               // emerald
+    ];
+
+    // ── DNA helix objects ──────────────────────────────────────
+    const helixes = Array.from({ length:7 }, (_, i) => ({
+      x: 0.05 + (i * 0.145) % 0.9,
+      y: 0.05 + (i * 0.17) % 0.88,
+      vx: (Math.random()-0.5) * 0.00014,
+      vy: (Math.random()-0.5) * 0.00014,
+      rot:  Math.random() * Math.PI * 2,
+      vrot: (Math.random()-0.5) * 0.0015,
+      phase: Math.random() * Math.PI * 2,
+      sc:   0.45 + (i % 4) * 0.15,
+      op:   0.07 + (i % 3) * 0.025,
+      c1: PALETTE[i % PALETTE.length],
+      c2: PALETTE[(i+2) % PALETTE.length],
+    }));
+
+    // ── EKG lines ─────────────────────────────────────────────
+    const ekgs = Array.from({ length:5 }, (_, i) => ({
+      x: 0.1 + (i * 0.21) % 0.8,
+      y: 0.1 + (i * 0.19) % 0.8,
+      vx: (Math.random()-0.5) * 0.00010,
+      vy: (Math.random()-0.5) * 0.00010,
+      phase: Math.random() * Math.PI * 2,
+      sc:   0.55 + (i % 3) * 0.2,
+      op:   0.055 + (i % 3) * 0.018,
+      col: PALETTE[i % 2 === 0 ? 0 : 2],
+    }));
+
+    // ── Cell / molecule blobs ──────────────────────────────────
+    const cells = Array.from({ length:6 }, (_, i) => ({
+      x: Math.random(), y: Math.random(),
+      vx: (Math.random()-0.5) * 0.00009,
+      vy: (Math.random()-0.5) * 0.00009,
+      phase: Math.random() * Math.PI * 2,
+      sc:   0.5 + (i % 4) * 0.18,
+      op:   0.045 + (i % 3) * 0.015,
+      col: PALETTE[(i+1) % PALETTE.length],
+      type: i % 3, // 0=rbc, 1=molecule, 2=chromosome
+    }));
+
+    const resize = () => {
+      W = cv.offsetWidth; H = cv.offsetHeight;
+      cv.width = W; cv.height = H;
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(cv);
+
+    const onMove = (e) => {
+      const rect = cv.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      mouseRef.current = { x:(cx-rect.left)/W, y:(cy-rect.top)/H };
+    };
+    window.addEventListener('mousemove', onMove, { passive:true });
+    window.addEventListener('touchmove', onMove, { passive:true });
+
+    // ── Draw DNA double helix ─────────────────────────────────
+    const drawDNA = (c1, c2, sc, phase, op) => {
+      const turns=3, hH=170*sc, amp=18*sc, STEPS=44, rungStep=4;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      const s1=[], s2=[];
+      for (let j=0;j<=STEPS;j++){
+        const t=j/STEPS, y=t*hH;
+        s1.push([amp*Math.sin(t*turns*2*Math.PI+phase), y]);
+        s2.push([-amp*Math.sin(t*turns*2*Math.PI+phase), y]);
+      }
+      // Strand 1
+      ctx.beginPath(); ctx.moveTo(s1[0][0],s1[0][1]);
+      for (let j=1;j<s1.length;j++) ctx.lineTo(s1[j][0],s1[j][1]);
+      ctx.strokeStyle=`rgba(${c1[0]},${c1[1]},${c1[2]},${op})`;
+      ctx.lineWidth=1.8*sc; ctx.stroke();
+      // Strand 2
+      ctx.beginPath(); ctx.moveTo(s2[0][0],s2[0][1]);
+      for (let j=1;j<s2.length;j++) ctx.lineTo(s2[j][0],s2[j][1]);
+      ctx.strokeStyle=`rgba(${c2[0]},${c2[1]},${c2[2]},${op})`;
+      ctx.lineWidth=1.8*sc; ctx.stroke();
+      // Rungs + dots
+      for (let j=0;j<=STEPS;j+=rungStep){
+        const t=j/STEPS, y=t*hH;
+        const x1=amp*Math.sin(t*turns*2*Math.PI+phase), x2=-x1;
+        const rc = j%( rungStep*2)===0?c1:c2;
+        ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y);
+        ctx.strokeStyle=`rgba(${rc[0]},${rc[1]},${rc[2]},${op*0.75})`; ctx.lineWidth=1.2*sc; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x1,y,2.4*sc,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${c1[0]},${c1[1]},${c1[2]},${op*0.9})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(x2,y,2.4*sc,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${c2[0]},${c2[1]},${c2[2]},${op*0.9})`; ctx.fill();
+      }
+    };
+
+    // ── Draw EKG waveform ─────────────────────────────────────
+    const drawEKG = (col, sc, op) => {
+      const w=90*sc;
+      ctx.beginPath(); ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.moveTo(-w*.5, 0);
+      ctx.lineTo(-w*.15, 0);
+      ctx.lineTo(-w*.05, -w*.08);
+      ctx.lineTo( w*.00, w*.04);
+      ctx.lineTo( w*.05, -w*.28);
+      ctx.lineTo( w*.10,  w*.14);
+      ctx.lineTo( w*.15, -w*.06);
+      ctx.lineTo( w*.25, 0);
+      ctx.lineTo( w*.5, 0);
+      ctx.strokeStyle=`rgba(${col[0]},${col[1]},${col[2]},${op})`;
+      ctx.lineWidth=1.6*sc; ctx.stroke();
+    };
+
+    // ── Draw cell / molecule ──────────────────────────────────
+    const drawCell = (col, sc, op, type) => {
+      const r = 18*sc;
+      ctx.strokeStyle=`rgba(${col[0]},${col[1]},${col[2]},${op})`;
+      ctx.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${op*0.08})`;
+      ctx.lineWidth = 1.4*sc;
+      if (type===0) {
+        // Red blood cell (circle with inner ring)
+        ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke(); ctx.fill();
+        ctx.beginPath(); ctx.arc(0,0,r*.45,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(${col[0]},${col[1]},${col[2]},${op*0.55})`; ctx.stroke();
+      } else if (type===1) {
+        // Molecule (3 dots connected)
+        const pts=[[0,-r],[r*.87,r*.5],[-r*.87,r*.5]];
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0],pts[0][1]); ctx.lineTo(pts[1][0],pts[1][1]);
+        ctx.lineTo(pts[2][0],pts[2][1]); ctx.closePath(); ctx.stroke();
+        for (const [px,py] of pts) {
+          ctx.beginPath(); ctx.arc(px,py,3.5*sc,0,Math.PI*2);
+          ctx.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${op*0.9})`; ctx.fill();
+        }
+      } else {
+        // Chromosome X shape
+        const a=r*.7;
+        ctx.beginPath(); ctx.moveTo(-a,-a); ctx.lineTo(a,a); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(a,-a); ctx.lineTo(-a,a); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0,0,r*.25,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${op*0.7})`; ctx.fill();
+      }
+    };
+
+    // ── Physics update ────────────────────────────────────────
+    const update = (obj, attraction=0.000012) => {
+      const dx=mouseRef.current.x-obj.x, dy=mouseRef.current.y-obj.y;
+      const dist=Math.hypot(dx,dy);
+      if (dist<0.4&&dist>0){ obj.vx+=dx*attraction; obj.vy+=dy*attraction; }
+      obj.vx*=0.997; obj.vy*=0.997;
+      obj.x+=obj.vx; obj.y+=obj.vy;
+      obj.phase+=0.008;
+      if (obj.x<0) obj.x=1; if (obj.x>1) obj.x=0;
+      if (obj.y<0) obj.y=1; if (obj.y>1) obj.y=0;
+    };
+
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw);
+      if (!W||!H) return;
+      ctx.clearRect(0,0,W,H);
+
+      for (const h of helixes) {
+        update(h);
+        const pulse = 0.85+Math.sin(h.phase)*0.15;
+        ctx.save();
+        ctx.translate(h.x*W, h.y*H);
+        ctx.rotate(h.rot); h.rot+=h.vrot;
+        ctx.translate(0, -(85*h.sc)); // centre helix vertically
+        drawDNA(h.c1, h.c2, h.sc, h.phase, h.op*pulse);
+        ctx.restore();
+      }
+
+      for (const e of ekgs) {
+        update(e, 0.000009);
+        const pulse = 0.8+Math.sin(e.phase)*0.2;
+        ctx.save();
+        ctx.translate(e.x*W, e.y*H);
+        drawEKG(e.col, e.sc, e.op*pulse);
+        ctx.restore();
+      }
+
+      for (const c of cells) {
+        update(c, 0.000008);
+        const pulse = 0.85+Math.sin(c.phase)*0.15;
+        ctx.save();
+        ctx.translate(c.x*W, c.y*H);
+        drawCell(c.col, c.sc, c.op*pulse, c.type);
+        ctx.restore();
+      }
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      ro.disconnect();
+    };
+  }, []);
 
   return (
-    <div style={{ position:'absolute', inset:0, pointerEvents:'none', overflow:'hidden', zIndex:0 }}>
-      {instances.map((inst, i) => (
-        <div key={i} style={{
-          position:'absolute', left:inst.left, top:inst.top,
-          animation:`${inst.anim} ${inst.duration}s ease-in-out ${inst.delay}s infinite`,
-          opacity: inst.opacity,
-        }}>
-          <div style={{ transform:`scale(${inst.scale})`, transformOrigin:'top center' }}>
-            <svg width="32" height={H} viewBox={`0 0 32 ${H}`} style={{ overflow:'visible' }}>
-              <defs>
-                <filter id={`hglow${i}`} x="-60%" y="-60%" width="220%" height="220%">
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="blur"/>
-                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-              </defs>
-              <path d={d1} fill="none" stroke={inst.c1} strokeWidth="1.8" strokeLinecap="round" filter={`url(#hglow${i})`}/>
-              <path d={d2} fill="none" stroke={inst.c2} strokeWidth="1.8" strokeLinecap="round" filter={`url(#hglow${i})`}/>
-              {rungs.map((r, ri) => (
-                <g key={ri}>
-                  <line x1={r.x1} y1={r.y} x2={r.x2} y2={r.y}
-                    stroke={ri % 2 === 0 ? inst.c1 : inst.c2}
-                    strokeWidth="1.4" strokeOpacity="0.75" strokeLinecap="round"/>
-                  <circle cx={r.x1} cy={r.y} r="2.4" fill={inst.c1} opacity="0.9"/>
-                  <circle cx={r.x2} cy={r.y} r="2.4" fill={inst.c2} opacity="0.9"/>
-                </g>
-              ))}
-            </svg>
-          </div>
-        </div>
-      ))}
-    </div>
+    <canvas ref={cvRef} style={{
+      position:'absolute', inset:0, width:'100%', height:'100%',
+      pointerEvents:'none', zIndex:0,
+    }}/>
   );
 }
 
@@ -897,7 +1044,7 @@ function AnimatedBackground() {
         }}>{q.text}</div>
       ))}
       {/* DNA helix strands floating in background */}
-      <DNAHelixBg/>
+      <DNAHelixCanvas/>
       {/* Biometric pulse — living lapis & gold particles reacting to mouse */}
       <BiometricPulseCanvas/>
       {/* (constellations removed) */}
@@ -1147,17 +1294,70 @@ const GLOBAL_CSS = `
   [data-theme='light'] .field{background:rgba(26,58,122,.04) !important;border-color:rgba(26,58,122,.22) !important;color:#1A1A1A !important;}
   [data-theme='light'] .field::placeholder{color:#6B6B8A !important;}
   [data-theme='light'] select.field option{background:#F9F9F7 !important;color:#1A1A1A !important;}
-  /* Force inline light-lavender text to be legible on white */
-  [data-theme='light'] .page-inner div[style*="color:rgba(240"],
-  [data-theme='light'] .page-inner span[style*="color:rgba(240"],
-  [data-theme='light'] .page-inner p[style*="color:rgba(240"]{color:#3A3A5C !important;}
-  [data-theme='light'] .page-inner div[style*="color:rgba(168"],
-  [data-theme='light'] .page-inner span[style*="color:rgba(168"]{color:#4A4A6A !important;}
+  /* ── Light mode: force ALL inline dark-theme text colors to be legible ── */
+  /* Light lavender (rgba(240,232,255,...)) — unreadable on white */
+  [data-theme='light'] div[style*="color:rgba(240,232"],
+  [data-theme='light'] span[style*="color:rgba(240,232"],
+  [data-theme='light'] p[style*="color:rgba(240,232"],
+  [data-theme='light'] h1[style*="color:rgba(240,232"],
+  [data-theme='light'] h2[style*="color:rgba(240,232"],
+  [data-theme='light'] h3[style*="color:rgba(240,232"],
+  [data-theme='light'] button[style*="color:rgba(240,232"]{color:#1A1A2E !important;}
+  /* Steel blue (rgba(168,196,240,...)) — unreadable on white */
+  [data-theme='light'] div[style*="color:rgba(168,196"],
+  [data-theme='light'] span[style*="color:rgba(168,196"],
+  [data-theme='light'] p[style*="color:rgba(168,196"],
+  [data-theme='light'] h1[style*="color:rgba(168,196"],
+  [data-theme='light'] h2[style*="color:rgba(168,196"],
+  [data-theme='light'] h3[style*="color:rgba(168,196"]{color:#3A4A7A !important;}
+  /* Pure white inline text */
+  [data-theme='light'] div[style*="color:#fff"],
+  [data-theme='light'] span[style*="color:#fff"],
+  [data-theme='light'] p[style*="color:#fff"],
+  [data-theme='light'] button[style*="color:#fff"]{color:#1A1A1A !important;}
+  [data-theme='light'] div[style*="color:white"],
+  [data-theme='light'] span[style*="color:white"]{color:#1A1A1A !important;}
+  /* rgba(255,255,255,...) white-ish text */
+  [data-theme='light'] div[style*="color:rgba(255,255,255"],
+  [data-theme='light'] span[style*="color:rgba(255,255,255"],
+  [data-theme='light'] p[style*="color:rgba(255,255,255"]{color:#2A2A4A !important;}
+  /* Dark card / panel backgrounds — make white/near-white */
+  [data-theme='light'] div[style*="background:rgba(4,"],
+  [data-theme='light'] div[style*="background:rgba(5,"],
+  [data-theme='light'] div[style*="background:rgba(8,"],
+  [data-theme='light'] div[style*="background:rgba(10,"],
+  [data-theme='light'] div[style*="background:rgba(14,"],
+  [data-theme='light'] div[style*="background:rgba(16,"]{
+    background:rgba(255,255,255,.96) !important;
+    border-color:rgba(26,58,122,.14) !important;
+    color:#1A1A1A !important;
+  }
+  /* rgba(22,...) and rgba(32,...) dark backgrounds */
+  [data-theme='light'] div[style*="background:rgba(22,"],
+  [data-theme='light'] div[style*="background:rgba(32,"]{background:rgba(248,247,252,.97) !important;border-color:rgba(26,58,122,.12) !important;}
   /* Chart / progress bar tracks */
   [data-theme='light'] [style*="background:rgba(255,255,255,.06"]{background:rgba(26,58,122,.08) !important;}
   [data-theme='light'] [style*="background:rgba(255,255,255,.05"]{background:rgba(26,58,122,.06) !important;}
   [data-theme='light'] [style*="background:rgba(255,255,255,.04"]{background:rgba(26,58,122,.05) !important;}
   [data-theme='light'] [style*="background:rgba(255,255,255,.03"]{background:rgba(26,58,122,.04) !important;}
+  /* Nav items in light mode */
+  [data-theme='light'] .nav-item{color:#2A2A4A !important;}
+  [data-theme='light'] .nav-item:hover{color:#1A1A1A !important;background:rgba(139,101,0,.08) !important;}
+  [data-theme='light'] .nav-item.active{color:#6B4800 !important;background:linear-gradient(135deg,rgba(139,101,0,.15),rgba(139,101,0,.06)) !important;border-color:rgba(139,101,0,.35) !important;}
+  /* Main content area base text */
+  [data-theme='light'] .main-content{color:#1A1A1A !important;}
+  [data-theme='light'] .page-inner{color:#1A1A1A;}
+  /* Textarea in diary — dark text on light paper */
+  [data-theme='light'] .diary-textarea{color:#2A1A0A !important;background:rgba(255,252,245,.9) !important;}
+  /* Make all glass-card descendant text dark */
+  [data-theme='light'] .glass-card *:not(canvas):not(svg):not(path){color:inherit;}
+  [data-theme='light'] .glass-card{color:#1A1A1A !important;}
+  [data-theme='light'] .glass-card-static{color:#1A1A1A !important;}
+  /* Stat cards text */
+  [data-theme='light'] .stat-card{color:#1A1A1A !important;}
+  /* Force legibility on any remaining gold text (--lz-text-gold in light = #8B6500, fine) */
+  /* Override the mobile topbar & sidebar toggle area */
+  [data-theme='light'] .mobile-topbar{background:rgba(238,233,248,.98) !important;}
 
   @keyframes fadeOut{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
@@ -5172,7 +5372,15 @@ function ResearchLibrary() {
 
   // bookAnim: null | { shelfId, bookIdx, phase: 1|2|3 }
   const [bookAnim, setBookAnim] = React.useState(null);
-  const [hoveredBook, setHoveredBook] = React.useState(null); // `${shelfId}-${bookIdx}`
+  const [hoveredBook, setHoveredBook] = React.useState(null);
+  const [tooltipInfo, setTooltipInfo] = React.useState(null); // {x,y,book,shelf}
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   // ── History management ────────────────────────────────────────
   React.useEffect(() => {
@@ -5221,38 +5429,40 @@ function ResearchLibrary() {
   const activeShelf = bookAnim ? LIBRARY_SHELVES.find(s => s.id === bookAnim.shelfId) : null;
   const activeBook  = activeShelf ? activeShelf.books[bookAnim.bookIdx] : null;
 
-  // ── Light mode fallback ───────────────────────────────────────
-  if (!isDark) {
+  // ── Card grid: mobile (any theme) or light mode ──────────────
+  if (isMobile || !isDark) {
     return (
       <div>
-        <PH emoji="📚" title="Lazuli Library" sub="Curated medical research — click any card to open the source" />
+        <PH emoji="📚" title="Lazuli Library" sub="Curated medical research — tap any card to open the source" />
         {LIBRARY_SHELVES.map(shelf => (
-          <div key={shelf.id} style={{ marginBottom: 32 }}>
+          <div key={shelf.id} style={{ marginBottom: 28 }}>
             <div style={{
-              fontSize: 13, fontWeight: 700, color: '#1A3A7A', textTransform: 'uppercase',
-              letterSpacing: 1.6, marginBottom: 14, paddingBottom: 6,
-              borderBottom: '2px solid rgba(26,58,122,.15)',
+              fontSize: 12, fontWeight: 700,
+              color: isDark ? 'rgba(212,168,67,.65)' : '#1A3A7A',
+              textTransform: 'uppercase', letterSpacing: 2,
+              marginBottom: 12, paddingBottom: 6,
+              borderBottom: `2px solid ${isDark ? 'rgba(212,168,67,.15)' : 'rgba(26,58,122,.15)'}`,
             }}>
               {shelf.label}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10 }}>
               {shelf.books.map((book, bi) => (
                 <a key={bi} href={book.url} target="_blank" rel="noopener noreferrer"
                   style={{
-                    display: 'block', padding: '14px 16px', borderRadius: 14,
-                    background: 'linear-gradient(145deg,#fff,#f9f6f0)',
-                    border: '1.5px solid #D4A843',
+                    display: 'block', padding: '14px 14px', borderRadius: 14,
+                    background: isDark ? 'rgba(10,17,40,.85)' : 'linear-gradient(145deg,#fff,#f9f6f0)',
+                    border: isDark ? `1.5px solid ${shelf.accent}44` : '1.5px solid #D4A843',
                     textDecoration: 'none',
-                    boxShadow: '0 2px 12px rgba(0,0,0,.06)',
+                    boxShadow: isDark ? `0 4px 18px rgba(0,0,0,.45),inset 0 0 12px ${shelf.glow}22` : '0 2px 12px rgba(0,0,0,.06)',
                     transition: 'transform .18s, box-shadow .18s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(212,168,67,.25)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,.06)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
                 >
                   <div style={{ fontSize: 22, marginBottom: 6 }}>{book.emoji}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#3D1F16', marginBottom: 3, fontFamily: "'Cormorant Garamond',serif" }}>{book.title}</div>
-                  <div style={{ fontSize: 12, color: '#6B6B8A', lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>{book.subtitle}</div>
-                  <div style={{ marginTop: 8, fontSize: 11, color: '#D4A843', fontWeight: 600 }}>Open source →</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? 'rgba(224,204,164,.95)' : '#1A1A1A', marginBottom: 3, fontFamily: "'Cormorant Garamond',serif", lineHeight: 1.3 }}>{book.title}</div>
+                  <div style={{ fontSize: 11, color: isDark ? 'rgba(168,196,240,.6)' : '#6B6B8A', lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>{book.subtitle}</div>
+                  <div style={{ marginTop: 8, fontSize: 11, color: '#D4A843', fontWeight: 600 }}>Open →</div>
                 </a>
               ))}
             </div>
@@ -5262,10 +5472,45 @@ function ResearchLibrary() {
     );
   }
 
-  // ── Dark mode: 3D skeuomorphic bookshelf ──────────────────────
+  // ── Desktop dark: 3D skeuomorphic bookshelf ──────────────────
   return (
     <div style={{ perspective: '1200px' }}>
       <PH emoji="📚" title="Lazuli Library" sub="Gilded research — pull a spine to open the source" />
+
+      {/* Fixed tooltip — escapes overflow clipping entirely */}
+      {tooltipInfo && !bookAnim && (
+        <div style={{
+          position: 'fixed',
+          left: tooltipInfo.x,
+          top: tooltipInfo.y - 10,
+          transform: 'translate(-50%,-100%)',
+          background: 'rgba(4,1,14,.97)',
+          border: `1px solid ${tooltipInfo.shelf.accent}66`,
+          borderRadius: 11,
+          padding: '10px 14px',
+          width: 172,
+          boxShadow: `0 12px 40px rgba(0,0,0,.7),0 0 20px ${tooltipInfo.shelf.glow}`,
+          zIndex: 9999,
+          pointerEvents: 'none',
+          fontFamily: "'DM Sans',sans-serif",
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(224,204,164,.95)', marginBottom: 3, lineHeight: 1.3 }}>
+            {tooltipInfo.book.title}
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(168,196,240,.75)', lineHeight: 1.45 }}>
+            {tooltipInfo.book.subtitle}
+          </div>
+          <div style={{ fontSize: 10, color: 'rgba(212,168,67,.55)', marginTop: 5, letterSpacing: .5 }}>
+            Pull to open ↗
+          </div>
+          <div style={{
+            position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
+            width: 0, height: 0,
+            borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+            borderTop: `6px solid ${tooltipInfo.shelf.accent}55`,
+          }}/>
+        </div>
+      )}
 
       <div style={{ position: 'relative', marginBottom: 8 }}>
         {LIBRARY_SHELVES.map((shelf) => (
@@ -5347,8 +5592,13 @@ function ResearchLibrary() {
                     <div
                       key={bi}
                       onClick={() => !bookAnim && handleBookClick(shelf.id, bi)}
-                      onMouseEnter={() => !bookAnim && setHoveredBook(bookKey)}
-                      onMouseLeave={() => setHoveredBook(null)}
+                      onMouseEnter={(e) => {
+                        if (bookAnim) return;
+                        setHoveredBook(bookKey);
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setTooltipInfo({ x: r.left + r.width / 2, y: r.top, book, shelf });
+                      }}
+                      onMouseLeave={() => { setHoveredBook(null); setTooltipInfo(null); }}
                       onTransitionEnd={(e) => isAnim && phase < 3 && handleBookTransitionEnd(e, shelf.id, bi)}
                       style={{
                         position: 'relative',
@@ -5450,38 +5700,6 @@ function ResearchLibrary() {
                         )}
                       </div>
 
-                      {/* Hover tooltip */}
-                      {isHovered && !bookAnim && (
-                        <div style={{
-                          position: 'absolute', bottom: 'calc(100% + 12px)', left: '50%',
-                          transform: 'translateX(-50%)',
-                          background: 'rgba(6,2,18,.97)',
-                          border: `1px solid ${shelf.accent}66`,
-                          borderRadius: 11,
-                          padding: '9px 13px',
-                          width: 168,
-                          boxShadow: `0 10px 36px rgba(0,0,0,.65), 0 0 18px ${shelf.glow}`,
-                          zIndex: 80,
-                          pointerEvents: 'none',
-                          fontFamily: "'DM Sans',sans-serif",
-                        }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(224,204,164,.95)', marginBottom: 3, lineHeight: 1.3 }}>
-                            {book.title}
-                          </div>
-                          <div style={{ fontSize: 11, color: 'rgba(168,196,240,.75)', lineHeight: 1.45 }}>
-                            {book.subtitle}
-                          </div>
-                          <div style={{ fontSize: 10, color: 'rgba(212,168,67,.55)', marginTop: 5, letterSpacing: .5 }}>
-                            Pull to open ↗
-                          </div>
-                          <div style={{
-                            position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
-                            width: 0, height: 0,
-                            borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-                            borderTop: `6px solid ${shelf.accent}55`,
-                          }} />
-                        </div>
-                      )}
                     </div>
                   );
                 })}
