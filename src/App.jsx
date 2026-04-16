@@ -575,7 +575,7 @@ export default function App() {
             {tab==='share'        && <SharePrivacy data={data} upd={upd} user={user}/>}
             {tab==='updates'      && <Updates/>}
             {tab==='gym'          && <LazuliGym data={data}/>}
-            {tab==='library'      && <ResearchLibrary/>}
+            {tab==='library'      && <ResearchLibrary user={user}/>}
             {tab==='pets'         && <PetHealthLog data={data} upd={upd}/>}
           </div>
         </main>
@@ -5618,7 +5618,7 @@ function Updates() {
 const LIBRARY_SHELVES = [
   {
     id: 'neuro',
-    label: 'Neuro-Diversity & Cognition',
+    label: 'Neurology & Cognition',
     color: '#0A1A4A',
     accent: '#2A5CAD',
     glow: 'rgba(42,92,173,.55)',
@@ -5629,6 +5629,8 @@ const LIBRARY_SHELVES = [
       { title:'Memory Loss', subtitle:'Mayo Clinic — When to Worry', url:'https://www.mayoclinic.org/diseases-conditions/alzheimers-disease/in-depth/memory-loss/art-20046326', emoji:'💭' },
       { title:'Ketogenic Diet & Epilepsy', subtitle:'NIH Clinical Evidence', url:'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6361831/', emoji:'⚡' },
       { title:'Brain Fog & Chronic Illness', subtitle:'NIH Neurological Review', url:'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8461687/', emoji:'🌫️' },
+      { title:'Occipital Neuralgia', subtitle:'AANS — Conditions & Treatments', url:'https://www.aans.org/patients/conditions-treatments/occipital-neuralgia/', emoji:'🧠' },
+      { title:'Neurological Sjogren\'s', subtitle:'Johns Hopkins — Nervous System Involvement', url:'https://www.hopkinssjogrens.org/disease-information/manifestations-sjogrens-syndrome/neurological-complications/', emoji:'🔬' },
     ],
   },
   {
@@ -5644,6 +5646,12 @@ const LIBRARY_SHELVES = [
       { title:'Fibromyalgia', subtitle:'Arthritis Foundation Guide', url:'https://www.arthritis.org/diseases/fibromyalgia', emoji:'💢' },
       { title:'Chronic Inflammation', subtitle:'Harvard Health Explainer', url:'https://www.health.harvard.edu/staying-healthy/understanding-acute-and-chronic-inflammation', emoji:'🔬' },
       { title:'POTS & Dysautonomia', subtitle:'Dysautonomia International', url:'https://www.dysautonomiainternational.org/page.php?ID=34', emoji:'💓' },
+      { title:"Sjogren's Research Hub", subtitle:'Johns Hopkins — Latest Research', url:'https://www.hopkinssjogrens.org/research/', emoji:'💧' },
+      { title:'Sjogren\'s Foundation', subtitle:'Clinical Trials & Open Studies', url:'https://sjogrens.org/treatment-and-care/find-a-sjogrens-clinical-trial', emoji:'🏥' },
+      { title:'Sjogren\'s NIH Guide', subtitle:'NCBI Books — Full Medical Overview', url:'https://www.ncbi.nlm.nih.gov/books/NBK538281/', emoji:'📖' },
+      { title:'Nature: Sjogren\'s', subtitle:'Peer-Reviewed Research Index', url:'https://www.nature.com/subjects/sjogrens-disease', emoji:'🌿' },
+      { title:'Sjogren\'s Eye Advances', subtitle:"Boston Sight — Treatment Research", url:'https://www.bostonsight.org/the-latest-research-and-advances-in-sjogrens-syndrome-treatment/', emoji:'👁️' },
+      { title:'UW Madison Trial', subtitle:"Treating Sjogren's — Clinical Study", url:'https://www.med.wisc.edu/news/trial-treats-sjogrens-disease-patient/', emoji:'🧪' },
     ],
   },
   {
@@ -5659,23 +5667,6 @@ const LIBRARY_SHELVES = [
       { title:'Thyroid Disease', subtitle:'American Thyroid Association', url:'https://www.thyroid.org/patient-thyroid-information/', emoji:'🔵' },
       { title:'Sourdough & Gut Health', subtitle:'Oxford Academic Study', url:'https://academic.oup.com/gastro/article/1/1/94/6805451', emoji:'🍞' },
       { title:'Anti-Inflammatory Diet', subtitle:'Harvard T.H. Chan School', url:'https://www.hsph.harvard.edu/nutritionsource/anti-inflammatory-diet/', emoji:'🥗' },
-    ],
-  },
-  {
-    id: 'sjogrens',
-    label: "Sjogren's & Neurological Research",
-    color: '#0A1E3A',
-    accent: '#4A90D9',
-    glow: 'rgba(74,144,217,.55)',
-    spine: 'linear-gradient(160deg,#0D2A55 0%,#1A4080 40%,#0A1E40 100%)',
-    books: [
-      { title:"Sjogren's Research Hub",  subtitle:'Johns Hopkins — Latest Research',        url:'https://www.hopkinssjogrens.org/research/',                                                              emoji:'🔬' },
-      { title:'Clinical Trials Finder',  subtitle:"Sjogren's Foundation — Open Trials",    url:'https://sjogrens.org/treatment-and-care/find-a-sjogrens-clinical-trial',                               emoji:'🏥' },
-      { title:'Eye Disease Advances',    subtitle:"Boston Sight — Sjogren's Treatment",    url:'https://www.bostonsight.org/the-latest-research-and-advances-in-sjogrens-syndrome-treatment/',         emoji:'👁️' },
-      { title:'UW Madison Trial',        subtitle:"Treating Sjogren's — Clinical Study",   url:'https://www.med.wisc.edu/news/trial-treats-sjogrens-disease-patient/',                                  emoji:'🧪' },
-      { title:"Nature: Sjogren's",       subtitle:'Peer-Reviewed Research Index',          url:'https://www.nature.com/subjects/sjogrens-disease',                                                       emoji:'🌿' },
-      { title:"Sjogren's — NIH Guide",   subtitle:'NCBI Books — Full Medical Overview',    url:'https://www.ncbi.nlm.nih.gov/books/NBK538281/',                                                          emoji:'📖' },
-      { title:'Occipital Neuralgia',     subtitle:'AANS — Conditions & Treatments',        url:'https://www.aans.org/patients/conditions-treatments/occipital-neuralgia/',                               emoji:'🧠' },
     ],
   },
   {
@@ -5695,7 +5686,215 @@ const LIBRARY_SHELVES = [
   },
 ];
 
-function ResearchLibrary() {
+// ── Lazuli Librarian — AI research assistant ──────────────────
+function LazuliLibrarian({ user }) {
+  const [query, setQuery] = React.useState('');
+  const [messages, setMessages] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(true);
+  const inputRef = React.useRef();
+
+  const LIBRARIAN_SYSTEM = `You are Lyra, the Lazuli Librarian — a warm, knowledgeable research guide at the Lazuli Crest health library. When someone asks about a health topic, condition, symptom, or treatment, respond concisely and always include 2–4 specific, direct URLs to trusted medical sources (PubMed, NIH, Mayo Clinic, Johns Hopkins, CDC, Sjogren's Foundation, Arthritis Foundation, etc.). Format each link on its own line like: • [Title](URL). Be warm, clear, and supportive. Never diagnose. Always remind users to discuss findings with their care team.`;
+
+  const sendQuery = async () => {
+    const q = query.trim();
+    if (!q || loading) return;
+    const userMsg = { role: 'user', content: q };
+    const newMsgs = [...messages, userMsg];
+    setMessages(newMsgs);
+    setQuery('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newMsgs,
+          system: LIBRARIAN_SYSTEM,
+          userId: user?.uid || null,
+          requestType: 'chat',
+        }),
+      });
+      const data = await res.json();
+      if (data.content?.[0]?.text) {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.content[0].text }]);
+      } else if (data.error) {
+        setMessages(prev => [...prev, { role: 'assistant', content: `I'm sorry — ${data.error}` }]);
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'I had trouble connecting. Please try again in a moment.' }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Split on newlines and render markdown links + bare URLs inline
+  const renderContent = (text) => {
+    return text.split('\n').map((line, li) => {
+      const parts = [];
+      const linkRe = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+      let last = 0;
+      let m;
+      while ((m = linkRe.exec(line)) !== null) {
+        if (m.index > last) parts.push(<React.Fragment key={`t${last}`}>{line.slice(last, m.index)}</React.Fragment>);
+        parts.push(<a key={`l${m.index}`} href={m[2]} target="_blank" rel="noopener noreferrer" style={{ color:'#4A90D9', textDecoration:'underline', wordBreak:'break-all', fontWeight:600 }}>{m[1]}</a>);
+        last = m.index + m[0].length;
+      }
+      // Also render bare URLs
+      const bareRe = /https?:\/\/[^\s)]+/g;
+      const remainingLine = line.slice(last);
+      let blast = 0;
+      let bm;
+      while ((bm = bareRe.exec(remainingLine)) !== null) {
+        if (bm.index > blast) parts.push(<React.Fragment key={`bt${blast}`}>{remainingLine.slice(blast, bm.index)}</React.Fragment>);
+        parts.push(<a key={`bu${bm.index}`} href={bm[0]} target="_blank" rel="noopener noreferrer" style={{ color:'#4A90D9', textDecoration:'underline', wordBreak:'break-all', fontWeight:600 }}>{bm[0]}</a>);
+        blast = bm.index + bm[0].length;
+      }
+      if (blast < remainingLine.length) parts.push(<React.Fragment key={`bend`}>{remainingLine.slice(blast)}</React.Fragment>);
+      if (parts.length === 0 && last < line.length) parts.push(<React.Fragment key="plain">{line}</React.Fragment>);
+      return <div key={li} style={{ minHeight: line ? 'auto' : 8 }}>{parts}</div>;
+    });
+  };
+
+  return (
+    <div style={{
+      marginBottom: 32,
+      borderRadius: 16,
+      border: '1px solid rgba(74,144,217,.25)',
+      background: 'linear-gradient(145deg,rgba(8,16,52,.92) 0%,rgba(4,10,36,.96) 100%)',
+      overflow: 'hidden',
+      boxShadow: '0 8px 32px rgba(0,0,0,.45), 0 0 40px rgba(74,144,217,.08)',
+    }}>
+      {/* Librarian header */}
+      <div
+        onClick={() => setExpanded(e => !e)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 14,
+          padding: '16px 22px',
+          cursor: 'pointer',
+          borderBottom: expanded ? '1px solid rgba(74,144,217,.15)' : 'none',
+          background: 'rgba(74,144,217,.06)',
+        }}
+      >
+        <div style={{
+          width: 46, height: 46, borderRadius: '50%', flexShrink: 0,
+          background: 'linear-gradient(135deg,#1A3A7A,#0D2A55)',
+          border: '2px solid rgba(74,144,217,.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 22,
+          boxShadow: '0 0 14px rgba(74,144,217,.35)',
+        }}>🦉</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize: 15, fontWeight: 700, color: 'rgba(168,196,240,.95)', letterSpacing: .5 }}>
+            Lyra — Lazuli Librarian
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(168,196,240,.45)', fontFamily:"'DM Sans',sans-serif", marginTop: 2 }}>
+            Ask me to find research on any health topic
+          </div>
+        </div>
+        <div style={{ fontSize: 16, color: 'rgba(74,144,217,.5)', transition: 'transform .2s', transform: expanded ? 'rotate(180deg)' : 'none' }}>▾</div>
+      </div>
+
+      {expanded && (
+        <div style={{ padding: '18px 22px' }}>
+          {/* Welcome message if no conversation yet */}
+          {messages.length === 0 && (
+            <div style={{
+              padding: '14px 18px', borderRadius: 12, marginBottom: 16,
+              background: 'rgba(74,144,217,.07)', border: '1px solid rgba(74,144,217,.15)',
+              fontSize: 14, color: 'rgba(168,196,240,.8)', lineHeight: 1.7,
+              fontFamily: "'DM Sans',sans-serif",
+            }}>
+              Welcome to the Lazuli Library. I'm Lyra, your research guide. I can find peer-reviewed studies, trusted medical resources, and clinical references on any health topic — whether it's Sjogren's, neurological symptoms, autoimmune conditions, or anything else you're researching. What would you like to explore today?
+            </div>
+          )}
+
+          {/* Conversation */}
+          {messages.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16, maxHeight: 320, overflowY: 'auto', paddingRight: 4 }}>
+              {messages.map((m, i) => (
+                <div key={i} style={{
+                  display: 'flex', gap: 10, alignItems: 'flex-start',
+                  flexDirection: m.role === 'user' ? 'row-reverse' : 'row',
+                }}>
+                  {m.role === 'assistant' && (
+                    <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(74,144,217,.15)', border:'1px solid rgba(74,144,217,.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>🦉</div>
+                  )}
+                  <div style={{
+                    maxWidth: '82%', padding: '10px 14px', borderRadius: m.role === 'user' ? '14px 4px 14px 14px' : '4px 14px 14px 14px',
+                    background: m.role === 'user' ? 'rgba(74,144,217,.18)' : 'rgba(255,255,255,.04)',
+                    border: `1px solid ${m.role === 'user' ? 'rgba(74,144,217,.3)' : 'rgba(255,255,255,.07)'}`,
+                    fontSize: 13, color: 'rgba(220,232,255,.88)', lineHeight: 1.7,
+                    fontFamily: "'DM Sans',sans-serif",
+                  }}>
+                    {renderContent(m.content)}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                  <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(74,144,217,.15)', border:'1px solid rgba(74,144,217,.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>🦉</div>
+                  <div style={{ padding:'10px 14px', borderRadius:'4px 14px 14px 14px', background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.07)' }}>
+                    <div style={{ display:'flex', gap:5, alignItems:'center' }}>
+                      {[0,1,2].map(d => <div key={d} style={{ width:6, height:6, borderRadius:'50%', background:'rgba(74,144,217,.6)', animation:`pulse 1.2s ease-in-out ${d*.2}s infinite` }}/>)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Quick prompts */}
+          {messages.length === 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:7, marginBottom:14 }}>
+              {["Sjogren's syndrome research","Neurological complications of autoimmune disease","Brain fog and chronic illness","POTS treatment options","Occipital neuralgia management"].map(p => (
+                <button key={p} onClick={() => { setQuery(p); setTimeout(() => inputRef.current?.focus(), 50); }}
+                  style={{ padding:'5px 12px', borderRadius:20, fontSize:11, border:'1px solid rgba(74,144,217,.25)', background:'rgba(74,144,217,.06)', color:'rgba(168,196,240,.6)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .14s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(74,144,217,.55)'; e.currentTarget.style.color='rgba(168,196,240,.9)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(74,144,217,.25)'; e.currentTarget.style.color='rgba(168,196,240,.6)'; }}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <div style={{ display:'flex', gap:10 }}>
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendQuery()}
+              placeholder="Ask Lyra to find research on any health topic…"
+              style={{
+                flex:1, padding:'10px 16px', borderRadius:12,
+                border:'1px solid rgba(74,144,217,.25)', background:'rgba(255,255,255,.04)',
+                color:'rgba(220,232,255,.9)', fontFamily:"'DM Sans',sans-serif", fontSize:13,
+                outline:'none',
+              }}
+            />
+            <button
+              onClick={sendQuery}
+              disabled={!query.trim() || loading}
+              style={{
+                padding:'10px 18px', borderRadius:12, border:'none',
+                background: query.trim() && !loading ? 'linear-gradient(135deg,#1A4A8A,#2A5CAD)' : 'rgba(74,144,217,.1)',
+                color: query.trim() && !loading ? 'rgba(168,196,240,.95)' : 'rgba(74,144,217,.35)',
+                cursor: query.trim() && !loading ? 'pointer' : 'default',
+                fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:600,
+                transition:'all .15s', whiteSpace:'nowrap',
+              }}
+            >
+              {loading ? '…' : 'Find →'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResearchLibrary({ user }) {
   const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
   // bookAnim: null | { shelfId, bookIdx, phase: 1|2|3 }
@@ -5756,6 +5955,7 @@ function ResearchLibrary() {
     return (
       <div>
         <PH emoji="📚" title="Lazuli Library" sub="Curated medical research — tap any card to open the source" />
+        <LazuliLibrarian user={user} />
         {LIBRARY_SHELVES.map(shelf => (
           <div key={shelf.id} style={{ marginBottom: 28 }}>
             <div style={{
@@ -5798,6 +5998,7 @@ function ResearchLibrary() {
   return (
     <div>
       <PH emoji="📚" title="Lazuli Library" sub="Gilded research — pull a spine to open the source" />
+      <LazuliLibrarian user={user} />
 
       {/* Fixed tooltip — rendered outside perspective container so position:fixed uses true viewport */}
       {tooltipInfo && !bookAnim && (

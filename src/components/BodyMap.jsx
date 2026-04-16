@@ -199,19 +199,58 @@ const BACK_REGIONS = [
 ];
 
 const REGION_STYLE = `
-  .bm-region { cursor:pointer; transition:all .18s ease; }
-  .bm-region path { fill:rgba(123,47,190,.1); stroke:rgba(123,47,190,.3); stroke-width:1; transition:all .18s ease; }
-  .bm-region:hover path { fill:rgba(201,168,76,.18); stroke:#C9A84C; stroke-width:1.5; }
-  .bm-region.selected path { fill:rgba(201,168,76,.3); stroke:#E8C96B; stroke-width:2; filter:drop-shadow(0 0 4px rgba(201,168,76,.4)); }
-  .bm-region.has-mild path { fill:rgba(248,113,113,.25); stroke:#f87171; stroke-width:1.5; }
-  .bm-region.has-severe path { fill:rgba(239,68,68,.4); stroke:#dc2626; stroke-width:2; filter:drop-shadow(0 0 5px rgba(239,68,68,.45)); }
+  .bm-region { cursor:pointer; transition:all .2s ease; }
+  .bm-region path {
+    fill: rgba(209,195,178,.28);
+    stroke: rgba(94,113,130,.55);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+    transition: all .2s ease;
+  }
+  .bm-region:hover path {
+    fill: rgba(59,130,246,.18);
+    stroke: rgba(37,99,235,.75);
+    stroke-width: 1.8;
+    filter: drop-shadow(0 0 3px rgba(59,130,246,.3));
+  }
+  .bm-region.selected path {
+    fill: rgba(201,168,76,.32);
+    stroke: #C9A84C;
+    stroke-width: 2.2;
+    filter: drop-shadow(0 0 5px rgba(201,168,76,.45));
+  }
+  .bm-region.has-mild path {
+    fill: rgba(251,146,60,.3);
+    stroke: rgba(234,88,12,.8);
+    stroke-width: 1.8;
+  }
+  .bm-region.has-severe path {
+    fill: rgba(220,38,38,.38);
+    stroke: #b91c1c;
+    stroke-width: 2.2;
+    filter: drop-shadow(0 0 5px rgba(220,38,38,.5));
+  }
+  /* Muscle detail lines inside regions */
+  .bm-detail { fill:none; stroke:rgba(94,113,130,.18); stroke-width:.7; stroke-linecap:round; pointer-events:none; }
 `;
 
 function HumanFigure({ regions, painData, selectedIds, onTap, view }) {
   const allRegions = view === 'front' ? FRONT_REGIONS : BACK_REGIONS;
   return (
-    <svg viewBox="0 0 200 510" style={{ width:'100%', maxWidth:200 }}>
+    <svg viewBox="0 0 200 510" style={{ width:'100%', maxWidth:200, display:'block' }}>
       <style>{REGION_STYLE}</style>
+      {/* Clinical chart background */}
+      <rect x="0" y="0" width="200" height="510" rx="6" fill="rgba(8,14,38,.7)" stroke="rgba(42,92,173,.18)" strokeWidth="1"/>
+      {/* Center guideline */}
+      <line x1="100" y1="8" x2="100" y2="502" stroke="rgba(42,92,173,.15)" strokeWidth="0.6" strokeDasharray="3,6"/>
+      {/* Horizontal anatomical reference lines */}
+      {[95, 115, 170, 220, 268, 336].map(y => (
+        <line key={y} x1="4" y1={y} x2="196" y2={y} stroke="rgba(42,92,173,.08)" strokeWidth="0.5" strokeDasharray="2,10"/>
+      ))}
+      {/* Millimetre-rule tick marks left edge */}
+      {[50,115,170,220,268,336,460].map(y => (
+        <line key={`tick-${y}`} x1="4" y1={y} x2="10" y2={y} stroke="rgba(42,92,173,.2)" strokeWidth="0.7"/>
+      ))}
       {allRegions.map(r => {
         const pain = painData[r.id];
         const isSelected = selectedIds.includes(r.id);
@@ -291,8 +330,8 @@ export default function BodyMap({ data, upd }) {
     <div>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:28, flexWrap:'wrap', gap:12 }}>
         <div>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:30, fontWeight:600, color:'#C9A84C', marginBottom:4 }}>◎ Body Map</div>
-          <div style={{ fontSize:14, color:'rgba(240,232,255,.4)' }}>Tap one or multiple areas — then log your pain together</div>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:24, fontWeight:700, color:'#C9A84C', marginBottom:4, letterSpacing:.5 }}>◎ Body Map</div>
+          <div style={{ fontSize:13, color:'rgba(168,196,240,.45)', fontFamily:"'DM Sans',sans-serif" }}>Tap one or multiple areas — then log your pain together</div>
         </div>
         {selectedIds.length > 0 && (
           <button className="btn btn-gold" onClick={openEdit}>
@@ -338,9 +377,9 @@ export default function BodyMap({ data, upd }) {
           </div>
           <div style={{ display:'flex', gap:12, marginTop:10, flexWrap:'wrap', justifyContent:'center' }}>
             {[
-              { label:'No pain', style:{ background:'rgba(123,47,190,.15)', border:'1px solid rgba(123,47,190,.4)' } },
-              { label:'Mild', style:{ background:'rgba(248,113,113,.25)', border:'1px solid #f87171' } },
-              { label:'Severe', style:{ background:'rgba(239,68,68,.4)', border:'2px solid #dc2626', boxShadow:'0 0 4px rgba(239,68,68,.4)' } },
+              { label:'No pain', style:{ background:'rgba(209,195,178,.2)', border:'1px solid rgba(94,113,130,.5)' } },
+              { label:'Mild', style:{ background:'rgba(251,146,60,.28)', border:'1px solid rgba(234,88,12,.75)' } },
+              { label:'Severe', style:{ background:'rgba(220,38,38,.38)', border:'2px solid #b91c1c', boxShadow:'0 0 4px rgba(220,38,38,.45)' } },
             ].map(l => (
               <span key={l.label} style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:'rgba(240,232,255,.35)' }}>
                 <span style={{ width:10, height:10, borderRadius:2, ...l.style, display:'inline-block' }}/>
@@ -354,7 +393,7 @@ export default function BodyMap({ data, upd }) {
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           {editOpen && (
             <div className="glass-card-static" style={{ padding:22, border:'1px solid rgba(201,168,76,.2)', animation:'popIn .2s ease' }}>
-              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'#C9A84C', marginBottom:14 }}>{multiLabel}</div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, fontWeight:600, color:'#C9A84C', marginBottom:14, letterSpacing:.3 }}>{multiLabel}</div>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
                 <label style={{ margin:0 }}>Pain severity</label>
                 <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:17, fontWeight:700, color:'#f87171' }}>{form.severity}/10</span>
@@ -385,7 +424,7 @@ export default function BodyMap({ data, upd }) {
           )}
 
           <div className="glass-card-static" style={{ padding:20 }}>
-            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, color:'#C9A84C', marginBottom:12 }}>Logged Pain</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:13, fontWeight:600, color:'#C9A84C', marginBottom:12, letterSpacing:.8, textTransform:'uppercase' }}>Logged Pain</div>
             {bodyMap.length === 0
               ? <div style={{ fontSize:12, color:'rgba(240,232,255,.25)', fontStyle:'italic', lineHeight:1.7 }}>No pain logged yet.<br/>Tap a region on the figure to get started.</div>
               : <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -395,7 +434,7 @@ export default function BodyMap({ data, upd }) {
                     return (
                       <div key={e.id} style={{ display:'flex', alignItems:'center', gap:11, padding:'10px 13px', background:'rgba(255,255,255,.03)', borderRadius:11, border:'1px solid rgba(123,47,190,.1)', cursor:'pointer' }}
                         onClick={() => { setSelectedIds([e.id]); const allR = view === 'front' ? FRONT_REGIONS : BACK_REGIONS; const r = allR.find(x => x.id === e.id); if (r) { setForm({ severity:e.severity, types:e.types||[], notes:e.notes||'' }); setMultiLabel(e.label); setEditOpen(true); } }}>
-                        <div style={{ width:32, height:32, borderRadius:'50%', background:bg, border:`2px solid ${c}`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Cormorant Garamond',serif", fontSize:14, fontWeight:700, color:c, flexShrink:0 }}>{e.severity}</div>
+                        <div style={{ width:32, height:32, borderRadius:'50%', background:bg, border:`2px solid ${c}`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, color:c, flexShrink:0 }}>{e.severity}</div>
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize:13, fontWeight:500, color:'#F0E8FF' }}>{e.label}</div>
                           {e.types?.length > 0 && <div style={{ fontSize:11, color:'rgba(240,232,255,.35)' }}>{e.types.join(' · ')}</div>}
