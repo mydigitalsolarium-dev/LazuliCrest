@@ -109,6 +109,7 @@ const NAV_GROUPS = [
     label: 'AI & Settings',
     items: [
       { id:'advocate',    icon:'◈',   label:'AI Advocate'       },
+      { id:'treasury',    icon:'🏦',  label:'Treasury'          },
       { id:'share',       icon:'◫',   label:'Share & Privacy'   },
     ]
   },
@@ -562,6 +563,7 @@ export default function App() {
             {tab==='diet'         && <AIDiet       data={data} upd={upd} user={user}/>}
             {tab==='documents'    && <Documents    data={data} upd={upd}/>}
             {tab==='advocate'     && <Advocate     data={data} user={user}/>}
+            {tab==='treasury'     && <Treasury user={user}/>}
             {tab==='profile'      && <Profile      data={data} upd={upd} user={user}/>}
             {tab==='share'        && <SharePrivacy data={data} upd={upd} user={user}/>}
             {tab==='updates'      && <Updates/>}
@@ -6527,6 +6529,102 @@ function Profile({ data, upd, user }) {
         {saved && <div style={{ padding:'12px 16px', background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.22)', borderRadius:12, fontSize:16, color:'#6ee7b7' }}>✓ Profile saved successfully!</div>}
         <button className="btn btn-gold" onClick={save} style={{ justifyContent:'center', padding:'14px', fontSize:15, width:'100%' }}>Save Profile</button>
       </div>
+    </div>
+  );
+}
+
+// ─── Treasury ─────────────────────────────────────────────────
+function Treasury({ user }) {
+  const [copied, setCopied] = React.useState(false);
+  const uid = user?.uid || '';
+
+  const copyUID = () => {
+    navigator.clipboard.writeText(uid).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const PACKAGES = [
+    { credits:150,  label:'Starter',   price:'$2.99',  coin:'🪙', desc:'Perfect for light use',        color:'#C9A84C', popular:false },
+    { credits:500,  label:'Explorer',  price:'$7.99',  coin:'💰', desc:'Most popular for daily tracking', color:'#D4A843', popular:true  },
+    { credits:1200, label:'Champion',  price:'$14.99', coin:'👑', desc:'Power user — 2 months of full AI', color:'#E8C85A', popular:false },
+  ];
+
+  return (
+    <div className="page-fade">
+      <PH emoji="🏦" title="Treasury" sub="Refill your AI credits — power your health journey with Lazuli"/>
+
+      {/* Coming soon banner */}
+      <div className="glass-card-static" style={{ padding:'18px 24px', marginBottom:22, display:'flex', alignItems:'center', gap:14, borderColor:'rgba(201,168,76,.5)' }}>
+        <div style={{ fontSize:28 }}>🚧</div>
+        <div>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:15, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>Stripe Payments — Coming Soon</div>
+          <div style={{ fontSize:13, color:'rgba(240,232,255,.55)', lineHeight:1.6 }}>The Treasury is being prepared. Credit packages and Stripe Checkout will be live shortly. Your current free credits remain active.</div>
+        </div>
+      </div>
+
+      {/* Credit packages */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))', gap:18, marginBottom:32 }}>
+        {PACKAGES.map(pkg => (
+          <div key={pkg.label} className="glass-card" style={{ padding:'28px 22px', position:'relative', textAlign:'center', opacity:.82, cursor:'default' }}>
+            {pkg.popular && (
+              <div style={{ position:'absolute', top:-10, left:'50%', transform:'translateX(-50%)', background:'linear-gradient(135deg,#C9A84C,#E8C85A)', color:'#1a0a2e', fontSize:10, fontWeight:800, padding:'3px 14px', borderRadius:20, letterSpacing:1.5, textTransform:'uppercase', boxShadow:'0 2px 10px rgba(201,168,76,.5)', whiteSpace:'nowrap' }}>Most Popular</div>
+            )}
+            <div style={{ fontSize:44, marginBottom:10 }}>{pkg.coin}</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:18, fontWeight:700, color:pkg.color, marginBottom:4, letterSpacing:.8 }}>{pkg.label}</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:32, fontWeight:700, color:'rgba(240,232,255,.92)', marginBottom:2 }}>{pkg.price}</div>
+            <div style={{ fontSize:13, color:'rgba(201,168,76,.65)', fontWeight:600, marginBottom:10 }}>{pkg.credits.toLocaleString()} AI credits</div>
+            <div style={{ fontSize:12, color:'rgba(240,232,255,.38)', marginBottom:20, lineHeight:1.5 }}>{pkg.desc}</div>
+            <div style={{ position:'relative' }}>
+              <button disabled style={{ width:'100%', padding:'11px', borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C85A)', border:'none', color:'#1a0a2e', fontSize:14, fontWeight:800, cursor:'not-allowed', letterSpacing:.4, fontFamily:"'Cinzel',serif", opacity:.5 }}>
+                🪙 Buy Credits
+              </button>
+              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.25)', borderRadius:12, fontSize:11, color:'rgba(255,255,255,.6)', fontWeight:600, letterSpacing:.8, textTransform:'uppercase' }}>Coming Soon</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Current credit balance */}
+      <div className="glass-card-static" style={{ padding:'20px 24px', marginBottom:22 }}>
+        <div style={{ fontSize:12, color:'rgba(201,168,76,.55)', textTransform:'uppercase', letterSpacing:2, marginBottom:10, fontFamily:"'DM Sans',sans-serif" }}>Current Balance</div>
+        <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
+          {[
+            { label:'Free credits', val:'150 on signup', icon:'🎁' },
+            { label:'Daily top-up', val:'+50 / midnight', icon:'🌙' },
+            { label:'Credit cap', val:'500 max', icon:'📊' },
+            { label:'Chat cost', val:'2 credits / msg', icon:'💬' },
+          ].map(item => (
+            <div key={item.label} style={{ flex:'1 1 140px', padding:'14px 16px', borderRadius:12, background:'rgba(201,168,76,.06)', border:'1px solid rgba(201,168,76,.15)', textAlign:'center' }}>
+              <div style={{ fontSize:22, marginBottom:5 }}>{item.icon}</div>
+              <div style={{ fontSize:13, fontWeight:700, color:'rgba(240,232,255,.85)', marginBottom:2 }}>{item.val}</div>
+              <div style={{ fontSize:11, color:'rgba(240,232,255,.38)', textTransform:'uppercase', letterSpacing:1 }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Admin section */}
+      {uid && (
+        <div className="glass-card-static" style={{ padding:'18px 22px', borderColor:'rgba(201,168,76,.25)' }}>
+          <div style={{ fontSize:11, color:'rgba(201,168,76,.45)', textTransform:'uppercase', letterSpacing:2, marginBottom:10, fontFamily:"'DM Sans',sans-serif" }}>⚙ Admin / Developer Info</div>
+          <div style={{ fontSize:13, color:'rgba(240,232,255,.5)', marginBottom:10, lineHeight:1.6 }}>
+            Your Firebase UID is used to grant unlimited credits for testing. Copy it and add it to <code style={{ background:'rgba(255,255,255,.06)', padding:'1px 6px', borderRadius:4, fontSize:12 }}>ADMIN_USER_IDS</code> in Vercel → Project → Settings → Environment Variables.
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <code style={{ flex:1, background:'rgba(0,0,0,.3)', border:'1px solid rgba(201,168,76,.2)', borderRadius:8, padding:'8px 12px', fontSize:13, color:'rgba(201,168,76,.85)', fontFamily:'monospace', wordBreak:'break-all' }}>
+              {uid}
+            </code>
+            <button onClick={copyUID} style={{ padding:'8px 16px', borderRadius:9, background: copied ? 'rgba(80,200,80,.15)' : 'rgba(201,168,76,.12)', border:`1px solid ${copied ? 'rgba(80,200,80,.4)' : 'rgba(201,168,76,.35)'}`, color: copied ? '#6EE7B7' : '#C9A84C', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", whiteSpace:'nowrap', transition:'all .18s' }}>
+              {copied ? '✓ Copied' : 'Copy UID'}
+            </button>
+          </div>
+          <div style={{ marginTop:10, fontSize:12, color:'rgba(80,200,120,.55)', lineHeight:1.6 }}>
+            ✓ Your account (<strong style={{ color:'rgba(80,200,120,.75)' }}>{uid.slice(0,8)}…</strong>) is pre-approved as an admin — unlimited AI credits are already active on your account with no setup needed.
+          </div>
+        </div>
+      )}
     </div>
   );
 }

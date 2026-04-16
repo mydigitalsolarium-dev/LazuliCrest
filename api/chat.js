@@ -4,7 +4,21 @@
 // Credit costs:  Chat message = 2 credits
 //                Health summary = FREE for first 3, then 50 credits each
 // Credits given: 150 on signup · +50 every day at midnight · cap 500
+//
+// ADMIN BYPASS:  Set ADMIN_USER_IDS in Vercel env vars (comma-separated
+//                Firebase UIDs). Those accounts get unlimited credits.
+//                Find your UID in the app → Treasury → Admin Info.
 // ─────────────────────────────────────────────────────────────
+
+// Admin UIDs — hardcoded owner account + optional ADMIN_USER_IDS env var
+const HARDCODED_ADMINS = [
+  'BEhLyvqZeCVy2SRFhsKCZ0fbqrC2', // site owner / test account
+];
+const ADMIN_IDS = [
+  ...HARDCODED_ADMINS,
+  ...(process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean),
+];
+const isAdminUser = (uid) => uid && ADMIN_IDS.includes(uid);
 
 const SIGNUP_CREDITS = 150;
 const DAILY_TOPUP    = 50;
@@ -60,6 +74,11 @@ async function pingDiscord(msg) {
 // ── Credits system ────────────────────────────────────────────
 async function useCredits(userId, requestType = 'chat') {
   if (!userId) return { allowed: true, balance: 999, summariesUsed: 0 };
+
+  // ── Admin bypass — unlimited, no Firestore reads/writes ──
+  if (isAdminUser(userId)) {
+    return { allowed: true, balance: 999999, summariesUsed: 0, isAdmin: true };
+  }
 
   const today = new Date().toISOString().split('T')[0];
   const doc   = await fsGet(`user_credits/${userId}`);
@@ -225,7 +244,7 @@ export default async function handler(req, res) {
   const isQuotaError = lastError.toLowerCase().includes('quota') || lastError.toLowerCase().includes('exceeded');
   return res.status(503).json({
     error: isQuotaError
-      ? `🔑 Your Gemini API key has exceeded its quota. To fix this: go to aistudio.google.com → click your key → check rate limits, or create a new free API key. Details: ${lastError}`
+      ? `🔑  Details: ${lastError}`
       : `AI temporarily unavailable. Please try again in a moment. (${lastError})`,
   });
 }
