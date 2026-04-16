@@ -160,6 +160,8 @@ export default async function handler(req, res) {
       error: '⚙️ GEMINI_API_KEY is not set in Vercel environment variables. Go to Vercel → Project → Settings → Environment Variables and add it (get a free key at aistudio.google.com).',
     });
   }
+  // Diagnostic: log key prefix so we can confirm which key is active (safe — only 8 chars)
+  console.log('[Gemini] key prefix:', geminiKey.slice(0, 8), '— length:', geminiKey.length);
 
   const { messages, system, userId, requestType = 'chat' } = body;
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -218,7 +220,7 @@ export default async function handler(req, res) {
 
       // Skip if quota exceeded for THIS model (try next)
       if (upstream.status === 429 || errMsg.includes('quota') || errMsg.includes('rate limit')) {
-        console.warn(`[Gemini] ${model} quota exceeded, trying next`);
+        console.warn(`[Gemini] ${model} quota exceeded, trying next — HTTP ${upstream.status} — ${data?.error?.message?.slice(0,120)}`);
         lastError = data?.error?.message || lastError;
         continue;
       }
