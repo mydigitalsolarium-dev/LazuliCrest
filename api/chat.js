@@ -1,9 +1,12 @@
 // api/chat.js — Lazuli Crest AI Serverless Function
 // ─────────────────────────────────────────────────────────────
-// AI:            Google Gemini (tries multiple models/tiers in sequence)
+// AI:            Groq (primary, free) → Gemini (fallback)
 // Credit costs:  Chat message = 2 credits
 //                Health summary = FREE for first 3, then 50 credits each
 // Credits given: 150 on signup · +50 every day at midnight · cap 500
+//
+// SETUP:         Set GROQ_API_KEY in Vercel env vars (free at console.groq.com)
+//                Set GEMINI_API_KEY as fallback (free at aistudio.google.com)
 //
 // ADMIN BYPASS:  Set ADMIN_USER_IDS in Vercel env vars (comma-separated
 //                Firebase UIDs). Those accounts get unlimited credits.
@@ -27,14 +30,20 @@ const CHAT_COST      = 2;
 const SUMMARY_COST   = 50;
 const FREE_SUMMARIES = 3;
 
-// Try these in order until one works — covers free tier + paid + experimental
-const MODEL_PRIORITY = [
-  'gemini-2.0-flash-lite',       // lowest quota requirement
-  'gemini-2.0-flash',            // main model
-  'gemini-1.5-flash-8b',         // tiny, high free quota
-  'gemini-1.5-flash-latest',     // stable 1.5
-  'gemini-1.5-flash',            // older stable
-  'gemini-2.0-flash-exp',        // experimental fallback
+// Groq models — tried first (free, fast, reliable)
+const GROQ_MODELS = [
+  'llama-3.3-70b-versatile',     // best quality, generous free quota
+  'llama-3.1-8b-instant',        // ultra-fast fallback
+  'gemma2-9b-it',                // Google Gemma via Groq
+];
+
+// Gemini models — fallback if Groq unavailable
+const GEMINI_MODELS = [
+  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-8b',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash',
 ];
 
 // ── Firestore REST helpers ────────────────────────────────────
@@ -154,14 +163,14 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
 
+  const groqKey   = process.env.GROQ_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
-  if (!geminiKey) {
+
+  if (!groqKey && !geminiKey) {
     return res.status(500).json({
-      error: '⚙️ GEMINI_API_KEY is not set in Vercel environment variables. Go to Vercel → Project → Settings → Environment Variables and add it (get a free key at aistudio.google.com).',
+      error: '⚙️ No AI key configured. Add GROQ_API_KEY (free at console.groq.com) to Vercel → Settings → Environment Variables.',
     });
   }
-  // Diagnostic: log key prefix so we can confirm which key is active (safe — only 8 chars)
-  console.log('[Gemini] key prefix:', geminiKey.slice(0, 8), '— length:', geminiKey.length);
 
   const { messages, system, userId, requestType = 'chat' } = body;
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -188,65 +197,101 @@ export default async function handler(req, res) {
     }
   }
 
-  // Build request body
-  const geminiBody = {
-    contents: messages.map(m => ({
-      role:  m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: String(m.content || '') }],
-    })),
-    generationConfig: { maxOutputTokens: 1400, temperature: 0.72 },
-  };
-  if (system) geminiBody.system_instruction = { parts: [{ text: String(system) }] };
-
-  // Try each model in priority order
   let lastError = 'AI unavailable';
-  for (const model of MODEL_PRIORITY) {
-    try {
-      const upstream = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-        { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(geminiBody) }
-      );
 
-      let data;
-      try { data = await upstream.json(); } catch { continue; }
+  // ── 1. Try Groq first (free, fast, reliable) ─────────────────
+  if (groqKey) {
+    const groqMessages = [];
+    if (system) groqMessages.push({ role: 'system', content: String(system) });
+    groqMessages.push(...messages.map(m => ({ role: m.role, content: String(m.content || '') })));
 
-      const errMsg = (data?.error?.message || '').toLowerCase();
+    for (const model of GROQ_MODELS) {
+      try {
+        const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+          body: JSON.stringify({ model, messages: groqMessages, max_tokens: 1400, temperature: 0.72 }),
+        });
 
-      // Skip this model if it's not found or not supported
-      if (upstream.status === 404 || errMsg.includes('not found') || errMsg.includes('not supported')) {
-        console.warn(`[Gemini] ${model} not found, trying next`);
-        continue;
+        let data;
+        try { data = await upstream.json(); } catch { continue; }
+
+        const errMsg = (data?.error?.message || '').toLowerCase();
+        if (upstream.status === 429 || errMsg.includes('rate limit') || errMsg.includes('quota')) {
+          console.warn(`[Groq] ${model} rate limited, trying next`);
+          lastError = data?.error?.message || lastError;
+          continue;
+        }
+        if (!upstream.ok) {
+          console.warn(`[Groq] ${model} error HTTP ${upstream.status}:`, data?.error?.message);
+          lastError = data?.error?.message || `Groq HTTP ${upstream.status}`;
+          continue;
+        }
+
+        const text = data?.choices?.[0]?.message?.content || '';
+        if (!text) { lastError = 'Empty response from Groq'; continue; }
+
+        console.log(`[Groq] success with ${model}`);
+        return res.status(200).json({ content: [{ type: 'text', text }], model });
+
+      } catch (e) {
+        lastError = e.message;
+        console.warn(`[Groq] ${model} threw:`, e.message);
       }
+    }
+    console.warn('[Groq] all models failed, falling back to Gemini');
+  }
 
-      // Skip if quota exceeded for THIS model (try next)
-      if (upstream.status === 429 || errMsg.includes('quota') || errMsg.includes('rate limit')) {
-        console.warn(`[Gemini] ${model} quota exceeded, trying next — HTTP ${upstream.status} — ${data?.error?.message?.slice(0,120)}`);
-        lastError = data?.error?.message || lastError;
-        continue;
+  // ── 2. Gemini fallback ────────────────────────────────────────
+  if (geminiKey) {
+    const geminiBody = {
+      contents: messages.map(m => ({
+        role:  m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: String(m.content || '') }],
+      })),
+      generationConfig: { maxOutputTokens: 1400, temperature: 0.72 },
+    };
+    if (system) geminiBody.system_instruction = { parts: [{ text: String(system) }] };
+
+    for (const model of GEMINI_MODELS) {
+      try {
+        const upstream = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiBody) }
+        );
+
+        let data;
+        try { data = await upstream.json(); } catch { continue; }
+
+        const errMsg = (data?.error?.message || '').toLowerCase();
+        if (upstream.status === 404 || errMsg.includes('not found') || errMsg.includes('not supported')) {
+          continue;
+        }
+        if (upstream.status === 429 || errMsg.includes('quota') || errMsg.includes('rate limit')) {
+          console.warn(`[Gemini] ${model} quota exceeded`);
+          lastError = data?.error?.message || lastError;
+          continue;
+        }
+        if (!upstream.ok) {
+          lastError = data?.error?.message || `Gemini HTTP ${upstream.status}`;
+          continue;
+        }
+
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (!text) { lastError = 'Empty response'; continue; }
+
+        console.log(`[Gemini] success with ${model}`);
+        return res.status(200).json({ content: [{ type: 'text', text }], model });
+
+      } catch (e) {
+        lastError = e.message;
+        console.warn(`[Gemini] ${model} threw:`, e.message);
       }
-
-      if (!upstream.ok) {
-        lastError = data?.error?.message || `HTTP ${upstream.status}`;
-        console.error(`[Gemini] ${model} error:`, lastError);
-        continue;
-      }
-
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      if (!text) { lastError = 'Empty response'; continue; }
-
-      return res.status(200).json({ content: [{ type:'text', text }], model });
-
-    } catch (e) {
-      lastError = e.message;
-      console.warn(`[Gemini] ${model} threw:`, e.message);
     }
   }
 
-  // All models failed
-  const isQuotaError = lastError.toLowerCase().includes('quota') || lastError.toLowerCase().includes('exceeded');
+  // All providers failed
   return res.status(503).json({
-    error: isQuotaError
-      ? `🔑  Details: ${lastError}`
-      : `AI temporarily unavailable. Please try again in a moment. (${lastError})`,
+    error: `AI temporarily unavailable — please try again in a moment. ${groqKey ? '' : 'Tip: add GROQ_API_KEY in Vercel for more reliable AI (free at console.groq.com).'}`,
   });
 }
