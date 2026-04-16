@@ -1253,11 +1253,12 @@ const GLOBAL_CSS = `
   /* ── Light Mode Legibility — override hardcoded dark-theme inline colors ── */
   /* Cards: crisp white with subtle gold border */
   [data-theme='light'] .glass-card,[data-theme='light'] .glass-card-static{
-    background:rgba(255,255,255,.98) !important;
-    border-color:rgba(139,101,0,.18) !important;
-    box-shadow:0 2px 20px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.9) !important;
+    background:#F5F5DC !important;
+    border:2px solid #D4A843 !important;
+    box-shadow:0 4px 24px rgba(0,0,0,.1),inset 0 0 18px rgba(212,168,67,.07) !important;
+    color:#0F0F0F !important;
   }
-  [data-theme='light'] .stat-card{background:#fff !important;border-color:rgba(139,101,0,.22) !important;box-shadow:0 2px 12px rgba(0,0,0,.07) !important;}
+  [data-theme='light'] .stat-card{background:#F5F5DC !important;border:2px solid #D4A843 !important;color:#0F0F0F !important;box-shadow:0 2px 16px rgba(0,0,0,.09),inset 0 0 12px rgba(212,168,67,.05) !important;}
   /* Diary */
   [data-theme='light'] .diary-book{background:#faf7f2 !important;border-color:rgba(26,58,122,.2) !important;}
   /* Sidebar group labels */
@@ -1349,12 +1350,12 @@ const GLOBAL_CSS = `
   [data-theme='light'] .page-inner{color:#1A1A1A;}
   /* Textarea in diary — dark text on light paper */
   [data-theme='light'] .diary-textarea{color:#2A1A0A !important;background:rgba(255,252,245,.9) !important;}
-  /* Make all glass-card descendant text dark */
-  [data-theme='light'] .glass-card *:not(canvas):not(svg):not(path){color:inherit;}
-  [data-theme='light'] .glass-card{color:#1A1A1A !important;}
-  [data-theme='light'] .glass-card-static{color:#1A1A1A !important;}
-  /* Stat cards text */
-  [data-theme='light'] .stat-card{color:#1A1A1A !important;}
+  /* Enforce Onyx Black text on all parchment cards */
+  [data-theme='light'] .glass-card{color:#0F0F0F !important;}
+  [data-theme='light'] .glass-card-static{color:#0F0F0F !important;}
+  [data-theme='light'] .stat-card{color:#0F0F0F !important;}
+  [data-theme='light'] .glass-card *:not(canvas):not(svg):not(path):not(button){color:#0F0F0F !important;}
+  [data-theme='light'] .glass-card-static *:not(canvas):not(svg):not(path):not(button){color:#0F0F0F !important;}
   /* Force legibility on any remaining gold text (--lz-text-gold in light = #8B6500, fine) */
   /* Override the mobile topbar & sidebar toggle area */
   [data-theme='light'] .mobile-topbar{background:rgba(238,233,248,.98) !important;}
@@ -1394,27 +1395,29 @@ const GLOBAL_CSS = `
   .page-fade{animation:fadeUp .32s cubic-bezier(.22,1,.36,1)}
   .slide-in{animation:slideInLeft .28s cubic-bezier(.22,1,.36,1)}
 
-  /* ── Luxury glass cards — Lapis Glass ───────────────────── */
+  /* ── Luxury cards — Deep Mahogany Physical Texture ──────── */
   .glass-card{
-    background:rgba(10,17,40,.87);
-    backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);
-    border:1.5px solid rgba(212,168,67,.28);
+    background:linear-gradient(145deg,rgba(61,31,22,.93) 0%,rgba(45,18,8,.97) 100%);
+    backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:2px solid rgba(212,168,67,.36);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.55),inset 0 0 22px rgba(212,168,67,.07),inset 0 1px 0 rgba(212,168,67,.14),inset 0 -1px 0 rgba(0,0,0,.3);
-    transition:all .22s ease
+    box-shadow:0 8px 32px rgba(0,0,0,.65),inset 0 0 32px rgba(201,168,76,.11),inset 0 1px 0 rgba(212,168,67,.22),inset 0 -2px 0 rgba(0,0,0,.45);
+    transition:all .22s ease;
+    color:#FFFFF0;
   }
   .glass-card:hover{
-    border-color:rgba(212,168,67,.52);
-    box-shadow:0 14px 48px rgba(0,0,0,.45),inset 0 0 32px rgba(212,168,67,.11),0 0 28px rgba(42,92,173,.1);
+    border-color:rgba(212,168,67,.62);
+    box-shadow:0 18px 56px rgba(0,0,0,.55),inset 0 0 42px rgba(201,168,76,.16),0 0 28px rgba(201,168,76,.14);
     transform:translateY(-2px)
   }
   .glass-card-static{
-    background:rgba(10,17,40,.87);
-    backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);
-    border:1.5px solid rgba(212,168,67,.24);
+    background:linear-gradient(145deg,rgba(58,28,18,.91) 0%,rgba(40,16,6,.95) 100%);
+    backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:2px solid rgba(212,168,67,.28);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 0 18px rgba(212,168,67,.06),inset 0 1px 0 rgba(212,168,67,.1);
+    box-shadow:0 8px 32px rgba(0,0,0,.58),inset 0 0 26px rgba(201,168,76,.09),inset 0 1px 0 rgba(212,168,67,.16);
     transition:border-color .22s,background .3s;will-change:auto;
+    color:#FFFFF0;
   }
 
   .matriarch-quote{font-family:'Cormorant Garamond',serif;font-style:italic;color:#C9A84C;line-height:1.8;font-size:18px;text-shadow:0 0 10px rgba(201,168,76,.25)}
@@ -1466,9 +1469,9 @@ const GLOBAL_CSS = `
   .hamburger span{display:block;width:24px;height:2px;background:#C9A84C;border-radius:2px}
   .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99;backdrop-filter:blur(4px)}
 
-  /* ── Stat cards — Lapis Glass ───────────────────────────── */
-  .stat-card{background:rgba(10,17,40,.88);border:2px solid rgba(212,168,67,.32);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.55),inset 0 0 18px rgba(212,168,67,.08)}
-  .stat-card:hover{transform:translateY(-4px);border-color:rgba(212,168,67,.58);box-shadow:0 16px 48px rgba(0,0,0,.4),inset 0 0 28px rgba(212,168,67,.12),0 0 24px rgba(42,92,173,.12)}
+  /* ── Stat cards — Deep Mahogany ─────────────────────────── */
+  .stat-card{background:linear-gradient(145deg,rgba(61,31,22,.9) 0%,rgba(44,18,8,.94) 100%);border:2px solid rgba(212,168,67,.34);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.6),inset 0 0 22px rgba(201,168,76,.1),inset 0 1px 0 rgba(212,168,67,.18);color:#FFFFF0}
+  .stat-card:hover{transform:translateY(-4px);border-color:rgba(212,168,67,.62);box-shadow:0 18px 52px rgba(0,0,0,.45),inset 0 0 32px rgba(201,168,76,.15),0 0 24px rgba(201,168,76,.12)}
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 
   /* ── Auth inputs ─────────────────────────────────────────── */
@@ -1570,11 +1573,11 @@ const GLOBAL_CSS = `
     100%{opacity:1;transform:perspective(1200px) rotateY(0deg) scaleX(1);}
   }
   .page-flip-out{
-    animation:pageFlipOut .22s cubic-bezier(.4,0,.6,1) forwards;
+    animation:pageFlipOut .6s cubic-bezier(.4,0,.6,1) forwards;
     transform-origin:left center;
   }
   .page-flip-in{
-    animation:pageFlipIn .22s cubic-bezier(.4,0,1,1) forwards;
+    animation:pageFlipIn .6s cubic-bezier(.4,0,1,1) forwards;
     transform-origin:left center;
   }
   .diary-entry-card{
@@ -2160,17 +2163,23 @@ function ZenGarden() {
         const ox=Math.cos(ang)*off, oy=Math.sin(ang)*off;
         if (treasureMode) {
           ctx.globalCompositeOperation='destination-out'; ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=4*dpr;
+          ctx.beginPath(); ctx.moveTo(p0.x+ox,p0.y+oy); ctx.lineTo(p1.x+ox,p1.y+oy); ctx.stroke();
         } else {
           ctx.globalCompositeOperation='source-over';
-          ctx.strokeStyle=p.line+'BB'; ctx.lineWidth=2*dpr;
+          // Deep groove shadow (wide dark underlay gives physical depth)
+          ctx.strokeStyle='rgba(0,0,0,.32)'; ctx.lineWidth=4.5*dpr;
           ctx.beginPath(); ctx.moveTo(p0.x+ox,p0.y+oy); ctx.lineTo(p1.x+ox,p1.y+oy); ctx.stroke();
-          const lx=Math.cos(ang)*1.5*dpr, ly=Math.sin(ang)*1.5*dpr;
-          ctx.strokeStyle=hlC+'88'; ctx.lineWidth=dpr;
+          // Main groove trough
+          ctx.strokeStyle=p.line+'CC'; ctx.lineWidth=2.2*dpr;
+          ctx.beginPath(); ctx.moveTo(p0.x+ox,p0.y+oy); ctx.lineTo(p1.x+ox,p1.y+oy); ctx.stroke();
+          // Bright highlight edge (near-light side)
+          const lx=Math.cos(ang)*2*dpr, ly=Math.sin(ang)*2*dpr;
+          ctx.strokeStyle=hlC+'AA'; ctx.lineWidth=1.2*dpr;
           ctx.beginPath(); ctx.moveTo(p0.x+ox+lx,p0.y+oy+ly); ctx.lineTo(p1.x+ox+lx,p1.y+oy+ly); ctx.stroke();
-          ctx.strokeStyle=shC+'66'; ctx.lineWidth=dpr;
+          // Cast shadow edge (far side)
+          ctx.strokeStyle=shC+'88'; ctx.lineWidth=1.2*dpr;
           ctx.beginPath(); ctx.moveTo(p0.x+ox-lx,p0.y+oy-ly); ctx.lineTo(p1.x+ox-lx,p1.y+oy-ly); ctx.stroke();
         }
-        ctx.beginPath(); ctx.moveTo(p0.x+ox,p0.y+oy); ctx.lineTo(p1.x+ox,p1.y+oy); ctx.stroke();
       });
       ctx.globalCompositeOperation='source-over';
       emitSand(p1.x,p1.y); sandSound();
@@ -3177,7 +3186,7 @@ function Appointments({ data, upd }) {
 function Diary({ data, upd }) {
   console.log('Diary mounted');
   const entries = data.diary || [];
-  const [view, setView]       = useState('list');   // 'list' | 'write' | number(idx)
+  const [view, setView]       = useState('closed');  // 'closed' | 'list' | 'write' | number(idx)
   const [editing, setEditing] = useState(null);
   const [newEntry, setNewEntry] = useState({ title:'', text:'', font:DIARY_FONTS[0].value, fontSize:18, mood:'✍️' });
   const [flipPhase, setFlipPhase] = useState('idle'); // 'idle'|'out'|'in'
@@ -3191,11 +3200,19 @@ function Diary({ data, upd }) {
     '"In documenting the hard days, I honour them — and release them."',
   ];
 
+  // ── History API — Back closes diary ──────────────────────────
+  React.useEffect(() => {
+    window.history.pushState({ lzView:'diary' }, '');
+    const onPop = () => { setView('closed'); setFlipPhase('idle'); window.history.pushState({ lzView:'diary' }, ''); };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const flipTo = (target) => {
     if (flipPhase !== 'idle') return;
     setFlipPhase('out');
-    const t1 = setTimeout(() => { setView(target); setFlipPhase('in'); }, 230);
-    const t2 = setTimeout(() => { setFlipPhase('idle'); }, 460);
+    const t1 = setTimeout(() => { setView(target); setFlipPhase('in'); }, 600);
+    const t2 = setTimeout(() => { setFlipPhase('idle'); }, 1200);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   };
 
@@ -3246,7 +3263,84 @@ function Diary({ data, upd }) {
   };
   const bookFlipClass = flipPhase === 'out' ? 'page-flip-out' : flipPhase === 'in' ? 'page-flip-in' : '';
 
-  // ── Cover view ────────────────────────────────────────────────
+  // ── Closed book — default landing view ───────────────────────
+  if (view === 'closed') return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'32px 0 48px' }}>
+      <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:700, color:'#C9A84C', letterSpacing:1.5, textAlign:'center', marginBottom:8 }}>My Health Diary</div>
+
+      {/* Mahogany desk surface */}
+      <div style={{ position:'relative', width:'100%', maxWidth:360, display:'flex', flexDirection:'column', alignItems:'center' }}>
+        <div style={{ position:'absolute', bottom:0, left:'10%', right:'10%', height:60, borderRadius:'50%', background:'radial-gradient(ellipse,rgba(30,12,4,.72) 0%,transparent 70%)', filter:'blur(14px)' }}/>
+
+        {/* 3D closed book */}
+        <div
+          onClick={() => flipTo('list')}
+          style={{
+            position:'relative', width:210, height:290,
+            cursor:'pointer',
+            transform:'perspective(900px) rotateX(6deg) rotateY(-22deg)',
+            transition:'transform .35s cubic-bezier(.22,1,.36,1), filter .35s',
+            filter:'drop-shadow(0 22px 36px rgba(0,0,0,.85))',
+          }}
+          onMouseEnter={e=>{ e.currentTarget.style.transform='perspective(900px) rotateX(6deg) rotateY(-10deg) translateY(-10px)'; e.currentTarget.style.filter='drop-shadow(0 32px 48px rgba(0,0,0,.9))'; }}
+          onMouseLeave={e=>{ e.currentTarget.style.transform='perspective(900px) rotateX(6deg) rotateY(-22deg)'; e.currentTarget.style.filter='drop-shadow(0 22px 36px rgba(0,0,0,.85))'; }}
+        >
+          {/* Spine (left strip) */}
+          <div style={{
+            position:'absolute', left:0, top:0, width:24, height:'100%',
+            background:'linear-gradient(90deg,#0e0402 0%,#2a0f05 55%,#1e0904 100%)',
+            borderRadius:'4px 0 0 4px',
+            boxShadow:'inset -4px 0 8px rgba(0,0,0,.5)',
+            display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', gap:10,
+          }}>
+            {[0,1,2,3].map(i=>(
+              <div key={i} style={{ width:5, height:5, borderRadius:'50%', background:'rgba(0,0,0,.65)', boxShadow:'inset 0 1px 2px rgba(0,0,0,.8)' }}/>
+            ))}
+          </div>
+
+          {/* Cover face */}
+          <div style={{
+            position:'absolute', left:24, top:0, right:0, bottom:0,
+            background:'linear-gradient(135deg,#4a200e 0%,#6e3018 30%,#4a200e 65%,#2d1008 100%)',
+            borderRadius:'0 6px 6px 0',
+            overflow:'hidden',
+          }}>
+            {/* Leather grain */}
+            <div style={{ position:'absolute', inset:0, backgroundImage:['linear-gradient(135deg,rgba(255,255,255,.065) 25%,transparent 25%)','linear-gradient(225deg,rgba(255,255,255,.065) 25%,transparent 25%)','linear-gradient(315deg,rgba(255,255,255,.065) 25%,transparent 25%)','linear-gradient(45deg,rgba(255,255,255,.065) 25%,transparent 25%)'].join(','), backgroundSize:'4px 4px', pointerEvents:'none' }}/>
+            {/* Sheen */}
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(145deg,rgba(255,255,255,.13) 0%,transparent 42%,rgba(0,0,0,.32) 100%)', pointerEvents:'none' }}/>
+            {/* Gold border inset */}
+            <div style={{ position:'absolute', inset:11, border:'1.5px solid rgba(201,168,76,.28)', borderRadius:4, pointerEvents:'none' }}/>
+            <div style={{ position:'absolute', inset:16, border:'1px solid rgba(201,168,76,.13)', borderRadius:2, pointerEvents:'none' }}/>
+            {/* Content */}
+            <div style={{ position:'relative', zIndex:1, height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', gap:10, padding:'28px 18px' }}>
+              <div style={{ fontSize:38, filter:'drop-shadow(0 3px 8px rgba(0,0,0,.65))' }}>📔</div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:12, color:'#E8C85A', textAlign:'center', letterSpacing:2.2, textShadow:'0 0 22px rgba(201,168,76,.55),0 2px 4px rgba(0,0,0,.7)', lineHeight:1.6 }}>My Health<br/>Diary</div>
+              <div style={{ width:46, height:1.5, background:'linear-gradient(90deg,transparent,#D4A843,transparent)', borderRadius:2 }}/>
+              <div style={{ fontSize:10, color:'rgba(201,168,76,.42)', fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif", textAlign:'center', lineHeight:1.7 }}>A sacred record<br/>of my healing journey</div>
+            </div>
+          </div>
+
+          {/* Page edges (right side) */}
+          <div style={{
+            position:'absolute', right:-10, top:3, width:12, height:'94%',
+            background:'repeating-linear-gradient(to right,#f5f0e4,#f5f0e4 0.5px,#d8d0be 0.5px,#d8d0be 1px)',
+            borderRadius:'0 3px 3px 0',
+            boxShadow:'4px 0 10px rgba(0,0,0,.4)',
+          }}/>
+        </div>
+
+        {/* Desk surface */}
+        <div style={{ width:'85%', height:14, marginTop:2, borderRadius:'50%', background:'linear-gradient(180deg,rgba(25,10,4,.7),transparent)', filter:'blur(4px)' }}/>
+      </div>
+
+      <div style={{ textAlign:'center', color:'rgba(201,168,76,.45)', fontSize:12, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', letterSpacing:1.2 }}>
+        Click to open your journal{entries.length > 0 ? ` · ${entries.length} ${entries.length===1?'entry':'entries'}` : ''}
+      </div>
+    </div>
+  );
+
+  // ── List / TOC spread ─────────────────────────────────────────
   if (view === 'list') return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
       <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:'#C9A84C', textAlign:'center' }}>📔 My Health Diary</div>
@@ -3259,6 +3353,7 @@ function Diary({ data, upd }) {
           ))}
           <div style={{ padding:'28px 22px 22px 24px' }}>
             <div style={{ fontSize:11, color:'rgba(201,168,76,.5)', letterSpacing:3, textTransform:'uppercase', marginBottom:16, fontFamily:"'DM Sans',sans-serif" }}>Entries</div>
+            <button onClick={()=>setView('closed')} style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:8, border:'1px solid rgba(201,168,76,.18)', background:'transparent', color:'rgba(201,168,76,.45)', fontSize:11, cursor:'pointer', fontFamily:"'Cormorant Garamond',serif", marginBottom:10 }}>← Close Book</button>
             {entries.length === 0 ? (
               <div style={{ color:'rgba(240,232,255,.3)', fontSize:14, fontStyle:'italic', lineHeight:1.8 }}>No entries yet.<br/>Write your first on the right →</div>
             ) : (
