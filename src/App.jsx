@@ -5474,10 +5474,10 @@ function ResearchLibrary() {
 
   // ── Desktop dark: 3D skeuomorphic bookshelf ──────────────────
   return (
-    <div style={{ perspective: '1200px' }}>
+    <div>
       <PH emoji="📚" title="Lazuli Library" sub="Gilded research — pull a spine to open the source" />
 
-      {/* Fixed tooltip — escapes overflow clipping entirely */}
+      {/* Fixed tooltip — rendered outside perspective container so position:fixed uses true viewport */}
       {tooltipInfo && !bookAnim && (
         <div style={{
           position: 'fixed',
@@ -5512,7 +5512,7 @@ function ResearchLibrary() {
         </div>
       )}
 
-      <div style={{ position: 'relative', marginBottom: 8 }}>
+      <div style={{ perspective: '1200px', position: 'relative', marginBottom: 8 }}>
         {LIBRARY_SHELVES.map((shelf) => (
           <div key={shelf.id} style={{ marginBottom: 42, position: 'relative' }}>
 
