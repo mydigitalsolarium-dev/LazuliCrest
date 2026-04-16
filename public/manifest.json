@@ -1,7 +1,7 @@
 {
-  "name": "Lazuli Crest",
-  "short_name": "Lazuli Crest",
-  "description": "The Gold Standard in Health Advocacy. Your private chronic illness companion — by Lazuli Crest.",
+  "name": "Lazuli Bio",
+  "short_name": "Lazuli Bio",
+  "description": "The Gold Standard in Health Advocacy. Your private chronic illness companion — by Lazuli Bio.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

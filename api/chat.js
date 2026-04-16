@@ -1,4 +1,4 @@
-// api/chat.js — Lazuli Crest AI Serverless Function
+// api/chat.js — Lazuli Bio AI Serverless Function
 // ─────────────────────────────────────────────────────────────
 // AI:            Groq (primary, free) → Gemini (fallback)
 // Credit costs:  Chat message = 2 credits
@@ -153,13 +153,13 @@ export default async function handler(req, res) {
     const { email='Unknown', name='Unknown', userId } = body;
     await Promise.all([
       initCredits(userId),
-      pingDiscord(`🎉 **New Lazuli Crest signup!**\n👤 ${name}\n📧 ${email}\n🕐 ${new Date().toLocaleString('en-US',{timeZone:'America/New_York'})} EST`),
+      pingDiscord(`🎉 **New Lazuli Bio signup!**\n👤 ${name}\n📧 ${email}\n🕐 ${new Date().toLocaleString('en-US',{timeZone:'America/New_York'})} EST`),
     ]);
     return res.status(200).json({ ok: true });
   }
 
   if (body.action === 'user_login') {
-    await pingDiscord(`🔑 **Lazuli Crest login**\n📧 ${body.email||'Unknown'}\n🕐 ${new Date().toLocaleString('en-US',{timeZone:'America/New_York'})} EST`);
+    await pingDiscord(`🔑 **Lazuli Bio login**\n📧 ${body.email||'Unknown'}\n🕐 ${new Date().toLocaleString('en-US',{timeZone:'America/New_York'})} EST`);
     return res.status(200).json({ ok: true });
   }
 

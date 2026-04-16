@@ -9,15 +9,15 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Lazuli Crest" />
+    <meta name="apple-mobile-web-app-title" content="Lazuli Bio" />
 
-    <meta name="description" content="Lazuli Crest — The Gold Standard in Health Advocacy. Your private chronic illness companion." />
-    <meta property="og:title" content="Lazuli Crest" />
+    <meta name="description" content="Lazuli Bio — The Gold Standard in Health Advocacy. Your private chronic illness companion." />
+    <meta property="og:title" content="Lazuli Bio" />
     <meta property="og:description" content="The Gold Standard in Health Advocacy. Your personal chronic illness advocate and health diary." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/icons/icon-512.png" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Lazuli Crest" />
+    <meta name="twitter:title" content="Lazuli Bio" />
     <meta name="twitter:description" content="The Gold Standard in Health Advocacy." />
 
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
@@ -27,7 +27,7 @@
     <link rel="preconnect" href="https://firestore.googleapis.com" />
     <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
 
-    <title>Lazuli Crest — The Gold Standard in Health Advocacy</title>
+    <title>Lazuli Bio — The Gold Standard in Health Advocacy</title>
 
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -104,11 +104,22 @@
     </style>
   </head>
   <body>
-    <noscript>Lazuli Crest requires JavaScript. Please enable it in your browser settings.</noscript>
+    <!-- Redirect old domain to new domain -->
+    <script>
+      (function () {
+        if (window.location.hostname === 'lazulicrest.vercel.app') {
+          window.location.replace(
+            'https://lazulibio.vercel.app' + window.location.pathname + window.location.search + window.location.hash
+          );
+        }
+      })();
+    </script>
 
-    <div id="root-loader" role="status" aria-label="Loading Lazuli Crest">
-      <img src="/icons/icon-192.png" alt="Lazuli Crest logo" onerror="this.style.display='none'"/>
-      <div class="splash-wordmark">LAZULI<em>Crest</em></div>
+    <noscript>Lazuli Bio requires JavaScript. Please enable it in your browser settings.</noscript>
+
+    <div id="root-loader" role="status" aria-label="Loading Lazuli Bio">
+      <img src="/icons/icon-192.png" alt="Lazuli Bio logo" onerror="this.style.display='none'"/>
+      <div class="splash-wordmark">LAZULI<em>Bio</em></div>
       <div class="splash-tagline">The Gold Standard in Health Advocacy</div>
       <div class="splash-bar"><div class="splash-fill"></div></div>
     </div>

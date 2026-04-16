@@ -213,8 +213,8 @@ function SharedView({ shareId }) {
     <div style={{ minHeight:'100vh', background:'#0d0520', display:'flex', alignItems:'center', justifyContent:'center', padding:24, fontFamily:"'DM Sans',sans-serif" }}>
       <style>{`*{box-sizing:border-box;margin:0;padding:0}body{-webkit-font-smoothing:antialiased}`}</style>
       <div style={{ width:'100%', maxWidth:420, textAlign:'center' }}>
-        <div style={{ marginBottom:20 }}><img src="/icons/icon-192.png" alt="Lazuli Crest" width={64} height={64} style={{ borderRadius:14, filter:'drop-shadow(0 0 16px rgba(42,92,173,.6))' }} onError={e=>e.target.style.display='none'}/></div>
-        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', letterSpacing:2, marginBottom:6 }}>Lazuli Crest</div>
+        <div style={{ marginBottom:20 }}><img src="/icons/icon-192.png" alt="Lazuli Bio" width={64} height={64} style={{ borderRadius:14, filter:'drop-shadow(0 0 16px rgba(42,92,173,.6))' }} onError={e=>e.target.style.display='none'}/></div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:22, color:'#C9A84C', letterSpacing:2, marginBottom:6 }}>Lazuli Bio</div>
         <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', marginBottom:32 }}>Secure Health Record Viewer</div>
 
         <div style={{ background:'rgba(16,8,40,.9)', border:'1.5px solid rgba(42,92,173,.3)', borderRadius:20, padding:'32px 28px', backdropFilter:'blur(20px)' }}>
@@ -264,9 +264,9 @@ function SharedView({ shareId }) {
       {/* Header */}
       <div style={{ background:'rgba(4,1,16,.97)', borderBottom:'1px solid rgba(42,92,173,.2)', padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:10, backdropFilter:'blur(20px)' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <img src="/icons/icon-192.png" alt="Lazuli Crest" width={32} height={32} style={{ borderRadius:7 }} onError={e=>e.target.style.display='none'}/>
+          <img src="/icons/icon-192.png" alt="Lazuli Bio" width={32} height={32} style={{ borderRadius:7 }} onError={e=>e.target.style.display='none'}/>
           <div>
-            <div style={{ fontFamily:"'Cinzel',serif", fontSize:15, fontWeight:700, color:'#C9A84C' }}>Lazuli Crest</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:15, fontWeight:700, color:'#C9A84C' }}>Lazuli Bio</div>
             <div style={{ fontSize:11, color:'rgba(240,232,255,.3)' }}>Shared Health Record · Read-only</div>
           </div>
         </div>
@@ -588,7 +588,7 @@ export default function App() {
 
 // ─── Logo ─────────────────────────────────────────────────────
 function LogoImg({ size=56 }) {
-  return <img src="/icons/icon-192.png" alt="Lazuli Crest" width={size} height={size}
+  return <img src="/icons/icon-192.png" alt="Lazuli Bio" width={size} height={size}
     style={{ borderRadius:size*.22, objectFit:'cover', flexShrink:0, filter:'drop-shadow(0 0 10px rgba(42,92,173,.6))' }}
     onError={e=>e.target.style.display='none'}/>;
 }
@@ -1190,7 +1190,7 @@ const GLOBAL_CSS = `
   ::-webkit-scrollbar-thumb{background:var(--lz-border-lapis);border-radius:4px}
   ::-webkit-scrollbar-track{background:transparent}
 
-  /* ══ Lazuli Crest Design Tokens — Dark Default / Light Override ══════════ */
+  /* ══ Lazuli Bio Design Tokens — Dark Default / Light Override ══════════ */
   :root{
     --lz-bg-root:#130828;
     --lz-bg-card:rgba(22,12,52,.82);
@@ -5558,12 +5558,12 @@ function Updates() {
       <div style={{ textAlign:'center', padding:'40px 20px 32px', position:'relative' }}>
         <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 30%, rgba(42,92,173,.2) 0%, transparent 65%)', pointerEvents:'none' }}/>
         <div style={{ display:'inline-block', marginBottom:16, animation:'floatUp 3s ease-in-out infinite' }}>
-          <img src="/icons/icon-192.png" alt="Lazuli Crest" style={{ width:80, height:80, borderRadius:18, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}/>
+          <img src="/icons/icon-192.png" alt="Lazuli Bio" style={{ width:80, height:80, borderRadius:18, filter:'drop-shadow(0 0 20px rgba(42,92,173,.8)) drop-shadow(0 0 40px rgba(201,168,76,.4))' }}/>
         </div>
-        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:6, textShadow:'0 0 30px rgba(201,168,76,.4)', letterSpacing:2 }}>Lazuli Crest</div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:28, fontWeight:700, color:'#C9A84C', marginBottom:6, textShadow:'0 0 30px rgba(201,168,76,.4)', letterSpacing:2 }}>Lazuli Bio</div>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, color:'rgba(168,196,240,.7)', letterSpacing:4, textTransform:'uppercase', marginBottom:18 }}>The Gold Standard in Health Advocacy</div>
         <div style={{ maxWidth:540, margin:'0 auto', fontSize:16, color:'rgba(240,232,255,.65)', lineHeight:1.8, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>
-          Lazuli Crest is always evolving — every update is built around real patient needs. New features, refinements, and tools are added constantly to better support your health journey.
+          Lazuli Bio is always evolving — every update is built around real patient needs. New features, refinements, and tools are added constantly to better support your health journey.
         </div>
         <div style={{ marginTop:22, display:'flex', flexWrap:'wrap', justifyContent:'center', gap:10 }}>
           <div style={{ padding:'8px 20px', borderRadius:20, background:'rgba(110,231,183,.1)', border:'1px solid rgba(110,231,183,.3)', fontSize:16, color:'#6ee7b7', fontWeight:600 }}>✓ Live Features</div>
@@ -5606,7 +5606,7 @@ function Updates() {
       {/* Bottom alchemy quote */}
       <div style={{ textAlign:'center', padding:'36px 20px 16px' }}>
         <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:18, color:'rgba(201,168,76,.6)', lineHeight:1.9, maxWidth:480, margin:'0 auto' }}>
-          "In alchemy, lapis lazuli was called the philosopher's stone of healing — rare, precious, and transformative. We built Lazuli Crest on that same principle."
+          "In alchemy, lapis lazuli was called the philosopher's stone of healing — rare, precious, and transformative. We built Lazuli Bio on that same principle."
         </div>
         <div style={{ fontSize:16, color:'rgba(240,232,255,.2)', marginTop:8, letterSpacing:2 }}>— THE LAZULI CREST TEAM</div>
       </div>
@@ -5694,7 +5694,7 @@ function LazuliLibrarian({ user }) {
   const [expanded, setExpanded] = React.useState(true);
   const inputRef = React.useRef();
 
-  const LIBRARIAN_SYSTEM = `You are Lyra, the Lazuli Librarian — a warm, knowledgeable research guide at the Lazuli Crest health library. When someone asks about a health topic, condition, symptom, or treatment, respond concisely and always include 2–4 specific, direct URLs to trusted medical sources (PubMed, NIH, Mayo Clinic, Johns Hopkins, CDC, Sjogren's Foundation, Arthritis Foundation, etc.). Format each link on its own line like: • [Title](URL). Be warm, clear, and supportive. Never diagnose. Always remind users to discuss findings with their care team.`;
+  const LIBRARIAN_SYSTEM = `You are Lazuli, the Lazuli Librarian — a warm, knowledgeable research guide at the Lazuli Bio health library. When someone asks about a health topic, condition, symptom, or treatment, respond concisely and always include 2–4 specific, direct URLs to trusted medical sources (PubMed, NIH, Mayo Clinic, Johns Hopkins, CDC, Sjogren's Foundation, Arthritis Foundation, etc.). Format each link on its own line like: • [Title](URL). Be warm, clear, and supportive. Never diagnose. Always remind users to discuss findings with their care team.`;
 
   const sendQuery = async () => {
     const q = query.trim();
@@ -5786,7 +5786,7 @@ function LazuliLibrarian({ user }) {
         }}>🦉</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily:"'Cinzel',serif", fontSize: 15, fontWeight: 700, color: 'rgba(168,196,240,.95)', letterSpacing: .5 }}>
-            Lyra — Lazuli Librarian
+            Lazuli — Your Librarian
           </div>
           <div style={{ fontSize: 12, color: 'rgba(168,196,240,.45)', fontFamily:"'DM Sans',sans-serif", marginTop: 2 }}>
             Ask me to find research on any health topic
@@ -5805,7 +5805,7 @@ function LazuliLibrarian({ user }) {
               fontSize: 14, color: 'rgba(168,196,240,.8)', lineHeight: 1.7,
               fontFamily: "'DM Sans',sans-serif",
             }}>
-              Welcome to the Lazuli Library. I'm Lyra, your research guide. I can find peer-reviewed studies, trusted medical resources, and clinical references on any health topic — whether it's Sjogren's, neurological symptoms, autoimmune conditions, or anything else you're researching. What would you like to explore today?
+              Welcome to the Lazuli Library. I'm Lazuli, your research guide. I can find peer-reviewed studies, trusted medical resources, and clinical references on any health topic — whether it's Sjogren's, neurological symptoms, autoimmune conditions, or anything else you're researching. What would you like to explore today?
             </div>
           )}
 
@@ -5865,7 +5865,7 @@ function LazuliLibrarian({ user }) {
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendQuery()}
-              placeholder="Ask Lyra to find research on any health topic…"
+              placeholder="Ask Lazuli to find research on any health topic…"
               style={{
                 flex:1, padding:'10px 16px', borderRadius:12,
                 border:'1px solid rgba(74,144,217,.25)', background:'rgba(255,255,255,.04)',
