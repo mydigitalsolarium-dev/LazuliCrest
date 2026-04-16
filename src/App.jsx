@@ -1466,6 +1466,19 @@ const GLOBAL_CSS = `
   .btn-lapis{background:var(--lz-lapis-btn);color:#E0EFFF;font-weight:600;border:none;box-shadow:0 4px 18px rgba(42,92,173,.3)}
   .btn-lapis:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(42,92,173,.5)}
 
+  /* ── Font clarity: suppress cursive/serif everywhere except diary ── */
+  /* Body/content text defaults to DM Sans for readability */
+  .lz-app-root p, .lz-app-root li, .lz-app-root td,
+  .lz-app-root .glass-card, .lz-app-root .glass-card-static {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+  }
+  /* Insight & quote readable text */
+  .ai-header-sub, .tab-hint-body { font-family:'DM Sans',sans-serif !important; font-size:15px !important; font-style:normal !important; }
+  /* Keep Cinzel/DM Sans for headings — remove italics from Cormorant outside diary */
+  .lz-app-root .ai-header-title { font-family:'Cinzel',serif !important; font-style:normal !important; }
+  /* Diary keeps its own fonts (applied via inline styles) */
+
   /* ── Form fields ─────────────────────────────────────────── */
   .field{background:var(--lz-bg-field);border:1.5px solid var(--lz-border-lapis);border-radius:12px;padding:13px 16px;font-size:18px;color:var(--lz-text);width:100%;outline:none;transition:all .18s;caret-color:var(--lz-gold)}
   .field:focus{border-color:var(--lz-gold);background:var(--lz-bg-field-focus);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
@@ -2351,7 +2364,24 @@ function ZenGarden() {
             if (np>=t.hardness) {
               changed=true;
               const gem=GEMS.find(g=>g.type===t.gemType);
-              if (gem) { emitSparkle(tx*dpr,ty*dpr,gem.glowColor); try{navigator.vibrate?.([60,30,100]);}catch{} setFound(f=>[...f,{uid:t.uid,type:t.gemType,name:gem.name,emoji:gem.emoji,rarity:gem.rarity}]); }
+              if (gem) {
+                emitSparkle(tx*dpr,ty*dpr,gem.glowColor);
+                try{navigator.vibrate?.([60,30,100]);}catch{}
+                if (t.isRareCredit) {
+                  setRareCreditFound(true);
+                  // Apply 5 credits to account via API
+                  try {
+                    fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'rare_credit_bonus',userId:null})}).catch(()=>{});
+                    const cur = parseInt(localStorage.getItem('lz_credits_left')||'0',10);
+                    localStorage.setItem('lz_credits_left', String(cur+5));
+                  } catch {}
+                  setFound(f=>[...f,{uid:t.uid,type:'diamond',name:'✨ Rare Artefact — 5 Credits Awarded!',emoji:'💎',rarity:'legendary'}]);
+                } else {
+                  setFound(f=>[...f,{uid:t.uid,type:t.gemType,name:gem.name,emoji:gem.emoji,rarity:gem.rarity}]);
+                }
+                // Persist updated treasure state
+                try { localStorage.setItem('lz_zen_treasures', JSON.stringify(treasures.map(x=>x.uid===t.uid?{...x,revealed:true}:x))); } catch {}
+              }
               return {...t,passCount:np,revealed:true};
             }
             changed=true; return {...t,passCount:np};
@@ -2412,10 +2442,34 @@ function ZenGarden() {
     return()=>{ if(rafRef.current) cancelAnimationFrame(rafRef.current); };
   },[]);
 
-  /* ── Treasure init ── */
-  const initTreasures = useCallback(()=>{
-    const dist=[{type:'diamond',c:1},{type:'sapphire',c:1},{type:'ruby',c:1},{type:'emerald',c:2},{type:'amethyst',c:1},{type:'coin',c:3},{type:'fossil',c:2},{type:'shell',c:2},{type:'wrapper',c:2},{type:'bolt',c:2}];
-    const arr=[]; dist.forEach(({type,c})=>{ const g=GEMS.find(x=>x.type===type); for(let i=0;i<c;i++) arr.push({uid:`${type}-${Date.now()}-${i}`,gemType:type,hardness:g?.hardness||1,x:8+Math.random()*84,y:8+Math.random()*84,passCount:0,revealed:false}); });
+  /* ── 5-credit bonus state ── */
+  const [rareCreditFound, setRareCreditFound] = useState(false);
+
+  /* ── Treasure init — 2-week biweekly spawn of exactly 3 Lazuli Coins ── */
+  const initTreasures = useCallback((force=false)=>{
+    const SPAWN_KEY  = 'lz_zen_spawn_ts';
+    const TWO_WEEKS  = 14 * 24 * 60 * 60 * 1000;
+    const now        = Date.now();
+    let   lastSpawn  = 0;
+    try { lastSpawn = parseInt(localStorage.getItem(SPAWN_KEY)||'0', 10); } catch {}
+    const needsSpawn = force || (now - lastSpawn >= TWO_WEEKS);
+    if (!needsSpawn) {
+      // Restore previously spawned coins from localStorage (still dig-able)
+      try {
+        const saved = localStorage.getItem('lz_zen_treasures');
+        if (saved) { setTreasures(JSON.parse(saved)); setFound([]); return; }
+      } catch {}
+    }
+    // Spawn: exactly 3 Lazuli Coins + 1 ultra-rare 5-credit token (<1% chance)
+    const arr = [];
+    for (let i = 0; i < 3; i++) {
+      arr.push({ uid:`coin-${now}-${i}`, gemType:'coin', hardness:1, x:10+Math.random()*80, y:10+Math.random()*80, passCount:0, revealed:false });
+    }
+    // 0.7% chance of a rare 5-credit artefact
+    if (Math.random() < 0.007) {
+      arr.push({ uid:`rare-credit-${now}`, gemType:'diamond', hardness:3, x:10+Math.random()*80, y:10+Math.random()*80, passCount:0, revealed:false, isRareCredit:true });
+    }
+    try { localStorage.setItem(SPAWN_KEY, String(now)); localStorage.setItem('lz_zen_treasures', JSON.stringify(arr)); } catch {}
     setTreasures(arr); setFound([]);
   },[]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -2489,8 +2543,8 @@ function ZenGarden() {
               </div>}
           </div>
         );})}
-        {items.length===0&&!treasureMode&&(<div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none',zIndex:5 }}><span style={{ fontSize:15,color:`${pal.tx}28`,fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic' }}>Drag to rake · Add accessories below</span></div>)}
-        {treasureMode&&found.length===0&&(<div style={{ position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:10,pointerEvents:'none' }}><span style={{ fontSize:13,color:'rgba(201,168,76,.5)',fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic' }}>Drag the rake to unearth hidden treasures…</span></div>)}
+        {items.length===0&&!treasureMode&&(<div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none',zIndex:5 }}><span style={{ fontSize:15,color:`${pal.tx}28`,fontFamily:"'DM Sans',sans-serif" }}>Drag to rake · Add accessories below</span></div>)}
+        {treasureMode&&found.length===0&&(<div style={{ position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:10,pointerEvents:'none' }}><span style={{ fontSize:13,color:'rgba(201,168,76,.5)',fontFamily:"'DM Sans',sans-serif" }}>3 Lazuli Coins hidden beneath the sand — dig to find them…</span></div>)}
       </div>
 
       {/* Excavation log */}
@@ -2500,7 +2554,8 @@ function ZenGarden() {
             <div style={{ fontFamily:"'Cinzel',serif",fontSize:14,color:'#C9A84C',letterSpacing:.8 }}>⛏ Excavation Log — {found.length} found</div>
             <button onClick={()=>{initCanvas();initTreasures();}} className="btn btn-ghost" style={{ fontSize:12,padding:'5px 12px' }}>🔄 New Dig</button>
           </div>
-          {found.length===0?<div style={{ fontSize:14,color:'rgba(201,168,76,.4)',fontStyle:'italic' }}>Nothing yet… dig deeper!</div>
+          {rareCreditFound&&<div style={{ marginBottom:10,padding:'10px 14px',borderRadius:12,background:'rgba(200,240,255,.1)',border:'1.5px solid rgba(200,240,255,.4)',fontSize:14,color:'#E0F8FF',fontWeight:700,fontFamily:"'DM Sans',sans-serif" }}>💎 Ultra-Rare Artefact Found! 5 Lazuli Credits have been added to your account. ✨</div>}
+          {found.length===0?<div style={{ fontSize:14,color:'rgba(201,168,76,.4)',fontFamily:"'DM Sans',sans-serif" }}>Nothing yet — move the rake across the sand to dig!</div>
             :<div style={{ display:'flex',flexWrap:'wrap',gap:8 }}>
               {Object.values(foundGroups).sort((a,b)=>(rarityOrd[b.rarity]||0)-(rarityOrd[a.rarity]||0)).map((f,i)=>{ const gem=GEMS.find(g=>g.type===f.type); return (
                 <div key={i} style={{ display:'flex',alignItems:'center',gap:6,padding:'6px 12px',borderRadius:20,background:RARITY_BG[f.rarity]||'rgba(0,0,0,.3)',border:`1px solid ${gem?.glowColor||'rgba(255,255,255,.1)'}`,animation:'zenFadeIn .3s ease' }}>
@@ -2519,7 +2574,7 @@ function ZenGarden() {
       {/* Accessory catalog (zen mode only) */}
       {!treasureMode&&(
         <div style={{ background:'rgba(255,255,255,.03)',borderRadius:16,padding:'12px 14px',border:'1px solid rgba(255,255,255,.07)' }}>
-          <div style={{ fontSize:12,color:'rgba(240,232,255,.38)',marginBottom:9,fontFamily:"'Cormorant Garamond',serif",letterSpacing:.8 }}>Garden accessories — tap to place, drag to move</div>
+          <div style={{ fontSize:12,color:'rgba(240,232,255,.38)',marginBottom:9,fontFamily:"'DM Sans',sans-serif",letterSpacing:.4 }}>Garden accessories — tap to place, drag to move</div>
           <div style={{ display:'flex',flexWrap:'wrap',gap:7 }}>
             {CATALOG.map(acc=>(<button key={acc.id} onClick={()=>addAcc(acc)} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'7px 11px',borderRadius:12,border:'1px solid rgba(255,255,255,.08)',background:'rgba(255,255,255,.04)',cursor:'pointer',color:'rgba(240,232,255,.65)',fontSize:11,fontFamily:"'DM Sans',sans-serif",transition:'all .18s' }} onMouseEnter={e=>{e.currentTarget.style.border=`1px solid ${pal.tx}44`;e.currentTarget.style.background=pal.bg;}} onMouseLeave={e=>{e.currentTarget.style.border='1px solid rgba(255,255,255,.08)';e.currentTarget.style.background='rgba(255,255,255,.04)';}}>
               {acc.special==='koi'?<div style={{ width:24,height:24,borderRadius:'50%',background:'radial-gradient(circle,#40E0D0 0%,#1A6B8A 55%,#0A2040 100%)',boxShadow:'0 0 7px rgba(64,224,208,.5)' }}/>:<span style={{ fontSize:20 }}>{acc.emoji}</span>}
@@ -2788,7 +2843,7 @@ function Dashboard({ data, setTab, upd, user, bgInsight }) {
             <span style={{ fontSize:18, flexShrink:0, opacity:.7 }}>💙</span>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:11, fontWeight:700, color:'rgba(168,196,240,.4)', textTransform:'uppercase', letterSpacing:1.5, marginBottom:5 }}>Lazuli's Latest Insight</div>
-              <div style={{ fontSize:15, color:'rgba(240,232,255,.75)', lineHeight:1.7, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>{bgInsight.text}</div>
+              <div style={{ fontSize:16, color:'rgba(240,232,255,.85)', lineHeight:1.75, fontFamily:"'DM Sans',sans-serif", fontWeight:400 }}>{bgInsight.text}</div>
               <div style={{ fontSize:11, color:'rgba(240,232,255,.2)', marginTop:4 }}>{bgInsight.ts ? new Date(bgInsight.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}</div>
             </div>
           </div>
@@ -2894,7 +2949,8 @@ function Symptoms({ data, upd }) {
   const [custom, setCustom] = useState('');
   const [filter, setFilter] = useState('all');
   const [viewPhoto, setViewPhoto] = useState(null);
-  const photoRef = useRef();
+  const photoRef  = useRef();
+  const cameraRef = useRef();
 
   const addSym = () => {
     const s = sel||custom.trim();
@@ -3008,8 +3064,10 @@ function Symptoms({ data, upd }) {
                   <button onClick={()=>removePhoto(p.id)} style={{ position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#f87171',border:'none',color:'#fff',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900 }}>×</button>
                 </div>
               ))}
-              <button className="btn btn-ghost" style={{ fontSize:16,padding:'8px 14px' }} onClick={()=>photoRef.current?.click()}>📷 Add Photo</button>
+              <button className="btn btn-ghost" style={{ fontSize:16,padding:'8px 14px' }} onClick={()=>photoRef.current?.click()}>📁 Upload Photo</button>
+              <button className="btn btn-ghost" style={{ fontSize:16,padding:'8px 14px' }} onClick={()=>cameraRef.current?.click()}>📷 Take Photo</button>
               <input ref={photoRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={e=>[...e.target.files].forEach(addPhoto)}/>
+              <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display:'none' }} onChange={e=>[...e.target.files].forEach(addPhoto)}/>
             </div>
           </div>
 
@@ -3649,7 +3707,8 @@ function AIDiet({ data, upd, user }) {
   const [loadingAI, setLoadingAI] = useState(false);
   const [showLog, setShowLog]   = useState(false);
   const [mealPhoto, setMealPhoto] = useState(null);
-  const mealPhotoRef = useRef();
+  const mealPhotoRef   = useRef();
+  const mealCameraRef  = useRef();
 
   // ── Meal Finder ──
   const [mealMode,       setMealMode]       = useState('mood');   // 'mood' | 'health'
@@ -4049,9 +4108,13 @@ Suggest 2-3 recipes using ONLY those ingredients. Return JSON array: [{ name, em
                     </div>
                   </div>
                 ) : (
-                  <button className="btn btn-ghost" style={{ fontSize:14, padding:'8px 16px' }} onClick={()=>mealPhotoRef.current?.click()}>📷 Add meal photo</button>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button className="btn btn-ghost" style={{ fontSize:14, padding:'8px 16px' }} onClick={()=>mealPhotoRef.current?.click()}>📁 Upload Photo</button>
+                    <button className="btn btn-ghost" style={{ fontSize:14, padding:'8px 16px' }} onClick={()=>mealCameraRef.current?.click()}>📷 Take Photo</button>
+                  </div>
                 )}
-                <input ref={mealPhotoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>e.target.files[0]&&addMealPhoto(e.target.files[0])}/>
+                <input ref={mealPhotoRef}   type="file" accept="image/*"                   style={{ display:'none' }} onChange={e=>e.target.files[0]&&addMealPhoto(e.target.files[0])}/>
+                <input ref={mealCameraRef}  type="file" accept="image/*" capture="environment" style={{ display:'none' }} onChange={e=>e.target.files[0]&&addMealPhoto(e.target.files[0])}/>
               </div>
               <div style={{ display:'flex', gap:8 }}>
                 <button className="btn btn-gold" onClick={logMeal}>Log meal</button>
@@ -4138,7 +4201,8 @@ function Documents({ data, upd }) {
   const [note,setNote]=useState('');
   const [drag,setDrag]=useState(false);
   const [viewDoc,setViewDoc]=useState(null);
-  const fileRef=useRef();
+  const fileRef      = useRef();
+  const docCameraRef = useRef();
   const ACCEPTED='.pdf,.png,.jpg,.jpeg,.heic,.heif';
   const process=file=>{
     if(!file) return;
@@ -4181,10 +4245,14 @@ function Documents({ data, upd }) {
       <div className="glass-card-static" style={{ padding:22,marginBottom:20 }}>
         <div onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);[...e.dataTransfer.files].forEach(process);}} style={{ border:`2px dashed ${drag?'#C9A84C':'rgba(42,92,173,.28)'}`,borderRadius:14,padding:'26px 18px',textAlign:'center',marginBottom:16,transition:'all .2s',background:drag?'rgba(201,168,76,.04)':'transparent',cursor:'pointer' }} onClick={()=>fileRef.current?.click()}>
           <div style={{ fontSize:28,marginBottom:8,opacity:.45 }}>📎</div>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif",fontSize:17,color:'#C9A84C',marginBottom:3 }}>Drag & drop files here</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif",fontSize:17,color:'#C9A84C',marginBottom:3 }}>Drag & drop files here</div>
           <div style={{ fontSize:16,color:'rgba(240,232,255,.28)',marginBottom:13 }}>PDF, PNG, JPG, HEIC supported</div>
-          <button className="btn btn-gold" onClick={e=>{e.stopPropagation();fileRef.current?.click();}} style={{ fontSize:13 }}>Browse files</button>
-          <input ref={fileRef} type="file" multiple accept={ACCEPTED} style={{ display:'none' }} onChange={e=>[...e.target.files].forEach(process)}/>
+          <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }} onClick={e=>e.stopPropagation()}>
+            <button className="btn btn-gold" onClick={()=>fileRef.current?.click()} style={{ fontSize:13 }}>📁 Browse files</button>
+            <button className="btn btn-ghost" onClick={()=>docCameraRef.current?.click()} style={{ fontSize:13 }}>📷 Take Photo</button>
+          </div>
+          <input ref={fileRef}       type="file" multiple accept={ACCEPTED} style={{ display:'none' }} onChange={e=>[...e.target.files].forEach(process)}/>
+          <input ref={docCameraRef}  type="file" accept="image/*" capture="environment" style={{ display:'none' }} onChange={e=>[...e.target.files].forEach(process)}/>
         </div>
         <div className="two-col">
           <div><label>Document type</label><select className="field" value={dtype} onChange={e=>setDtype(e.target.value)}>{['','Lab Results','Imaging / X-Ray','Prescription','Doctor Notes','Insurance','Referral','Procedure Report','Biopsy Results','Surgery Notes','Other'].map(x=><option key={x} value={x}>{x||'Select type…'}</option>)}</select></div>
@@ -5594,6 +5662,23 @@ const LIBRARY_SHELVES = [
     ],
   },
   {
+    id: 'sjogrens',
+    label: "Sjogren's & Neurological Research",
+    color: '#0A1E3A',
+    accent: '#4A90D9',
+    glow: 'rgba(74,144,217,.55)',
+    spine: 'linear-gradient(160deg,#0D2A55 0%,#1A4080 40%,#0A1E40 100%)',
+    books: [
+      { title:"Sjogren's Research Hub",  subtitle:'Johns Hopkins — Latest Research',        url:'https://www.hopkinssjogrens.org/research/',                                                              emoji:'🔬' },
+      { title:'Clinical Trials Finder',  subtitle:"Sjogren's Foundation — Open Trials",    url:'https://sjogrens.org/treatment-and-care/find-a-sjogrens-clinical-trial',                               emoji:'🏥' },
+      { title:'Eye Disease Advances',    subtitle:"Boston Sight — Sjogren's Treatment",    url:'https://www.bostonsight.org/the-latest-research-and-advances-in-sjogrens-syndrome-treatment/',         emoji:'👁️' },
+      { title:'UW Madison Trial',        subtitle:"Treating Sjogren's — Clinical Study",   url:'https://www.med.wisc.edu/news/trial-treats-sjogrens-disease-patient/',                                  emoji:'🧪' },
+      { title:"Nature: Sjogren's",       subtitle:'Peer-Reviewed Research Index',          url:'https://www.nature.com/subjects/sjogrens-disease',                                                       emoji:'🌿' },
+      { title:"Sjogren's — NIH Guide",   subtitle:'NCBI Books — Full Medical Overview',    url:'https://www.ncbi.nlm.nih.gov/books/NBK538281/',                                                          emoji:'📖' },
+      { title:'Occipital Neuralgia',     subtitle:'AANS — Conditions & Treatments',        url:'https://www.aans.org/patients/conditions-treatments/occipital-neuralgia/',                               emoji:'🧠' },
+    ],
+  },
+  {
     id: 'vision',
     label: 'Vision, Light & Accessibility',
     color: '#1A1200',
@@ -5617,13 +5702,7 @@ function ResearchLibrary() {
   const [bookAnim, setBookAnim] = React.useState(null);
   const [hoveredBook, setHoveredBook] = React.useState(null);
   const [tooltipInfo, setTooltipInfo] = React.useState(null); // {x,y,book,shelf}
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
-
-  React.useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
+  // isMobile removed — bookshelf now renders on all screen sizes
 
   // ── History management ────────────────────────────────────────
   React.useEffect(() => {
@@ -5672,8 +5751,8 @@ function ResearchLibrary() {
   const activeShelf = bookAnim ? LIBRARY_SHELVES.find(s => s.id === bookAnim.shelfId) : null;
   const activeBook  = activeShelf ? activeShelf.books[bookAnim.bookIdx] : null;
 
-  // ── Card grid: mobile (any theme) or light mode ──────────────
-  if (isMobile || !isDark) {
+  // ── Card grid: light mode only (mobile now uses full bookshelf) ──
+  if (!isDark) {
     return (
       <div>
         <PH emoji="📚" title="Lazuli Library" sub="Curated medical research — tap any card to open the source" />
@@ -5703,7 +5782,7 @@ function ResearchLibrary() {
                   onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
                 >
                   <div style={{ fontSize: 22, marginBottom: 6 }}>{book.emoji}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? 'rgba(224,204,164,.95)' : '#1A1A1A', marginBottom: 3, fontFamily: "'Cormorant Garamond',serif", lineHeight: 1.3 }}>{book.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? 'rgba(224,204,164,.95)' : '#1A1A1A', marginBottom: 3, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.3 }}>{book.title}</div>
                   <div style={{ fontSize: 11, color: isDark ? 'rgba(168,196,240,.6)' : '#6B6B8A', lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>{book.subtitle}</div>
                   <div style={{ marginTop: 8, fontSize: 11, color: '#D4A843', fontWeight: 600 }}>Open →</div>
                 </a>
