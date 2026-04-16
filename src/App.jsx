@@ -1683,6 +1683,37 @@ const GLOBAL_CSS = `
       .sidebar{padding-bottom:env(safe-area-inset-bottom)}
     }
   }
+  /* ── AI Advocate — full-screen chat on mobile ── */
+  @media(max-width:768px){
+    .ai-chat-page {
+      /* Escape page-inner padding to go edge-to-edge */
+      margin: -68px -13px -80px !important;
+      height: calc(100dvh - 68px) !important;
+      min-height: 0 !important;
+      gap: 0 !important;
+      border-radius: 0;
+    }
+    .ai-chat-header {
+      padding: 14px 14px 10px !important;
+      gap: 6px !important;
+    }
+    .ai-chat-header .ai-header-title { font-size:20px !important; }
+    .ai-chat-header .ai-header-sub   { display:none !important; }
+    .ai-chat-header .ai-header-btns  { gap:6px !important; }
+    .ai-chat-header .ai-header-btns button { padding:7px 10px !important; font-size:13px !important; }
+    .ai-gel-shell {
+      border-radius: 0 !important;
+      border-left: none !important;
+      border-right: none !important;
+      border-bottom: none !important;
+    }
+    .ai-gel-shell .ai-messages { padding: 12px 12px !important; gap: 10px !important; }
+    .ai-gel-shell .ai-messages .bubble { max-width:88% !important; font-size:15px !important; }
+    .ai-input-area { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) !important; }
+    .ai-input-area textarea { font-size:16px !important; }  /* prevent iOS zoom */
+    .ai-hint { display:none !important; }
+    .ai-status-bar { padding: 8px 14px !important; margin: 0 !important; border-radius:0 !important; }
+  }
   /* Stop aurora/floating animations from causing repaints on mobile */
   @media(max-width:768px){
     .aurora-orb,.float-sym,.float-quote{display:none !important}
@@ -5285,14 +5316,14 @@ function Advocate({ data, user }) {
   if (!user) return <GuestAIWall feature="💙 AI Advocate" />;
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:16, height:'calc(100vh - 120px)', minHeight:500 }}>
+    <div className="ai-chat-page" style={{ display:'flex', flexDirection:'column', gap:16, height:'calc(100vh - 120px)', minHeight:500 }}>
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10, flexShrink:0 }}>
+      <div className="ai-chat-header" style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10, flexShrink:0 }}>
         <div>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 AI Advocate</div>
-          <div style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
+          <div className="ai-header-title" style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>💙 AI Advocate</div>
+          <div className="ai-header-sub" style={{ fontSize:15, color:'rgba(240,232,255,.45)' }}>Your personal health advocate — named for the ancient healing stone</div>
         </div>
-        <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
+        <div className="ai-header-btns" style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
           <button onClick={()=>{ setVoiceCallActive(v=>!v); if(voiceCallActive){ window.speechSynthesis?.cancel(); setVoiceSpeaking(false); }}} style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer', border:`1.5px solid ${voiceCallActive?'rgba(110,231,183,.5)':'rgba(42,92,173,.35)'}`, background:voiceCallActive?'rgba(110,231,183,.12)':'rgba(42,92,173,.08)', color:voiceCallActive?'#6ee7b7':'rgba(168,196,240,.7)', fontFamily:"'DM Sans',sans-serif", transition:'all .2s' }}>
             {voiceCallActive ? '📞 On Call' : '📞 Call Lazuli'}
           </button>
@@ -5304,15 +5335,15 @@ function Advocate({ data, user }) {
         </div>
       </div>
 
-      {/* Status pills — subtle, not alarming */}
-      {limitHit && <div style={{ padding:'10px 14px', background:'rgba(201,168,76,.06)', border:'1px solid rgba(201,168,76,.18)', borderRadius:12, fontSize:14, color:'rgba(201,168,76,.75)', lineHeight:1.6, flexShrink:0, display:'flex', gap:8, alignItems:'center' }}>💙 <span>Daily credits used — limit resets at midnight.</span></div>}
+      {/* Status pills */}
+      {limitHit && <div className="ai-status-bar" style={{ padding:'10px 14px', background:'rgba(201,168,76,.06)', border:'1px solid rgba(201,168,76,.18)', borderRadius:12, fontSize:14, color:'rgba(201,168,76,.75)', lineHeight:1.6, flexShrink:0, display:'flex', gap:8, alignItems:'center' }}>💙 <span>Daily credits used — limit resets at midnight.</span></div>}
       {!limitHit && dailyCount>0 && <div style={{ fontSize:12, color:'rgba(240,232,255,.18)', textAlign:'right', flexShrink:0 }}>{dailyCount} msgs today</div>}
-      {error && !limitHit && <div style={{ padding:'10px 14px', background:'rgba(255,80,80,.07)', border:'1px solid rgba(255,80,80,.25)', borderRadius:10, fontSize:13, color:'rgba(255,160,160,.85)', lineHeight:1.6, flexShrink:0 }}>
+      {error && !limitHit && <div className="ai-status-bar" style={{ padding:'10px 14px', background:'rgba(255,80,80,.07)', border:'1px solid rgba(255,80,80,.25)', borderRadius:10, fontSize:13, color:'rgba(255,160,160,.85)', lineHeight:1.6, flexShrink:0 }}>
         ⚠ {error}
       </div>}
 
-      {/* GEL PC SHELL */}
-      <div style={{ flex:1, position:'relative', background:'rgba(4,12,38,.88)', backdropFilter:'blur(32px) saturate(1.4)', borderRadius:24, border:'1.5px solid rgba(42,92,173,.4)', boxShadow:'0 0 60px rgba(42,92,173,.12),0 20px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(168,196,240,.1)', overflow:'hidden', display:'flex', flexDirection:'column', minHeight:0 }}>
+      {/* GEL SHELL */}
+      <div className="ai-gel-shell" style={{ flex:1, position:'relative', background:'rgba(4,12,38,.88)', backdropFilter:'blur(32px) saturate(1.4)', borderRadius:24, border:'1.5px solid rgba(42,92,173,.4)', boxShadow:'0 0 60px rgba(42,92,173,.12),0 20px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(168,196,240,.1)', overflow:'hidden', display:'flex', flexDirection:'column', minHeight:0 }}>
         {/* Screen glow - mimics monitor light */}
         <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 0%,rgba(42,92,173,.08) 0%,transparent 60%)', pointerEvents:'none', zIndex:0 }}/>
         <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'30%', background:'linear-gradient(0deg,rgba(42,92,173,.04) 0%,transparent 100%)', pointerEvents:'none', zIndex:0 }}/>
@@ -5331,7 +5362,7 @@ function Advocate({ data, user }) {
         </div>
 
         {/* Messages */}
-        <div style={{ flex:1, overflowY:'auto', padding:'18px 22px', position:'relative', zIndex:2, display:'flex', flexDirection:'column', gap:13, minHeight:0 }}>
+        <div className="ai-messages" style={{ flex:1, overflowY:'auto', padding:'18px 22px', position:'relative', zIndex:2, display:'flex', flexDirection:'column', gap:13, minHeight:0 }}>
           {msgs.length===0 && (
             <div style={{ flex:1, display:'flex', flexDirection:'column', justifyContent:'center' }}>
               <div style={{ textAlign:'center', marginBottom:22 }}>
@@ -5355,7 +5386,7 @@ function Advocate({ data, user }) {
           {msgs.map((m,i)=>(
             <div key={i} style={{ display:'flex', justifyContent:m.role==='user'?'flex-end':'flex-start', alignItems:'flex-end', gap:8 }}>
               {m.role==='assistant' && <div style={{ width:30, height:30, borderRadius:'50%', flexShrink:0, overflow:'hidden', boxShadow:'0 0 12px rgba(42,92,173,.5)', marginBottom:2 }}><LogoImg size={30}/></div>}
-              <div style={{ maxWidth:'75%', padding:'12px 16px', borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px', background:m.role==='user'?'linear-gradient(135deg,rgba(42,92,173,.3),rgba(201,168,76,.12))':'rgba(255,255,255,.05)', color:m.role==='user'?'#F0E8FF':'rgba(240,232,255,.85)', fontSize:17, lineHeight:1.8, border:m.role==='assistant'?'1px solid rgba(42,92,173,.18)':'1px solid rgba(201,168,76,.2)', backdropFilter:'blur(10px)', whiteSpace:'pre-wrap' }}>
+              <div className="bubble" style={{ maxWidth:'75%', padding:'12px 16px', borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px', background:m.role==='user'?'linear-gradient(135deg,rgba(42,92,173,.3),rgba(201,168,76,.12))':'rgba(255,255,255,.05)', color:m.role==='user'?'#F0E8FF':'rgba(240,232,255,.85)', fontSize:17, lineHeight:1.8, border:m.role==='assistant'?'1px solid rgba(42,92,173,.18)':'1px solid rgba(201,168,76,.2)', backdropFilter:'blur(10px)', whiteSpace:'pre-wrap' }}>
                 {m.content}
               </div>
             </div>
@@ -5372,7 +5403,7 @@ function Advocate({ data, user }) {
         </div>
 
         {/* Input area */}
-        <div style={{ position:'relative', zIndex:2, padding:'12px 16px 14px', borderTop:'1px solid rgba(42,92,173,.12)', background:'rgba(0,0,0,.25)', backdropFilter:'blur(12px)', flexShrink:0 }}>
+        <div className="ai-input-area" style={{ position:'relative', zIndex:2, padding:'12px 16px 14px', borderTop:'1px solid rgba(42,92,173,.12)', background:'rgba(0,0,0,.25)', backdropFilter:'blur(12px)', flexShrink:0 }}>
           {/* Voice Call bar */}
           {voiceCallActive && (
             <div style={{ margin:'0 0 10px', padding:'14px 20px', background:'linear-gradient(135deg,rgba(42,92,173,.25),rgba(123,47,190,.15))', border:'1.5px solid rgba(42,92,173,.5)', borderRadius:16, display:'flex', gap:14, alignItems:'center' }}>
@@ -5393,7 +5424,7 @@ function Advocate({ data, user }) {
             <textarea ref={inputRef} style={{ flex:1, border:'none', background:'transparent', color:'#F0E8FF', fontFamily:"'DM Sans',sans-serif", fontSize:17, lineHeight:1.55, resize:'none', outline:'none', minHeight:24, maxHeight:120, caretColor:'#C9A84C', padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
             <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end', padding:'8px 18px', fontSize:15, opacity:loading||!input.trim()||limitHit?.35:1, flexShrink:0 }}>Send</button>
           </div>
-          <div style={{ display:'flex', justifyContent:'space-between', marginTop:6, alignItems:'center', paddingLeft:4 }}>
+          <div className="ai-hint" style={{ display:'flex', justifyContent:'space-between', marginTop:6, alignItems:'center', paddingLeft:4 }}>
             <div style={{ fontSize:13, color:'rgba(240,232,255,.15)' }}>Enter to send · Shift+Enter new line</div>
             {msgs.length>0 && <button onClick={handleShare} style={{ fontSize:13, color:'rgba(201,168,76,.45)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
           </div>
