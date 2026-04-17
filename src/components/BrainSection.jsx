@@ -3,13 +3,27 @@ import { todayStr, fmtDate } from "../utils/helpers";
 
 // ─── Brain regions ─────────────────────────────────────────────
 const BRAIN_REGIONS = [
-  { id:'frontal',        label:'Frontal Lobe',    desc:'Decision-making, personality, focus, mood regulation',  cx:58,  cy:80,  d:'M100,22 C78,20 56,26 40,40 C26,52 18,68 18,86 C18,100 24,112 34,120 L54,126 L100,128 Z' },
-  { id:'parietal',       label:'Parietal Lobe',   desc:'Sensation, spatial awareness, processing touch',        cx:146, cy:82,  d:'M100,22 L162,22 C176,34 182,52 180,72 C178,90 170,106 158,118 L134,126 L100,128 Z' },
-  { id:'temporal_left',  label:'Left Temporal',   desc:'Language, memory, hearing',                             cx:36,  cy:138, d:'M18,86 C14,100 14,116 18,130 C22,148 32,162 48,170 L76,162 L54,126 L34,120 Z' },
-  { id:'temporal_right', label:'Right Temporal',  desc:'Music, faces, emotional memory',                        cx:160, cy:146, d:'M158,118 L134,126 L122,162 L150,172 C166,166 176,152 180,134 C182,118 178,106 172,98 Z' },
-  { id:'occipital',      label:'Occipital Lobe',  desc:'Vision and visual processing',                          cx:100, cy:174, d:'M76,162 C80,176 88,186 100,190 C112,186 120,176 124,162 L122,162 L100,128 L76,162 Z' },
-  { id:'cerebellum',     label:'Cerebellum',      desc:'Balance, coordination, fine motor control',             cx:100, cy:200, d:'M48,170 C52,188 62,202 78,208 C88,214 100,214 112,212 C126,210 138,200 150,188 C155,180 158,172 156,164 L150,172 L124,162 L100,190 C88,186 80,176 76,162 L48,170 Z' },
-  { id:'brainstem',      label:'Brain Stem',      desc:'Vital functions: breathing, heart rate, alertness',     cx:100, cy:228, d:'M88,212 Q100,216 112,212 L116,234 Q108,244 100,244 Q92,244 84,234 Z' },
+  { id:'frontal',        label:'Frontal Lobe',    desc:'Decision-making, personality, focus, mood regulation',
+    cx:65,  cy:72,
+    d:'M100,18 C80,16 60,24 48,40 C38,54 34,70 36,86 C38,96 42,104 50,112 L64,118 L100,120 Z' },
+  { id:'parietal',       label:'Parietal Lobe',   desc:'Sensation, spatial awareness, processing touch',
+    cx:138, cy:72,
+    d:'M100,18 L152,20 C164,30 170,48 168,68 C166,86 158,102 148,112 L130,118 L100,120 Z' },
+  { id:'temporal_left',  label:'Left Temporal',   desc:'Language, memory, hearing',
+    cx:38,  cy:136,
+    d:'M36,86 C32,100 30,116 34,130 C38,148 48,160 64,166 L88,158 L64,118 L50,112 Z' },
+  { id:'temporal_right', label:'Right Temporal',  desc:'Music, faces, emotional memory',
+    cx:162, cy:140,
+    d:'M148,112 L130,118 L116,158 L140,166 C158,160 168,146 170,128 C172,112 168,100 162,90 Z' },
+  { id:'occipital',      label:'Occipital Lobe',  desc:'Vision and visual processing',
+    cx:100, cy:166,
+    d:'M88,158 C90,172 94,182 100,186 C106,182 110,172 114,158 L116,158 L100,120 L88,158 Z' },
+  { id:'cerebellum',     label:'Cerebellum',      desc:'Balance, coordination, fine motor control',
+    cx:100, cy:200,
+    d:'M64,166 C68,182 76,196 90,202 C96,206 100,206 104,204 C116,200 126,190 138,180 C144,172 148,162 146,154 L140,166 L114,158 L100,186 C94,182 90,172 88,158 L64,166 Z' },
+  { id:'brainstem',      label:'Brain Stem',      desc:'Vital functions: breathing, heart rate, alertness',
+    cx:100, cy:222,
+    d:'M92,204 Q100,208 108,204 L112,226 Q104,236 100,236 Q96,236 88,226 Z' },
 ];
 
 // ─── 24 neurological symptoms, no emojis ──────────────────────
@@ -49,9 +63,9 @@ const BRAIN_SYMPTOMS = [
 
 // ─── Sparkle node positions ────────────────────────────────────
 const BRAIN_NODES = [
-  { x:100, y:22, r:2.5 }, { x:18, y:86, r:2.0 }, { x:182, y:72, r:2.0 },
-  { x:100, y:128, r:2.2 }, { x:48, y:170, r:1.8 }, { x:152, y:172, r:1.8 },
-  { x:100, y:190, r:2.2 }, { x:100, y:244, r:1.8 },
+  { x:100, y:18, r:2.5 }, { x:36, y:86, r:2.0 }, { x:168, y:68, r:2.0 },
+  { x:100, y:120, r:2.2 }, { x:64, y:166, r:1.8 }, { x:140, y:166, r:1.8 },
+  { x:100, y:186, r:2.2 }, { x:100, y:236, r:1.8 },
 ];
 
 // ─── All CSS animations for symptom overlays ───────────────────
@@ -215,6 +229,14 @@ function BrainSVG({ selectedRegions, activeSymptoms, onToggle }) {
 
         {/* Black base */}
         <rect x="0" y="0" width="200" height="256" fill="#000"/>
+
+        {/* Human head silhouette */}
+        <path
+          d="M100,8 C82,8 66,16 56,30 C46,44 42,60 44,76 C40,80 34,84 32,92 C30,100 34,106 40,106 C42,112 44,118 48,124 L52,130 C55,145 60,158 68,165 L76,170 L80,196 Q84,208 100,212 Q116,208 120,196 L124,170 L132,165 C140,158 145,145 148,130 L152,124 C156,118 158,112 160,106 C166,106 170,100 168,92 C166,84 160,80 156,76 C158,60 154,44 144,30 C134,16 118,8 100,8 Z"
+          fill="rgba(10,16,32,.75)"
+          stroke="rgba(201,168,76,.3)"
+          strokeWidth="1"
+        />
 
         {/* Brain lobe underlay */}
         <g opacity="0.45">
