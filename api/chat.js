@@ -46,6 +46,47 @@ const GEMINI_MODELS = [
   'gemini-1.5-flash',
 ];
 
+// Vision-capable models for image analysis
+const GROQ_VISION_MODELS = [
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'llama-3.2-90b-vision-preview',
+  'llama-3.2-11b-vision-preview',
+];
+const GEMINI_VISION_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+];
+
+function hasImageContent(messages) {
+  return messages.some(m =>
+    Array.isArray(m.content) &&
+    m.content.some(p => p.type === 'image_url')
+  );
+}
+
+// Convert a message's content for Gemini vision format
+function toGeminiParts(content) {
+  if (typeof content === 'string') return [{ text: content }];
+  return content.map(p => {
+    if (p.type === 'text') return { text: p.text };
+    if (p.type === 'image_url') {
+      const url = p.image_url?.url || '';
+      // data:image/jpeg;base64,XXXX
+      const match = url.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) return { inlineData: { mimeType: match[1], data: match[2] } };
+    }
+    return { text: '' };
+  });
+}
+
+const VISION_SYSTEM = `You are Lazuli, a compassionate AI health companion. When analyzing medical images (skin rashes, wounds, lesions, infections, bruises, swelling), observe carefully and describe:
+• What you see: colors, patterns, texture, borders, spread
+• Characteristics that may be clinically relevant
+• Possible categories (e.g. contact dermatitis, fungal, bacterial — without diagnosing)
+• Whether it appears to be changing or acute
+Always end with a clear reminder to seek in-person medical evaluation. Never provide a definitive diagnosis. Be warm, thorough, and supportive.`;
+
 // ── Firestore REST helpers ────────────────────────────────────
 function fsBase() {
   const pid = process.env.FIREBASE_PROJECT_ID || 'advyhealth';
@@ -147,6 +188,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
 
+  // Allow larger payloads for image uploads (up to 8MB)
+  // Vercel handles this via vercel.json bodyParser config — no action needed here
+
   const body = req.body || {};
 
   if (body.action === 'user_signup') {
@@ -200,12 +244,18 @@ export default async function handler(req, res) {
   let lastError = 'AI unavailable';
 
   // ── 1. Try Groq first (free, fast, reliable) ─────────────────
+  const isVision = hasImageContent(messages);
   if (groqKey) {
     const groqMessages = [];
-    if (system) groqMessages.push({ role: 'system', content: String(system) });
-    groqMessages.push(...messages.map(m => ({ role: m.role, content: String(m.content || '') })));
+    const sysPrompt = isVision ? VISION_SYSTEM : system;
+    if (sysPrompt) groqMessages.push({ role: 'system', content: String(sysPrompt) });
+    groqMessages.push(...messages.map(m => ({
+      role: m.role,
+      content: Array.isArray(m.content) ? m.content : String(m.content || ''),
+    })));
 
-    for (const model of GROQ_MODELS) {
+    const modelsToTry = isVision ? GROQ_VISION_MODELS : GROQ_MODELS;
+    for (const model of modelsToTry) {
       try {
         const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -247,13 +297,15 @@ export default async function handler(req, res) {
     const geminiBody = {
       contents: messages.map(m => ({
         role:  m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: String(m.content || '') }],
+        parts: toGeminiParts(m.content),
       })),
       generationConfig: { maxOutputTokens: 1400, temperature: 0.72 },
     };
-    if (system) geminiBody.system_instruction = { parts: [{ text: String(system) }] };
+    const gemSys = isVision ? VISION_SYSTEM : system;
+    if (gemSys) geminiBody.system_instruction = { parts: [{ text: String(gemSys) }] };
 
-    for (const model of GEMINI_MODELS) {
+    const geminiModels = isVision ? GEMINI_VISION_MODELS : GEMINI_MODELS;
+    for (const model of geminiModels) {
       try {
         const upstream = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,

@@ -5607,6 +5607,8 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
   const [creditsLeft,setCreditsLeft] = useState(null);
   const [voiceCallActive, setVoiceCallActive] = useState(false);
   const [voiceSpeaking, setVoiceSpeaking]     = useState(false);
+  const [photoAttach, setPhotoAttach] = useState(null); // {name, data (dataURL), type}
+  const photoInputRef = useRef();
   const [historyOpen, setHistoryOpen]         = useState(false);
   const [activeConvId, setActiveConvId]       = useState(null);
   const bottomRef = useRef();
@@ -5645,11 +5647,36 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
     window.speechSynthesis.speak(utt);
   };
 
+  const attachPhoto = (file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 512;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+      else        { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataURL = canvas.toDataURL('image/jpeg', 0.65);
+      setPhotoAttach({ name: file.name, data: dataURL, type: 'image/jpeg' });
+    };
+    img.src = URL.createObjectURL(file);
+  };
+
   const send = async (txt) => {
     const q = (txt||input).trim();
     if (!q || loading || limitHit) return;
     setInput(''); setError('');
-    const newMsgs = [...msgs, {role:'user', content:q}];
+    // Build user message — multimodal if photo is attached
+    const userContent = photoAttach
+      ? [
+          { type: 'text', text: q },
+          { type: 'image_url', image_url: { url: photoAttach.data } },
+        ]
+      : q;
+    const newMsgs = [...msgs, { role: 'user', content: userContent, photoPreview: photoAttach?.data }];
+    setPhotoAttach(null); // clear after attaching
     setMsgs(newMsgs); setLoading(true); setAiTyping(false);
     try {
       const res = await fetch('/api/chat', {
@@ -5835,7 +5862,10 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
             <div key={i} style={{ display:'flex', justifyContent:m.role==='user'?'flex-end':'flex-start', alignItems:'flex-end', gap:8 }}>
               {m.role==='assistant' && <div style={{ width:30, height:30, borderRadius:'50%', flexShrink:0, overflow:'hidden', boxShadow:'0 0 12px rgba(42,92,173,.5)', marginBottom:2 }}><LogoImg size={30}/></div>}
               <div className="bubble" style={{ maxWidth:'75%', padding:'12px 16px', borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px', background:m.role==='user'?'linear-gradient(135deg,rgba(42,92,173,.5),rgba(201,168,76,.2))':'#001422', color:m.role==='user'?'#F0E8FF':'rgba(240,232,255,.85)', fontSize:17, lineHeight:1.8, border:m.role==='assistant'?'1px solid rgba(212,175,55,.35)':'1px solid rgba(201,168,76,.3)', whiteSpace:'pre-wrap', boxShadow:'inset 0 1px 0 rgba(255,255,255,.08)' }}>
-                {m.content}
+                {m.photoPreview && (
+                  <img src={m.photoPreview} alt="Attached" style={{ display:'block', maxWidth:'100%', maxHeight:200, borderRadius:8, marginBottom:8, objectFit:'cover' }}/>
+                )}
+                {Array.isArray(m.content) ? m.content.find(p=>p.type==='text')?.text || '' : m.content}
               </div>
             </div>
           ))}
@@ -5868,12 +5898,36 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
               <button onClick={()=>{ setVoiceCallActive(false); window.speechSynthesis?.cancel(); setVoiceSpeaking(false); }} style={{ padding:'7px 14px', borderRadius:20, background:'rgba(248,113,113,.15)', border:'1.5px solid rgba(248,113,113,.4)', color:'#f87171', fontSize:14, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>End Call</button>
             </div>
           )}
+          {/* Hidden file input */}
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display:'none' }}
+            onChange={e => { attachPhoto(e.target.files?.[0]); e.target.value=''; }}
+          />
+          {/* Photo preview */}
+          {photoAttach && (
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', marginBottom:8, background:'rgba(42,92,173,.1)', borderRadius:10, border:'1px solid rgba(42,92,173,.25)' }}>
+              <img src={photoAttach.data} alt="Preview" style={{ width:48, height:48, borderRadius:6, objectFit:'cover', border:'1px solid rgba(201,168,76,.3)' }}/>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12, color:'rgba(201,168,76,.8)', fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{photoAttach.name}</div>
+                <div style={{ fontSize:11, color:'rgba(168,196,240,.5)' }}>Ready to analyze</div>
+              </div>
+              <button onClick={()=>setPhotoAttach(null)} style={{ padding:'4px 8px', borderRadius:6, background:'transparent', border:'1px solid rgba(248,113,113,.3)', color:'rgba(248,113,113,.6)', fontSize:12, cursor:'pointer' }}>✕</button>
+            </div>
+          )}
           <div style={{ display:'flex', gap:8, alignItems:'flex-end', background:'rgba(4,16,52,.8)', borderRadius:14, padding:'10px 10px 10px 16px', border:'1px solid rgba(42,92,173,.3)', boxShadow:'inset 0 1px 0 rgba(168,196,240,.06)' }}>
             <textarea ref={inputRef} style={{ flex:1, border:'none', background:'transparent', color:'#F0E8FF', fontFamily:"'DM Sans',sans-serif", fontSize:17, lineHeight:1.55, resize:'none', outline:'none', minHeight:24, maxHeight:120, caretColor:'#C9A84C', padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              title="Attach photo for analysis"
+              style={{ alignSelf:'flex-end', padding:'8px 10px', borderRadius:10, background: photoAttach ? 'rgba(201,168,76,.15)' : 'rgba(42,92,173,.08)', border: photoAttach ? '1.5px solid rgba(201,168,76,.5)' : '1px solid rgba(42,92,173,.25)', color: photoAttach ? '#C9A84C' : 'rgba(168,196,240,.5)', fontSize:18, cursor:'pointer', lineHeight:1, flexShrink:0, transition:'all .2s' }}
+            >📷</button>
             <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end', padding:'8px 18px', fontSize:15, opacity:loading||!input.trim()||limitHit?.35:1, flexShrink:0 }}>Send</button>
           </div>
           <div className="ai-hint" style={{ display:'flex', justifyContent:'space-between', marginTop:6, alignItems:'center', paddingLeft:4 }}>
-            <div style={{ fontSize:13, color:'rgba(240,232,255,.15)' }}>Enter to send · Shift+Enter new line</div>
+            <div style={{ fontSize:13, color:'rgba(240,232,255,.15)' }}>Enter to send · Shift+Enter new line · 📷 attach photo for AI analysis</div>
             {msgs.length>0 && <button onClick={handleShare} style={{ fontSize:13, color:'rgba(201,168,76,.45)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
           </div>
         </div>
