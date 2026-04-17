@@ -1065,9 +1065,9 @@ function AnimatedBackground() {
         }}>{q.text}</div>
       ))}
       {/* DNA helix strands floating in background */}
-      <DNAHelixCanvas/>
+      {typeof window !== 'undefined' && window.innerWidth > 768 && <DNAHelixCanvas/>}
       {/* Biometric pulse — living lapis & gold particles reacting to mouse */}
-      <BiometricPulseCanvas/>
+      {typeof window !== 'undefined' && window.innerWidth > 768 && <BiometricPulseCanvas/>}
       {/* (constellations removed) */}
       <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', display:'none' }} xmlns="http://www.w3.org/2000/svg">
         <defs/>
@@ -1196,7 +1196,7 @@ const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;1,400;1,600&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
   html{font-size:20px}
-  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none;overscroll-behavior:contain}
+  body{font-size:20px;line-height:1.7;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none;overscroll-behavior:contain;background:linear-gradient(160deg, #020818 0%, #030B1A 40%, #040C14 70%, #050A0F 100%)}
   button,input,select,textarea{font-family:'DM Sans',sans-serif;font-size:18px}
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:var(--lz-border-lapis);border-radius:4px}
@@ -1696,7 +1696,7 @@ const GLOBAL_CSS = `
   }
 
   @media(max-width:768px){
-    .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translate3d(-100%,0,0);z-index:200;overflow-y:scroll;-webkit-overflow-scrolling:touch;width:82vw;max-width:300px;will-change:transform;backface-visibility:hidden}
+    .sidebar{position:fixed;top:0;left:0;right:0;bottom:0;transform:translate3d(0,-100%,0);z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100vw;max-width:100vw;will-change:transform;backface-visibility:hidden;display:flex;flex-direction:column}
     .sidebar.open{transform:translate3d(0,0,0)}
     .mobile-overlay{z-index:199}
     .main-content{margin-left:0;min-height:0 !important;will-change:auto}
@@ -2092,21 +2092,37 @@ function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, se
           <div style={{ fontSize:13, color:'rgba(168,196,240,.88)', lineHeight:1.65, fontFamily:"'DM Sans',sans-serif", fontWeight:400, transition:'opacity .5s', position:'relative', zIndex:1 }}>{LAZULI_FACTS[factIdx]}</div>
         </div>
       </div>
-      <nav style={{ padding:'4px 8px', overflowY:'auto' }}>
+      <nav style={{ flex:1, padding:'12px 16px 20px', overflowY:'auto', display:'flex', flexDirection:'column', gap:6 }}>
+        {/* Full-screen mobile nav — all sections visible with large touch targets */}
         {NAV_GROUPS.map((group, gi) => (
-          <div key={gi}>
-            <div className="nav-group-label" style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.35)', textTransform:'uppercase', letterSpacing:1.8, padding:'10px 8px 4px', userSelect:'none' }}>{group.label}</div>
-            {group.items.map(n => {
-              const active = tab===n.id;
-              return (
-                <button key={n.id} onClick={()=>setTab(n.id)} className={`nav-item${active?' active':''}`} style={{ marginBottom:1 }}>
-                  {active && <div style={{ position:'absolute', left:0, top:'18%', bottom:'18%', width:3, background:'linear-gradient(180deg,#2A5CAD,#C9A84C)', borderRadius:'0 3px 3px 0' }}/>}
-                  <span style={{ fontSize:15, width:20, textAlign:'center', lineHeight:1, color:active?'var(--lz-text-gold)':'var(--lz-nav-icon)' }}>{n.icon}</span>
-                  <span style={{ flex:1, fontSize:14 }}>{n.label}</span>
-                  {active && <span style={{ width:4, height:4, borderRadius:'50%', background:'#C9A84C', boxShadow:'0 0 6px #C9A84C' }}/>}
-                </button>
-              );
-            })}
+          <div key={gi} style={{ marginBottom:8 }}>
+            <div style={{ fontSize:9, fontWeight:700, color:'rgba(201,168,76,.4)', textTransform:'uppercase', letterSpacing:2, padding:'6px 4px 8px', fontFamily:"'DM Sans',sans-serif" }}>
+              {group.label}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+              {group.items.map(n => {
+                const active = tab === n.id;
+                return (
+                  <button key={n.id} onClick={() => { setTab(n.id); setOpen(false); }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:10,
+                      padding:'14px 14px',
+                      borderRadius:14,
+                      border: `1.5px solid ${active ? 'rgba(201,168,76,.6)' : 'rgba(42,92,173,.25)'}`,
+                      background: active ? 'rgba(201,168,76,.12)' : 'rgba(4,16,52,.7)',
+                      color: active ? '#C9A84C' : 'rgba(168,196,240,.7)',
+                      fontSize:14, fontWeight: active ? 700 : 500,
+                      cursor:'pointer', fontFamily:"'DM Sans',sans-serif",
+                      textAlign:'left', transition:'all .18s',
+                      boxShadow: active ? '0 0 12px rgba(201,168,76,.2), inset 0 1px 0 rgba(255,255,255,.08)' : 'inset 0 1px 0 rgba(255,255,255,.04)',
+                    }}>
+                    <span style={{ fontSize:18, flexShrink:0, lineHeight:1 }}>{n.icon}</span>
+                    <span style={{ lineHeight:1.3, fontSize:13 }}>{n.label}</span>
+                    {active && <span style={{ marginLeft:'auto', width:5, height:5, borderRadius:'50%', background:'#C9A84C', flexShrink:0 }}/>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         ))}
       </nav>
@@ -4581,10 +4597,8 @@ const SOUNDSCAPES = [
   { id:'rain',      label:'Gentle Rain',        icon:'🌧', desc:'Soft rainfall — grounding and calming',           color:'#93c5fd', file:'/sounds/Rain ASMR.mp3' },
   { id:'rain2',     label:'Heavy Rain',         icon:'🌨', desc:'Deeper rainfall — total immersion',               color:'#60a5fa', file:'/sounds/Rain 2 ASMR.mp3' },
   { id:'lofi',      label:'Lofi Rain Ambience', icon:'🎵', desc:'Lazuli lo-fi music with rain — focus & calm',     color:'#a78bfa', file:'/sounds/Lazuli Lofi with Rain.mp3' },
-  { id:'ocean',     label:'Ocean Waves',        icon:'🌊', desc:'Rhythmic tides — nervous system reset',           color:'#60a5fa' },
   { id:'birds',     label:'Birds Chirping',     icon:'🐦', desc:'Morning birdsong — peaceful awakening',           color:'#6ee7b7', file:'/sounds/Birds Chirping ASMR.mp3' },
   { id:'river',     label:'River Flow',         icon:'💧', desc:'Flowing stream — calming and centering',          color:'#38bdf8', file:'/sounds/River Flow ASMR.mp3' },
-  { id:'whitenoise',label:'White Noise',        icon:'〰', desc:'Steady masking noise — focus and sleep',          color:'#a78bfa' },
   { id:'binaural40',label:'Gamma Binaural 40Hz',icon:'⚡', desc:'Focus & clarity — 40Hz gamma waves (headphones)', color:'#C9A84C' },
   { id:'binaural10',label:'Alpha Binaural 10Hz',icon:'🧠', desc:'Calm focus — 10Hz alpha waves (headphones)',      color:'#7B2FBE' },
   { id:'binaural4', label:'Theta Binaural 4Hz', icon:'💤', desc:'Deep rest — 4Hz theta waves (headphones)',        color:'#5B1F8E' },
@@ -4899,10 +4913,6 @@ function Mindfulness() {
         const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=900;f.Q.value=0.6;const g=ctx.createGain();g.gain.value=0.35;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
         const src2=mkNoise('pink');const f2=ctx.createBiquadFilter();f2.type='highpass';f2.frequency.value=3000;const g2=ctx.createGain();g2.gain.value=0.08;src2.connect(f2);f2.connect(g2);g2.connect(ctx.destination);src2.start();
         nodes.push(src,src2);
-      } else if (id==='ocean') {
-        const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=500;const g=ctx.createGain();g.gain.value=0.5;
-        const lfo=ctx.createOscillator();lfo.frequency.value=0.15;const lfoG=ctx.createGain();lfoG.gain.value=0.3;lfo.connect(lfoG);lfoG.connect(g.gain);lfo.start();
-        src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src,lfo);
       } else if (id==='forest') {
         const src=mkNoise('pink');const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2200;f.Q.value=0.4;const g=ctx.createGain();g.gain.value=0.2;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();nodes.push(src);
       } else if (id==='tibetan') {

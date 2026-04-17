@@ -87,7 +87,7 @@ function Corners({ w=200, h=510, len=16, pad=4, color='rgba(201,168,76,.4)' }) {
 }
 
 // ─── Main anatomical viewer ────────────────────────────────────
-function AnatomyViewer({ activeLayer, activeView, painData, selectedIds, onTap, zoomedId, onZoomChange, drillRegion, onDrillClose }) {
+function AnatomyViewer({ activeLayer, activeView, painData, selectedIds, onTap, drillRegion, onDrillClose }) {
   const layer = LAYERS.find(l => l.id === activeLayer);
 
   // Pick which hotspot set to show depending on layer
@@ -96,11 +96,8 @@ function AnatomyViewer({ activeLayer, activeView, painData, selectedIds, onTap, 
     activeLayer === 'organ'    ? ORGAN_HOTSPOTS    :
     activeLayer === 'nervous'  ? NERVE_HOTSPOTS    : [];
 
-  const zoomedRegion = SURFACE_REGIONS.find(r => r.id === zoomedId);
-  const svgScale  = zoomedRegion ? 2.8 : 1;
-  const svgOrigin = zoomedRegion
-    ? `${(zoomedRegion.cx/200)*100}% ${(zoomedRegion.cy/510)*100}%`
-    : '50% 50%';
+  const svgScale  = 1;
+  const svgOrigin = '50% 50%';
 
   const HOTSPOT_CSS = `
     @keyframes bmpulse   { 0%,100%{opacity:.45} 50%{opacity:1} }
@@ -178,9 +175,9 @@ function AnatomyViewer({ activeLayer, activeView, painData, selectedIds, onTap, 
           transform:`scale(${svgScale})`,
           transformOrigin: svgOrigin,
           transition:'transform .5s cubic-bezier(.22,1,.36,1)',
-          cursor: zoomedRegion ? 'zoom-out' : 'default',
+          cursor: 'default',
         }}
-        onClick={e => { if (e.currentTarget === e.target) { onZoomChange(null); onDrillClose(); } }}
+        onClick={e => { if (e.currentTarget === e.target) { onDrillClose(); } }}
       >
         <defs>
           <filter id="bmg"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -273,13 +270,12 @@ function AnatomyViewer({ activeLayer, activeView, painData, selectedIds, onTap, 
         {(activeLayer === 'skin' || activeLayer === 'muscle') && SURFACE_REGIONS.map(r => {
           const pain = painData[r.id];
           const isSel = selectedIds.includes(r.id);
-          const isZoomed = zoomedId === r.id;
           let cls = 'bm-surface';
           if (isSel) cls += ' sel';
           else if (pain) cls += pain.severity >= 7 ? ' severe' : ' mild';
           return (
             <g key={r.id} className={cls}
-              onClick={e => { e.stopPropagation(); onTap(r); onZoomChange(isZoomed ? null : r.id); }}>
+              onClick={e => { e.stopPropagation(); onTap(r); }}>
               <path d={r.d}/>
             </g>
           );
@@ -323,13 +319,7 @@ function AnatomyViewer({ activeLayer, activeView, painData, selectedIds, onTap, 
         </text>
       </svg>
 
-      {/* Zoom-out button */}
-      {zoomedRegion && (
-        <button onClick={() => onZoomChange(null)}
-          style={{ position:'absolute', top:8, right:8, zIndex:10, background:'rgba(0,0,0,.8)', border:'1px solid rgba(201,168,76,.4)', borderRadius:7, padding:'3px 9px', fontSize:10, color:'rgba(201,168,76,.85)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
-          ← Zoom out
-        </button>
-      )}
+
     </div>
   );
 }
@@ -424,7 +414,6 @@ export default function BodyMap({ data, upd }) {
   const [activeLayer, setActiveLayer] = useState('skin');
   const [activeView,  setActiveView]  = useState('front');
   const [selectedIds, setSelectedIds] = useState([]);
-  const [zoomedId,    setZoomedId]    = useState(null);
   const [drillRegion, setDrillRegion] = useState(null);
   const [editOpen,    setEditOpen]    = useState(false);
   const [form,        setForm]        = useState({ severity:5, types:[], notes:'' });
@@ -439,14 +428,12 @@ export default function BodyMap({ data, upd }) {
     if (!layer.views.includes(activeView)) {
       setActiveView(activeView === 'right' ? 'front' : activeView === 'left' ? 'front' : activeView);
     }
-    setZoomedId(null);
   }, [activeView]);
 
   const handleViewChange = useCallback((v) => {
     const layer = LAYERS.find(l => l.id === activeLayer);
     if (!layer.views.includes(v)) return;
     setActiveView(v);
-    setZoomedId(null);
   }, [activeLayer]);
 
   const handleTap = useCallback((region) => {
@@ -460,7 +447,6 @@ export default function BodyMap({ data, upd }) {
     const layer = LAYERS.find(l => l.id === lid);
     if (!layer.views.includes(activeView)) setActiveView('front');
     setDrillRegion(null);
-    setZoomedId(null);
   };
 
   const openEdit = () => {
@@ -473,17 +459,23 @@ export default function BodyMap({ data, upd }) {
   };
 
   const save = () => {
+    const timestamp = Date.now();
     const entries = selectedIds.map(id => ({
-      id, label: SURFACE_REGIONS.find(r => r.id === id)?.label || id,
-      severity: form.severity, types: form.types, notes: form.notes, date: todayStr(),
+      id: `${id}-${timestamp}`,
+      regionId: id,
+      label: SURFACE_REGIONS.find(r => r.id === id)?.label || id,
+      severity: form.severity, types: form.types, notes: form.notes,
+      date: todayStr(), timestamp,
     }));
-    upd('bodyMap', [...bodyMap.filter(e => !selectedIds.includes(e.id)), ...entries]);
-    setEditOpen(false); setSelectedIds([]); setZoomedId(null);
+    upd('bodyMap', [...bodyMap, ...entries]);
+    setEditOpen(false);
+    setSelectedIds([]);
+    setForm({ severity:5, types:[], notes:'' });
   };
 
   const clearSelected = () => {
     upd('bodyMap', bodyMap.filter(e => !selectedIds.includes(e.id)));
-    setEditOpen(false); setSelectedIds([]); setZoomedId(null);
+    setEditOpen(false); setSelectedIds([]);
   };
 
   const toggleType = t => setForm(f => ({
@@ -523,11 +515,9 @@ export default function BodyMap({ data, upd }) {
             <AnatomyViewer
               activeLayer={activeLayer}
               activeView={activeView}
-              painData={Object.fromEntries(bodyMap.map(e => [e.id, e]))}
+              painData={Object.fromEntries(bodyMap.map(e => [e.regionId || e.id, e]))}
               selectedIds={selectedIds}
               onTap={handleTap}
-              zoomedId={zoomedId}
-              onZoomChange={setZoomedId}
               drillRegion={drillRegion}
               onDrillClose={() => setDrillRegion(null)}
             />
