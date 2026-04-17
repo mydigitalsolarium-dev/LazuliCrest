@@ -3097,7 +3097,10 @@ function Dashboard({ data, setTab, upd, user, bgInsight }) {
   const totalTaken  = activeMeds.filter(m=>(m.takenDates||[]).includes(today)).length;
   const medPct      = activeMeds.length ? Math.round((totalTaken/activeMeds.length)*100) : 0;
   const upcoming    = data.appointments.filter(a=>a.date>=today&&!a.isInfusion).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
-  const todaySym    = data.symptoms.filter(s=>s.date===today);
+  const todaySym       = data.symptoms.filter(s=>s.date===today);
+  const todayBodyMap   = (data.bodyMap||[]).filter(e=>e.date===today);
+  const todayBrain     = (data.brain||[]).filter(e=>e.date===today);
+  const hasAnythingToday = todaySym.length>0 || todayBodyMap.length>0 || todayBrain.length>0;
   const isCare      = data.profile?.accountType==='caree';
   const displayName = isCare ? data.profile?.careeName||'Your loved one' : (user?.displayName||data.profile?.name||'Welcome');
   const proactive   = getProactiveGreeting(data.profile?.name, data.appointments);
@@ -3148,7 +3151,7 @@ function Dashboard({ data, setTab, upd, user, bgInsight }) {
       {/* Stat cards */}
       <div className="stats-grid">
         {[
-          {label:'Symptoms',     val:data.symptoms.length,                                   icon:'◈',  color:'#A8C4F0',glow:'rgba(42,92,173,.18)',  tab:'symptoms'},
+          {label:'Symptoms',     val:data.symptoms.length+(data.bodyMap||[]).length+(data.brain||[]).length, icon:'◈',  color:'#A8C4F0',glow:'rgba(42,92,173,.18)',  tab:'symptoms'},
           {label:'Medications',  val:activeMeds.length,                                      icon:'◉',  color:'#6ee7b7',glow:'rgba(110,231,183,.18)',tab:'medications'},
           {label:'Infusions',    val:(data.appointments||[]).filter(a=>a.isInfusion).length, icon:'💉', color:'#f97316',glow:'rgba(249,115,22,.18)', tab:'infusion'},
           {label:'Diary Entries',val:(data.diary||[]).length,                                icon:'✑',  color:'#C9A84C',glow:'rgba(201,168,76,.18)', tab:'diary'},
@@ -3196,21 +3199,62 @@ function Dashboard({ data, setTab, upd, user, bgInsight }) {
       <div className="two-col">
         <div className="glass-card-static" style={{ padding:18 }}>
           <SH title="Today's Symptoms" emoji="◈" onAction={()=>setTab('symptoms')} actionLabel="Log"/>
-          {todaySym.length===0
-            ? <div style={{ fontSize:16, color:'rgba(240,232,255,.22)', fontStyle:'italic' }}>No entries today yet.</div>
-            : todaySym.slice(0,1).map(s=>(
-              <div key={s.id}>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginBottom:8 }}>{s.entries?.slice(0,3).map((e,i)=><span key={i} className="pill">{e.symptom}</span>)}</div>
-                <div style={{ display:'flex', gap:8 }}>
-                  {[{l:'Pain',v:s.pain,c:'#f87171'},{l:'Energy',v:s.energy,c:'#6ee7b7'},{l:'Mood',v:s.mood,c:'#93c5fd'}].map(m=>(
-                    <div key={m.l} style={{ textAlign:'center' }}>
-                      <div style={{ fontSize:16, fontWeight:700, color:m.c, fontFamily:"'Cinzel',serif" }}>{m.v}<span style={{ fontSize:9, color:'rgba(240,232,255,.2)' }}>/10</span></div>
-                      <div style={{ fontSize:9, color:m.c, opacity:.75 }}>{m.l}</div>
+          {!hasAnythingToday
+            ? <div style={{ fontSize:14, color:'rgba(240,232,255,.22)', fontStyle:'italic' }}>No entries today yet.</div>
+            : <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+
+                {/* ── General symptom tracker entries ── */}
+                {todaySym.slice(0,1).map(s=>(
+                  <div key={s.id}>
+                    {s.entries?.length > 0 && (
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginBottom:6 }}>
+                        {s.entries.slice(0,4).map((e,i)=>(
+                          <span key={i} className="pill" style={{ fontSize:12 }}>{e.symptom}<span style={{ opacity:.55, marginLeft:3 }}>{e.severity}/10</span></span>
+                        ))}
+                        {s.entries.length > 4 && <span style={{ fontSize:12, color:'rgba(168,196,240,.4)', alignSelf:'center' }}>+{s.entries.length-4} more</span>}
+                      </div>
+                    )}
+                    <div style={{ display:'flex', gap:10 }}>
+                      {[{l:'Pain',v:s.pain,c:'#f87171'},{l:'Energy',v:s.energy,c:'#6ee7b7'},{l:'Mood',v:s.mood,c:'#93c5fd'}].map(m=>(
+                        <div key={m.l} style={{ textAlign:'center' }}>
+                          <div style={{ fontSize:15, fontWeight:700, color:m.c, fontFamily:"'Cinzel',serif", lineHeight:1 }}>{m.v}<span style={{ fontSize:8, color:'rgba(240,232,255,.2)' }}>/10</span></div>
+                          <div style={{ fontSize:9, color:m.c, opacity:.7 }}>{m.l}</div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
+
+                {/* ── Body map logs ── */}
+                {todayBodyMap.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:700, color:'rgba(201,168,76,.5)', letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, fontFamily:"'DM Sans',sans-serif" }}>Body Map</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+                      {todayBodyMap.slice(0,5).map((e,i)=>(
+                        <span key={i} style={{ padding:'3px 9px', borderRadius:20, fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif", background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', color:'#C9A84C' }}>
+                          {e.label} <span style={{ opacity:.6 }}>{e.severity}/10</span>
+                        </span>
+                      ))}
+                      {todayBodyMap.length > 5 && <span style={{ fontSize:12, color:'rgba(168,196,240,.4)', alignSelf:'center' }}>+{todayBodyMap.length-5} more</span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Brain / neurological logs ── */}
+                {todayBrain.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:700, color:'rgba(168,196,240,.5)', letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, fontFamily:"'DM Sans',sans-serif" }}>Neurological</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+                      {todayBrain.slice(0,3).map((e,i)=>(
+                        <span key={i} style={{ padding:'3px 9px', borderRadius:20, fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif", background:'rgba(42,92,173,.1)', border:'1px solid rgba(42,92,173,.3)', color:'rgba(168,196,240,.9)' }}>
+                          {(e.symptomLabels||e.symptoms||[]).slice(0,2).join(', ')||'Logged'}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               </div>
-            ))
           }
         </div>
         <div className="glass-card-static" style={{ padding:18 }}>
