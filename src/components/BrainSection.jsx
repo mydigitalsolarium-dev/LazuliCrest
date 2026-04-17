@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { todayStr, fmtDate } from "../utils/helpers";
 
 // ─── Brain regions ─────────────────────────────────────────────
@@ -316,6 +316,42 @@ export default function BrainSection({ data, upd }) {
   const [activeCat,        setActiveCat]        = useState('Pain');
   const [showLog,          setShowLog]          = useState(false);
 
+  const draftTimer = useRef(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  // Restore draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('lazuli_brain_draft');
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.selectedRegions?.length || d.activeSymptoms?.length || d.notes) {
+          if (d.selectedRegions?.length) setSelectedRegions(d.selectedRegions);
+          if (d.activeSymptoms?.length) setActiveSymptoms(d.activeSymptoms);
+          if (d.intensity != null) setIntensity(d.intensity);
+          if (d.notes) setNotes(d.notes);
+          if (d.activeCat) setActiveCat(d.activeCat);
+          setDraftRestored(true);
+          setTimeout(() => setDraftRestored(false), 4000);
+        }
+      }
+    } catch {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save draft on any change
+  useEffect(() => {
+    if (!selectedRegions.length && !activeSymptoms.length && !notes) return;
+    clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      try {
+        localStorage.setItem('lazuli_brain_draft', JSON.stringify({
+          selectedRegions, activeSymptoms, intensity, notes, activeCat, savedAt: Date.now()
+        }));
+      } catch {}
+    }, 800);
+    return () => clearTimeout(draftTimer.current);
+  }, [selectedRegions, activeSymptoms, intensity, notes, activeCat]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const toggleRegion = id =>
     setSelectedRegions(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
@@ -341,6 +377,7 @@ export default function BrainSection({ data, upd }) {
       notes,
     };
     upd('brain', [...brainLogs, entry]);
+    try { localStorage.removeItem('lazuli_brain_draft'); } catch {}
     // Reset for new entry
     setSelectedRegions([]);
     setActiveSymptoms([]);
@@ -500,6 +537,11 @@ export default function BrainSection({ data, upd }) {
 
           {/* Save / feedback */}
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            {draftRestored && (
+              <div style={{ padding:'8px 14px', borderRadius:10, background:'rgba(201,168,76,.12)', border:'1px solid rgba(201,168,76,.35)', color:'#C9A84C', fontSize:13, fontWeight:600, fontFamily:"'DM Sans',sans-serif", marginBottom:8, display:'flex', alignItems:'center', gap:8 }}>
+                <span>✦</span> Draft restored — your unsaved entry has been recovered
+              </div>
+            )}
             <button onClick={save}
               style={{ padding:'10px 26px', borderRadius:12, background:'linear-gradient(135deg,rgba(42,92,173,.8),rgba(74,144,217,.6))', border:'1px solid rgba(74,144,217,.5)', color:'#fff', fontSize:15, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .2s', boxShadow:'0 4px 16px rgba(42,92,173,.3)' }}>
               Log Entry

@@ -438,6 +438,7 @@ export default function App() {
   const [saving, setSaving]       = useState(false);
   const [tab, setTab]             = usePersistedTab('dashboard');
   const [sideOpen, setSideOpen]   = useState(false);
+  const [silkOpen, setSilkOpen]   = useState(false);
   const [privacyOn, setPrivacyOn] = useState(false);
   const saveTimer                 = useRef(null);
   const unsubRef                  = useRef(null);
@@ -512,6 +513,8 @@ export default function App() {
       <div style={{ display:'flex', maxWidth:1280, margin:'0 auto', minHeight:'100vh', position:'relative', zIndex:1 }}>
         {sideOpen && <div className="mobile-overlay" onClick={()=>setSideOpen(false)}/>}
         <Sidebar tab={tab} setTab={go} user={user} data={data} saving={saving} open={sideOpen} setOpen={setSideOpen} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} onShowAuth={()=>setShowAuth(true)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} creditsLeft={appCreditsLeft}/>
+        <BottomNav tab={tab} setTab={go} onMoreClick={()=>setSilkOpen(true)}/>
+        <SilkOverlay open={silkOpen} tab={tab} setTab={go} onClose={()=>setSilkOpen(false)} user={user} data={data} saving={saving} privacyOn={privacyOn} setPrivacyOn={setPrivacyOn} darkMode={darkMode} toggleDarkMode={toggleDarkMode} creditsLeft={appCreditsLeft} onShowAuth={()=>setShowAuth(true)}/>
 
         <main className={`main-content${privacyOn?' privacy-on':''}`}>
           <div className="mobile-topbar">
@@ -1501,6 +1504,29 @@ const GLOBAL_CSS = `
   .pill{display:inline-flex;align-items:center;gap:6px;background:var(--lz-pill-bg);border:1.5px solid var(--lz-pill-border);color:var(--lz-pill-text);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500}
 
   /* ── Sidebar — Deep Lapis & Gold ────────────────────────── */
+  /* ── Fixed Bottom Navigation Bar (mobile only) ── */
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:#0D0D0D;border-top:1.5px solid rgba(212,175,55,.4);padding:8px 0 calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 20px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.08)}
+  .bottom-nav-items{display:flex;justify-content:space-around;align-items:center;max-width:500px;margin:0 auto}
+  .bottom-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border:none;background:transparent;cursor:pointer;min-width:56px;color:rgba(168,196,240,.55);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;transition:color .18s}
+  .bottom-nav-btn.active{color:#C9A84C}
+  .bottom-nav-btn .bnav-icon{font-size:22px;line-height:1;transition:transform .18s}
+  .bottom-nav-btn.active .bnav-icon{transform:scale(1.12)}
+  .silk-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(1,8,26,.96);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:env(safe-area-inset-top) 0 calc(80px + env(safe-area-inset-bottom))}
+  .silk-overlay.open{display:block !important}
+  .silk-overlay-inner{padding:20px 16px 16px;max-width:480px;margin:0 auto}
+  .silk-overlay-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(201,168,76,.2)}
+  .silk-close{background:transparent;border:1.5px solid rgba(201,168,76,.4);border-radius:50%;width:36px;height:36px;color:#C9A84C;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .silk-group-label{font-size:9px;font-weight:700;color:rgba(201,168,76,.5);text-transform:uppercase;letter-spacing:2px;padding:10px 2px 8px;font-family:'DM Sans',sans-serif}
+  .silk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .silk-item{display:flex;align-items:center;gap:10px;padding:14px 14px;border-radius:14px;border:1.5px solid rgba(42,92,173,.25);background:rgba(4,16,52,.7);color:rgba(168,196,240,.7);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;transition:all .18s;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+  .silk-item.active{border-color:rgba(201,168,76,.6);background:rgba(201,168,76,.12);color:#C9A84C;font-weight:700;box-shadow:0 0 12px rgba(201,168,76,.2),inset 0 1px 0 rgba(255,255,255,.08)}
+  .silk-item-icon{font-size:18px;flex-shrink:0;line-height:1}
+  @media(max-width:768px){
+    .bottom-nav{display:block !important}
+    .sidebar{display:none !important}
+    .mobile-topbar .hamburger{display:none !important}
+    .page-inner{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
+  }
   .sidebar{width:272px;background:#0D0D0D;border-right:2px solid #D4AF37;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;z-index:100;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),10px 0 30px rgba(0,0,0,.7),inset -1px 0 0 rgba(212,175,55,.18);transition:transform .3s cubic-bezier(.22,1,.36,1),background .3s}
   [data-theme='light'] .sidebar{background:linear-gradient(175deg,#041C18 0%,#072820 35%,#052218 65%,#031410 100%);border-right:2px solid #C9A84C;box-shadow:10px 0 32px rgba(0,0,0,.65)}
   .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 16px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(240,228,208,.85);font-size:16px;font-weight:500;cursor:pointer;transition:all .16s;text-align:left;position:relative;letter-spacing:0.3px}
@@ -2051,6 +2077,91 @@ function DailyQuoteSidebar() {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
+// ─── Bottom Navigation Bar (mobile) ──────────────────────────
+const BOTTOM_TABS = [
+  { id:'dashboard', icon:'🏠', label:'Home' },
+  { id:'bodymap',   icon:'🫀', label:'Body' },
+  { id:'brain',     icon:'🧠', label:'Brain' },
+  { id:'advocate',  icon:'💙', label:'Advocate' },
+];
+
+function BottomNav({ tab, setTab, onMoreClick }) {
+  return (
+    <nav className="bottom-nav" aria-label="Main navigation">
+      <div className="bottom-nav-items">
+        {BOTTOM_TABS.map(t => (
+          <button key={t.id} className={`bottom-nav-btn${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)} aria-label={t.label}>
+            <span className="bnav-icon">{t.icon}</span>
+            <span>{t.label}</span>
+          </button>
+        ))}
+        <button className={`bottom-nav-btn`} onClick={onMoreClick} aria-label="More navigation">
+          <span className="bnav-icon">☰</span>
+          <span>More</span>
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+function SilkOverlay({ open, tab, setTab, onClose, user, data, saving, privacyOn, setPrivacyOn, darkMode, toggleDarkMode, creditsLeft, onShowAuth }) {
+  if (!open) return null;
+  const isCare = data.profile?.accountType === 'caree';
+  const displayName = user ? (isCare ? data.profile?.careeName||'Your Caree' : (user.displayName||'Your Account')) : 'Guest';
+  return (
+    <div className={`silk-overlay${open?' open':''}`} onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="silk-overlay-inner">
+        <div className="silk-overlay-header">
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,#1E3A8A,#C9A84C)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#fff',flexShrink:0}}>
+              {(displayName||'?')[0].toUpperCase()}
+            </div>
+            <div>
+              <div style={{fontWeight:600,fontSize:15,color:'#F0E8FF',fontFamily:"'DM Sans',sans-serif"}}>{displayName}</div>
+              {saving && <div style={{fontSize:11,color:'rgba(201,168,76,.7)',fontFamily:"'DM Sans',sans-serif"}}>Saving…</div>}
+            </div>
+          </div>
+          <button className="silk-close" onClick={onClose} aria-label="Close menu">✕</button>
+        </div>
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi}>
+            <div className="silk-group-label">{group.label}</div>
+            <div className="silk-grid">
+              {group.items.map(n => (
+                <button key={n.id} className={`silk-item${tab===n.id?' active':''}`}
+                  onClick={()=>{ setTab(n.id); onClose(); }}>
+                  <span className="silk-item-icon">{n.icon}</span>
+                  <span style={{lineHeight:1.3}}>{n.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div style={{marginTop:16,display:'flex',flexDirection:'column',gap:8}}>
+          {creditsLeft !== null && (
+            <button onClick={()=>{setTab('treasury');onClose();}} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderRadius:12,border:'1px solid rgba(201,168,76,.28)',background:'rgba(201,168,76,.07)',cursor:'pointer',fontFamily:"'DM Sans',sans-serif",width:'100%'}}>
+              <span style={{fontSize:13,color:'rgba(201,168,76,.7)',fontWeight:600}}>🪙 AI Credits</span>
+              <span style={{fontSize:14,fontWeight:800,color:'#C9A84C'}}>{creditsLeft}</span>
+            </button>
+          )}
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={toggleDarkMode} style={{flex:1,padding:'10px',borderRadius:12,border:`1.5px solid ${darkMode?'rgba(201,168,76,.3)':'rgba(26,58,122,.35)'}`,background:darkMode?'rgba(201,168,76,.07)':'rgba(26,58,122,.08)',color:darkMode?'rgba(201,168,76,.8)':'#6B4E00',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>
+              {darkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+            <button onClick={()=>setPrivacyOn(p=>!p)} style={{flex:1,padding:'10px',borderRadius:12,border:`1.5px solid ${privacyOn?'rgba(201,168,76,.5)':'rgba(42,92,173,.3)'}`,background:privacyOn?'rgba(201,168,76,.1)':'rgba(42,92,173,.08)',color:privacyOn?'#C9A84C':'rgba(168,196,240,.6)',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>
+              {privacyOn ? '🔓 Show' : '🔒 Privacy'}
+            </button>
+          </div>
+          {user
+            ? <button onClick={()=>{ signOut(auth); onClose(); }} style={{width:'100%',padding:'10px',borderRadius:12,border:'1px solid rgba(168,196,240,.2)',background:'transparent',color:'rgba(168,196,240,.6)',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>Sign Out</button>
+            : <button onClick={()=>{ onShowAuth(); onClose(); }} style={{width:'100%',padding:'10px',borderRadius:12,border:'1.5px solid rgba(201,168,76,.4)',background:'rgba(201,168,76,.1)',color:'#C9A84C',fontWeight:700,fontSize:14,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>Sign In / Sign Up</button>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Sidebar({ tab, setTab, user, data, saving, open, setOpen, privacyOn, setPrivacyOn, onShowAuth, darkMode, toggleDarkMode, creditsLeft }) {
   const isCare      = data.profile?.accountType === 'caree';
   const displayName = user ? (isCare ? data.profile?.careeName||'Your Caree' : (user.displayName||'Your Account')) : 'Guest';

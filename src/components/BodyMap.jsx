@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { todayStr } from "../utils";
 
 // ─── Layer system ──────────────────────────────────────────────
@@ -419,6 +419,39 @@ export default function BodyMap({ data, upd }) {
   const [form,        setForm]        = useState({ severity:5, types:[], notes:'' });
   const [multiLabel,  setMultiLabel]  = useState('');
 
+  const draftTimer = useRef(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  // Restore draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('lazuli_bodymap_draft');
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.selectedIds?.length || d.form?.notes) {
+          if (d.selectedIds?.length) { setSelectedIds(d.selectedIds); setEditOpen(true); }
+          if (d.form) setForm(d.form);
+          setDraftRestored(true);
+          setTimeout(() => setDraftRestored(false), 4000);
+        }
+      }
+    } catch {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save draft when selection or form changes
+  useEffect(() => {
+    if (!selectedIds.length && !form.notes && !form.types?.length) return;
+    clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      try {
+        localStorage.setItem('lazuli_bodymap_draft', JSON.stringify({
+          selectedIds, form, savedAt: Date.now()
+        }));
+      } catch {}
+    }, 800);
+    return () => clearTimeout(draftTimer.current);
+  }, [selectedIds, form]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const canSideView = activeLayer === 'skeleton';
 
   // Perspective lock: when switching to non-skeleton layer, snap to front/back
@@ -468,6 +501,7 @@ export default function BodyMap({ data, upd }) {
       date: todayStr(), timestamp,
     }));
     upd('bodyMap', [...bodyMap, ...entries]);
+    try { localStorage.removeItem('lazuli_bodymap_draft'); } catch {}
     setEditOpen(false);
     setSelectedIds([]);
     setForm({ severity:5, types:[], notes:'' });
@@ -621,6 +655,11 @@ export default function BodyMap({ data, upd }) {
                   <button className="btn btn-danger" style={{ fontSize:12, padding:'7px 12px' }} onClick={clearSelected}>Clear</button>
                 )}
                 <button className="btn btn-ghost" style={{ fontSize:12 }} onClick={() => { setEditOpen(false); setSelectedIds([]); }}>Cancel</button>
+                {draftRestored && (
+                  <div style={{ padding:'8px 14px', borderRadius:10, background:'rgba(201,168,76,.12)', border:'1px solid rgba(201,168,76,.35)', color:'#C9A84C', fontSize:13, fontWeight:600, fontFamily:"'DM Sans',sans-serif", marginBottom:8, display:'flex', alignItems:'center', gap:8 }}>
+                    <span>✦</span> Draft restored — your unsaved entry has been recovered
+                  </div>
+                )}
                 <button className="btn btn-gold"  style={{ fontSize:12, flex:1, justifyContent:'center' }} onClick={save}>Save</button>
               </div>
             </div>
