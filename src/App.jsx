@@ -577,7 +577,7 @@ export default function App() {
             {tab==='share'        && <SharePrivacy data={data} upd={upd} user={user}/>}
             {tab==='updates'      && <Updates/>}
             {tab==='gym'          && <LazuliGym data={data}/>}
-            {tab==='library'      && <ResearchLibrary user={user}/>}
+            {tab==='library'      && <ResearchLibrary user={user} data={data} upd={upd}/>}
             {tab==='pets'         && <PetHealthLog data={data} upd={upd}/>}
           </div>
         </main>
@@ -6118,11 +6118,13 @@ const LIBRARY_SHELVES = [
 ];
 
 // ── Lazuli Librarian — AI research assistant ──────────────────
-function LazuliLibrarian({ user }) {
+function LazuliLibrarian({ user, data, upd }) {
   const [query, setQuery] = React.useState('');
   const [messages, setMessages] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [expanded, setExpanded] = React.useState(true);
+  const [showLibHistory, setShowLibHistory] = React.useState(false);
+  const [libConvId, setLibConvId] = React.useState(null);
   const inputRef = React.useRef();
 
   const LIBRARIAN_SYSTEM = `You are Lazuli, the Lazuli Librarian — a warm, knowledgeable research guide at the Lazuli Bio health library. When someone asks about a health topic, condition, symptom, or treatment, respond concisely and always include 2–4 specific, direct URLs to trusted medical sources (PubMed, NIH, Mayo Clinic, Johns Hopkins, CDC, Sjogren's Foundation, Arthritis Foundation, etc.). Format each link on its own line like: • [Title](URL). Be warm, clear, and supportive. Never diagnose. Always remind users to discuss findings with their care team.`;
@@ -6146,11 +6148,23 @@ function LazuliLibrarian({ user }) {
           requestType: 'chat',
         }),
       });
-      const data = await res.json();
-      if (data.content?.[0]?.text) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.content[0].text }]);
-      } else if (data.error) {
-        setMessages(prev => [...prev, { role: 'assistant', content: `I'm sorry — ${data.error}` }]);
+      const apiData = await res.json();
+      if (apiData.content?.[0]?.text) {
+        const replyText = apiData.content[0].text;
+        setMessages(prev => [...prev, { role: 'assistant', content: replyText }]);
+        // Persist to Firestore
+        if (upd && data) {
+          const convId = libConvId || uid();
+          if (!libConvId) setLibConvId(convId);
+          const allMsgs = [...newMsgs, { role: 'assistant', content: replyText }];
+          const title = newMsgs[0]?.content?.slice(0, 60) || 'Research Query';
+          const existing = (data.conversations || []).filter(c => c.id !== convId);
+          upd('conversations', [...existing, {
+            id: convId, title, type: 'library', messages: allMsgs, timestamp: Date.now(),
+          }]);
+        }
+      } else if (apiData.error) {
+        setMessages(prev => [...prev, { role: 'assistant', content: `I'm sorry — ${apiData.error}` }]);
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'I had trouble connecting. Please try again in a moment.' }]);
@@ -6289,6 +6303,29 @@ function LazuliLibrarian({ user }) {
             </div>
           )}
 
+          {/* ── Library history ── */}
+          {upd && (data?.conversations||[]).filter(c=>c.type==='library').length > 0 && (
+            <div style={{ marginBottom:12, borderTop:'1px solid rgba(74,144,217,.1)', paddingTop:12 }}>
+              <button onClick={()=>setShowLibHistory(h=>!h)} style={{ fontSize:12, color:'rgba(168,196,240,.5)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", padding:0, marginBottom: showLibHistory ? 8 : 0 }}>
+                🕐 Past Research Sessions ({(data?.conversations||[]).filter(c=>c.type==='library').length}) {showLibHistory ? '▲' : '▼'}
+              </button>
+              {showLibHistory && (
+                <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:140, overflowY:'auto' }}>
+                  {[...(data?.conversations||[]).filter(c=>c.type==='library')].reverse().map(conv=>(
+                    <button key={conv.id} onClick={()=>{ setMessages(conv.messages); setLibConvId(conv.id); setShowLibHistory(false); }}
+                      style={{ textAlign:'left', padding:'7px 12px', borderRadius:8, background:'rgba(74,144,217,.06)', border:'1px solid rgba(74,144,217,.18)', color:'rgba(168,196,240,.7)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      📚 {conv.title} <span style={{ opacity:.4 }}>{new Date(conv.timestamp).toLocaleDateString()}</span>
+                    </button>
+                  ))}
+                  <button onClick={()=>{ setMessages([]); setLibConvId(null); setShowLibHistory(false); }}
+                    style={{ padding:'6px 12px', borderRadius:8, background:'transparent', border:'1px solid rgba(74,144,217,.15)', color:'rgba(74,144,217,.5)', fontSize:12, cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+                    + New Research Session
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Input */}
           <div style={{ display:'flex', gap:10 }}>
             <input
@@ -6325,7 +6362,7 @@ function LazuliLibrarian({ user }) {
   );
 }
 
-function ResearchLibrary({ user }) {
+function ResearchLibrary({ user, data, upd }) {
   const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
   // bookAnim: null | { shelfId, bookIdx, phase: 1|2|3 }
