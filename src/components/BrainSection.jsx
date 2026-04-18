@@ -347,8 +347,8 @@ export default function BrainSection({ data, upd }) {
       const raw = localStorage.getItem('lazuli_brain_draft');
       if (raw) {
         const d = JSON.parse(raw);
-        if (d.selectedRegions?.length || d.activeSymptoms?.length || d.notes) {
-          if (d.selectedRegions?.length) setSelectedRegions(d.selectedRegions);
+        if (d.activeSymptoms?.length || d.notes) {
+          // Note: selectedRegions intentionally not restored — regions always start fresh
           if (d.activeSymptoms?.length) setActiveSymptoms(d.activeSymptoms);
           if (d.intensity != null) setIntensity(d.intensity);
           if (d.notes) setNotes(d.notes);

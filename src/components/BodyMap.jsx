@@ -59,19 +59,8 @@ const HOTSPOT_CSS = `
     filter: drop-shadow(0 0 10px rgba(42,92,173,.7));
     animation: bmBloom .35s ease forwards;
   }
-  .bm-region.logged-mild path {
-    fill: rgba(201,168,76,.15);
-    stroke: rgba(201,168,76,.7);
-    stroke-width: 1.5;
-    filter: drop-shadow(0 0 6px rgba(201,168,76,.4));
-  }
-  .bm-region.logged-severe path {
-    fill: rgba(220,38,38,.18);
-    stroke: rgba(248,113,113,.8);
-    stroke-width: 1.5;
-    filter: drop-shadow(0 0 8px rgba(220,38,38,.5));
-  }
 `;
+
 
 function BodySilhouette({ painData, selectedIds, onTap }) {
   return (
@@ -112,11 +101,7 @@ function BodySilhouette({ painData, selectedIds, onTap }) {
         {SURFACE_REGIONS.map(r => {
           const logs = painData.filter(e => (e.regionId || e.id) === r.id);
           const isSel = selectedIds.includes(r.id);
-          const maxSev = logs.length ? Math.max(...logs.map(e => e.severity||0)) : 0;
-          let cls = 'bm-region';
-          if (isSel) cls += ' selected';
-          else if (maxSev >= 7) cls += ' logged-severe';
-          else if (maxSev > 0) cls += ' logged-mild';
+          const cls = `bm-region${isSel ? ' selected' : ''}`;
           return (
             <g key={r.id} className={cls} onClick={e => { e.stopPropagation(); onTap(r); }}>
               <path d={r.d}/>

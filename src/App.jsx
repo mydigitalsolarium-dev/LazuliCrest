@@ -5,7 +5,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile,
 } from 'firebase/auth';
-import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, getDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import {
   uid, todayStr, fmtDate, greet, getDailyMessage,
@@ -88,6 +88,7 @@ const NAV_GROUPS = [
       { id:'appointments',icon:'▷',   label:'Appointments'      },
       { id:'infusion',    icon:'∿',   label:'Infusion Hub'      },
       { id:'metabolic',   icon:'⚗',   label:'Metabolic Lab'     },
+      { id:'analytics',   icon:'📊',  label:'Analytics'         },
     ]
   },
   {
@@ -176,6 +177,8 @@ function SharedView({ shareId }) {
   const [pinInput, setPinInput] = useState('');
   const [snap, setSnap]       = useState(null);
   const [errMsg, setErrMsg]   = useState('');
+  const [attempts, setAttempts] = useState(0);
+  const MAX_ATTEMPTS = 3;
 
   const submit = async () => {
     if (!pinInput.trim()) return;
@@ -189,7 +192,21 @@ function SharedView({ shareId }) {
       if (d.expiresAt && new Date(d.expiresAt) < new Date()) { setErrMsg('This share link has expired (links last 7 days).'); setStep('error'); return; }
       // PIN check — stored as btoa(pin)
       const storedPin = atob(d.pin);
-      if (pinInput.trim() !== storedPin) { setErrMsg('Incorrect PIN. Please try again.'); setStep('pin'); return; }
+      if (pinInput.trim() !== storedPin) {
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        setPinInput('');
+        if (newAttempts >= MAX_ATTEMPTS) {
+          // Delete the share link after 3 failed attempts
+          try { await deleteDoc(ref); } catch(e2) {}
+          setErrMsg('Too many incorrect attempts. This share link has been deleted for security. Contact the person who shared it to generate a new link.');
+          setStep('error');
+        } else {
+          setErrMsg(`Incorrect PIN. ${MAX_ATTEMPTS - newAttempts} attempt${MAX_ATTEMPTS - newAttempts === 1 ? '' : 's'} remaining.`);
+          setStep('pin');
+        }
+        return;
+      }
       // Decode data
       const health = JSON.parse(decodeURIComponent(atob(d.data)));
       setSnap(health);
@@ -226,6 +243,13 @@ function SharedView({ shareId }) {
             Someone shared their health record with you.<br/>Enter the PIN they gave you to view it.
           </div>
           {errMsg && <div style={{ padding:'10px 14px', background:'rgba(255,80,80,.1)', border:'1px solid rgba(255,80,80,.25)', borderRadius:10, fontSize:13, color:'#ff9999', marginBottom:16 }}>{errMsg}</div>}
+          {attempts > 0 && attempts < MAX_ATTEMPTS && (
+            <div style={{ display:'flex', justifyContent:'center', gap:8, marginBottom:16 }}>
+              {[...Array(MAX_ATTEMPTS)].map((_, i) => (
+                <div key={i} style={{ width:10, height:10, borderRadius:'50%', background: i < attempts ? 'rgba(255,80,80,.7)' : 'rgba(255,255,255,.15)', transition:'background .3s' }}/>
+              ))}
+            </div>
+          )}
           <input
             value={pinInput}
             onChange={e=>setPinInput(e.target.value)}
@@ -582,6 +606,7 @@ export default function App() {
             {tab==='gym'          && <LazuliGym data={data}/>}
             {tab==='library'      && <ResearchLibrary user={user} data={data} upd={upd}/>}
             {tab==='pets'         && <PetHealthLog data={data} upd={upd}/>}
+            {tab==='analytics'    && <HealthAnalytics data={data} upd={upd}/>}
           </div>
         </main>
       </div>
@@ -630,7 +655,7 @@ const TAB_HINTS = {
   medications:  { icon:'💊', title:'Medications',              body:'Log your current medications, dosages, and schedules. Track when you take them and flag any issues.' },
   appointments: { icon:'📅', title:'Appointments',             body:'Save upcoming doctor visits with dates, locations, and notes. Never lose track of what to ask or what was said.' },
   diary:        { icon:'📖', title:'Health Diary',             body:'Write freely about your day, symptoms, emotions, or anything on your mind. Your private wellness journal.' },
-  mindfulness:  { icon:'🌿', title:'Mindfulness & Rest',       body:'Breathing exercises, a worry stone, zen garden, soundscapes, and guided imagery — all here to help you reset.' },
+  mindfulness:  { icon:'🌿', title:'Mindfulness & Rest',       body:'Breathing, affirmations, guided imagery, gratitude jar, grow your own garden, soundscapes, koi pond, and more — your wellness sanctuary.' },
   diet:         { icon:'🥗', title:'AI Nutrition',             body:'Log meals, set a diet protocol, and let the AI suggest recipes based on your mood or health profile. Use the scanner to find what you can make with what you have.' },
   documents:    { icon:'📁', title:'Documents',                body:'Upload and store lab results, prescriptions, imaging reports, and other medical files. Accessible whenever you need them.' },
   advocate:     { icon:'💙', title:'AI Health Advocate',       body:'Have a real conversation with your AI health companion. Ask questions, get support, and prepare for appointments.' },
@@ -639,6 +664,7 @@ const TAB_HINTS = {
   gym:          { icon:'🏋️', title:'Adaptive Gym',             body:'Gentle movement tracking designed for chronic illness. Log adaptive workouts and track energy vs. activity.' },
   updates:      { icon:'✨', title:'What\'s New',               body:'See the latest features and improvements added to the app.' },
   library:      { icon:'📚', title:'Research Library',          body:'A curated collection of trustworthy medical research — organized by topic. Click any book to open the source in a new tab.' },
+  analytics:    { icon:'📊', title:'Health Analytics',        body:'14-day trend charts, symptom correlations, flare pattern detection, and exportable reports. See your health patterns at a glance.' },
 };
 
 function TabHint({ tab }) {
@@ -1351,6 +1377,16 @@ const GLOBAL_CSS = `
   [data-theme='light'] .mobile-topbar { background:#FFFFFF !important; border-top:1.5px solid rgba(201,168,76,.45) !important; border-bottom:none !important; box-shadow:0 -2px 12px rgba(0,0,0,.08) !important; }
   [data-theme='light'] .mobile-topbar span,[data-theme='light'] .mobile-topbar div,[data-theme='light'] .mobile-topbar button { color:#111827 !important; }
   [data-theme='light'] .mobile-topbar button[style*="color:'#C9A84C'"],[data-theme='light'] .mobile-topbar button[style*="color:#C9A84C"] { color:#92400E !important; }
+  [data-theme='light'] .glass-card { background: #FFFFFF !important; border: 1px solid rgba(180,140,40,.3) !important; border-top-color: rgba(180,140,40,.4) !important; box-shadow: 0 2px 10px rgba(0,0,0,.08) !important; color: #1a1a2e !important; backdrop-filter:none !important; }
+  [data-theme='light'] .glass-card-static { background: #F8F6FF !important; border: 1px solid rgba(180,140,40,.22) !important; box-shadow: 0 1px 6px rgba(0,0,0,.06) !important; color: #1a1a2e !important; backdrop-filter:none !important; }
+  [data-theme='light'] .glass-card *, [data-theme='light'] .glass-card-static * { color: #1a1a2e !important; }
+  [data-theme='light'] .field { background: #ffffff !important; color: #1a1a2e !important; border-color: rgba(42,92,173,.35) !important; }
+  [data-theme='light'] .field::placeholder { color: rgba(26,26,46,.4) !important; }
+  [data-theme='light'] label { color: #92400E !important; }
+  [data-theme='light'] .stat-card { background: #ffffff !important; color: #1a1a2e !important; border-color: rgba(180,140,40,.5) !important; }
+  [data-theme='light'] .stat-card * { color: #1a1a2e !important; }
+  [data-theme='light'] .page-inner { background: transparent !important; }
+  [data-theme='light'] .main-content { background: rgba(248,246,240,.98) !important; }
 
   /* ── MAIN CONTENT & PAGE INNER ── */
   [data-theme='light'] .main-content { background:#F3F4F6; color:#111827 !important; }
@@ -1444,25 +1480,33 @@ const GLOBAL_CSS = `
 
   /* ── Cards — High-Contrast Lapis Minimalist ──────────── */
   .glass-card{
-    background:#001A33;
-    border:1px solid #D4AF37;
-    border-radius:8px;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -2px 0 rgba(0,0,0,.6),0 4px 16px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.5);
+    background:linear-gradient(158deg,#0E1E3A 0%,#091528 55%,#060E1E 100%);
+    border:1px solid rgba(42,92,173,.45);
+    border-top:1px solid rgba(201,168,76,.22);
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,.55),inset 0 1px 0 rgba(201,168,76,.12),inset 0 -1px 0 rgba(0,0,0,.4);
     transition:all .22s ease;
-    color:#F0E8FF;
+    color:#E8E0F5;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
   }
   .glass-card:hover{
-    border-color:#D4AF37;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -2px 0 rgba(0,0,0,.6),0 4px 16px rgba(0,0,0,.7),0 0 12px rgba(212,175,55,.3);
+    border-color:rgba(42,92,173,.65);
+    border-top-color:rgba(201,168,76,.38);
+    box-shadow:0 8px 28px rgba(0,0,0,.6),inset 0 1px 0 rgba(201,168,76,.18),0 0 0 1px rgba(42,92,173,.2);
     transform:translateY(-2px)
   }
   .glass-card-static{
-    background:#001A33;
-    border:1px solid rgba(212,175,55,.35);
-    border-radius:8px;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -2px 0 rgba(0,0,0,.6),0 4px 16px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.5);
-    transition:border-color .22s,background .3s;will-change:auto;
-    color:#F0E8FF;
+    background:linear-gradient(158deg,#0B1828 0%,#07101C 100%);
+    border:1px solid rgba(42,92,173,.35);
+    border-top:1px solid rgba(201,168,76,.15);
+    border-radius:14px;
+    box-shadow:0 2px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(168,196,240,.08);
+    transition:border-color .22s,box-shadow .22s;
+    will-change:auto;
+    color:#E8E0F5;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
   }
 
   .matriarch-quote{font-family:'Cormorant Garamond',serif;font-style:italic;color:#C9A84C;line-height:1.8;font-size:18px;text-shadow:0 0 10px rgba(201,168,76,.25)}
@@ -1493,7 +1537,13 @@ const GLOBAL_CSS = `
   .ai-header-sub, .tab-hint-body { font-family:'DM Sans',sans-serif !important; font-size:15px !important; font-style:normal !important; }
   /* Keep Cinzel/DM Sans for headings — remove italics from Cormorant outside diary */
   .lz-app-root .ai-header-title { font-family:'Cinzel',serif !important; font-style:normal !important; }
-  /* Diary keeps its own fonts (applied via inline styles) */
+  /* Diary keeps its own fonts (applied via inline styles on .diary-* elements) */
+  /* Remove cursive italic from non-diary sections */
+  .lz-app-root *:not(.diary-book):not(.diary-book *) {
+    font-style: normal !important;
+  }
+  /* But allow italic in specific styled elements that need it for design */
+  .rotating-quote-text, .affirmation-text { font-style: italic !important; }
 
   /* ── Form fields ─────────────────────────────────────────── */
   .field{background:var(--lz-bg-field);border:1.5px solid var(--lz-border-lapis);border-radius:12px;padding:13px 16px;font-size:18px;color:var(--lz-text);width:100%;outline:none;transition:all .18s;caret-color:var(--lz-gold)}
@@ -1564,8 +1614,8 @@ const GLOBAL_CSS = `
   .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99}
 
   /* ── Stat cards — Deep Mahogany ─────────────────────────── */
-  .stat-card{background:#001A33;border:1px solid #D4AF37;border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -2px 0 rgba(0,0,0,.6),0 4px 16px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.5);color:#FFFFF0;transform:perspective(1000px) rotateX(1.5deg)}
-  .stat-card:hover{transform:perspective(1000px) rotateX(0deg) translateY(-4px);border-color:#D4AF37;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 -2px 0 rgba(0,0,0,.6),0 12px 32px rgba(0,0,0,.7),0 0 12px rgba(212,175,55,.3)}
+  .stat-card{background:linear-gradient(158deg,#0F2040 0%,#091528 60%,#060E1E 100%);border:1px solid rgba(212,175,55,.4);border-top:1px solid rgba(212,175,55,.55);border-radius:18px;padding:22px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(212,175,55,.18);color:#F0EAD6;transform:perspective(800px) rotateX(1deg)}
+  .stat-card:hover{transform:perspective(800px) rotateX(0deg) translateY(-3px);border-color:rgba(212,175,55,.7);box-shadow:0 10px 28px rgba(0,0,0,.6),0 0 20px rgba(212,175,55,.18),inset 0 1px 0 rgba(212,175,55,.25)}
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 
   /* ── Auth inputs ─────────────────────────────────────────── */
@@ -1689,7 +1739,7 @@ const GLOBAL_CSS = `
     box-shadow:-3px 0 0 rgba(10,4,20,.8), 0 10px 32px rgba(0,0,0,.6)
   }
 
-  .share-card{background:linear-gradient(135deg,rgba(8,3,22,.94),rgba(15,6,36,.97));border:1.5px solid rgba(201,168,76,.28);border-radius:20px;padding:28px;position:relative;overflow:hidden}
+  .share-card{background:linear-gradient(158deg,#0E1E3A,#07101E);border:1.5px solid rgba(201,168,76,.35);border-top:1.5px solid rgba(201,168,76,.5);border-radius:20px;padding:28px;position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.5),inset 0 1px 0 rgba(201,168,76,.15)}
 
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
@@ -1749,9 +1799,10 @@ const GLOBAL_CSS = `
     .nav-item{padding:14px 16px;font-size:17px;min-height:52px}
     .glass-card{border-radius:16px !important;padding:16px 14px !important}
     .page-fade{animation:none !important}
-    .guest-banner{flex-wrap:wrap;gap:8px !important}
-    .guest-banner .guest-text{font-size:12px !important;flex:1 1 100%}
+    .guest-banner{flex-wrap:wrap;gap:8px !important;display:flex !important;visibility:visible !important;opacity:1 !important;position:sticky !important;top:64px !important;z-index:88 !important;background:rgba(20,14,50,.97) !important;border-bottom:1.5px solid rgba(201,168,76,.4) !important}
+    .guest-banner .guest-text{font-size:13px !important;flex:1 1 100%;color:#F0E8FF !important}
     .guest-banner .guest-btns{flex-shrink:0;display:flex;gap:6px;width:100%}
+    .guest-banner strong{color:#C9A84C !important}
   }
   @supports(padding-bottom:env(safe-area-inset-bottom)){
     @media(max-width:768px){
@@ -1769,6 +1820,7 @@ const GLOBAL_CSS = `
       left: 0 !important;
       right: 0 !important;
       margin: 0 !important;
+      padding: 0 !important;
       height: auto !important;
       min-height: 0 !important;
       gap: 0 !important;
@@ -1777,13 +1829,16 @@ const GLOBAL_CSS = `
       overflow: hidden !important;
       display: flex !important;
       flex-direction: column !important;
+      background: #020818 !important;
     }
     .ai-chat-header {
-      padding: 12px 14px 8px !important;
+      padding: 10px 16px 8px !important;
       gap: 6px !important;
       flex-shrink: 0 !important;
+      background: #020818 !important;
+      border-bottom: 1px solid rgba(212,175,55,.25) !important;
     }
-    .ai-chat-header .ai-header-title { font-size:19px !important; }
+    .ai-chat-header .ai-header-title { font-size:18px !important; }
     .ai-chat-header .ai-header-sub   { display:none !important; }
     .ai-chat-header .ai-header-btns  { gap:6px !important; }
     .ai-chat-header .ai-header-btns button { padding:6px 10px !important; font-size:12px !important; }
@@ -1795,32 +1850,56 @@ const GLOBAL_CSS = `
       border-left: none !important;
       border-right: none !important;
       border-bottom: none !important;
+      border-top: none !important;
       min-height: 0 !important;
       overflow: hidden !important;
+      background: #020818 !important;
     }
     .ai-gel-shell .ai-messages {
       flex: 1 !important;
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch !important;
-      padding: 14px 12px !important;
-      gap: 12px !important;
+      padding: 12px 16px !important;
+      gap: 10px !important;
       min-height: 0 !important;
     }
-    .ai-gel-shell .ai-messages .bubble { max-width:90% !important; font-size:15px !important; line-height:1.55 !important; }
+    .ai-gel-shell .ai-messages .bubble {
+      max-width: 88% !important;
+      font-size: 15px !important;
+      line-height: 1.6 !important;
+      padding: 10px 14px !important;
+    }
+    .bubble[style*="flex-end"] { background: #1C1F2E !important; }
     .ai-input-area {
       flex-shrink: 0 !important;
-      padding: 10px 12px 12px !important;
-      border-top: 1px solid rgba(42,92,173,.2) !important;
+      padding: 10px 16px calc(12px) !important;
+      background: #0A0F1E !important;
+      border-top: 1px solid rgba(212,175,55,.3) !important;
     }
-    .ai-input-area textarea { font-size:16px !important; min-height:44px !important; }
+    .ai-input-area textarea { font-size:16px !important; min-height:40px !important; }
     .ai-hint { display:none !important; }
-    .ai-status-bar { padding: 6px 14px !important; margin: 0 !important; border-radius:0 !important; flex-shrink:0 !important; }
+    .ai-status-bar { padding: 6px 16px !important; margin: 0 !important; border-radius:0 !important; flex-shrink:0 !important; font-size:13px !important; }
   }
   /* Stop aurora/floating animations from causing repaints on mobile */
   @media(max-width:768px){
     .aurora-orb{display:none !important}
-    .float-sym{opacity:.55 !important}
-    .float-quote{display:none !important}
+    .float-sym{opacity:.45 !important}
+    .float-quote{opacity:.5 !important;display:block !important}
+  }
+
+  /* ── Softer color energy — reduce glow intensity ── */
+  .aurora-orb { opacity: 0.55 !important; }
+  .float-sym { color: rgba(201,168,76,.3) !important; }
+  .stat-card { box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 4px 14px rgba(0,0,0,.5) !important; }
+  .glass-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  .glass-card-static { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  .btn-gold { box-shadow: 0 2px 10px rgba(201,168,76,.25) !important; }
+  .btn-gold:hover { box-shadow: 0 4px 18px rgba(201,168,76,.35) !important; }
+  .btn-lapis { box-shadow: 0 3px 14px rgba(42,92,173,.25) !important; }
+
+  /* ── Readability: ensure text is always legible ── */
+  .glass-card, .glass-card-static, .stat-card {
+    color: rgba(240,232,255,.92) !important;
   }
 
   /* ── Diary book ruled lines ─── */
@@ -2340,7 +2419,407 @@ function KoiPond({ size = 90 }) {
   );
 }
 
+// ─── Grow Your Own Garden ─────────────────────────────────────
+function GrowGarden() {
+  const [beds, setBeds] = useState({0:null,1:null,2:null,3:null,4:null});
+  const [stages, setStages] = useState({0:0,1:0,2:0,3:0,4:0});
+  const [sel, setSel] = useState(null);
+  const [watering, setWatering] = useState(null);
+  const [harvested, setHarvested] = useState([]);
+  const [panel, setPanel] = useState('garden');
+  const [toolMode, setToolMode] = useState('plant');
+  const [aiResp, setAiResp] = useState('');
+  const [aiLoad, setAiLoad] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [waterDrop, setWaterDrop] = useState(false);
+
+  const CROPS = [
+    {id:'tomato',    name:'Tomatoes',    emoji:'🍅',sg:['🌱','🌿','🍅','🍅'],color:'#c0392b',bg:'rgba(192,57,43,.18)',desc:'Stake when tall • loves full sun',companion:'basil, carrot',recipe:'Caprese salad, roasted tomato soup, pasta sauce'},
+    {id:'lettuce',   name:'Lettuce',     emoji:'🥬',sg:['🌱','🥬','🥬','🥬'],color:'#27ae60',bg:'rgba(39,174,96,.18)',desc:'Cool season • harvest outer leaves',companion:'radish, carrot',recipe:'Garden salads, lettuce wraps, green smoothies'},
+    {id:'carrot',    name:'Carrots',     emoji:'🥕',sg:['🌱','🌱','🥕','🥕'],color:'#e67e22',bg:'rgba(230,126,34,.18)',desc:'Loose deep soil • patient grower',companion:'lettuce, rosemary',recipe:'Carrot ginger soup, honey glazed carrots, carrot cake'},
+    {id:'strawberry',name:'Strawberries',emoji:'🍓',sg:['🌱','🍓','🍓','🍓'],color:'#e74c3c',bg:'rgba(231,76,60,.18)',desc:'Border beds • runners spread',companion:'lettuce, spinach',recipe:'Strawberry shortcake, smoothie, jam, fresh with cream'},
+    {id:'pepper',    name:'Bell Peppers',emoji:'🫑',sg:['🌱','🌿','🫑','🫑'],color:'#f39c12',bg:'rgba(243,156,18,.18)',desc:'Warm lover • colorful & nutritious',companion:'basil, tomato',recipe:'Stuffed peppers, stir-fry, roasted pepper hummus'},
+    {id:'herb',      name:'Fresh Herbs', emoji:'🌿',sg:['🌱','🌿','🌿','🌿'],color:'#27ae60',bg:'rgba(39,174,96,.15)',desc:'Versatile companions for all beds',companion:'tomato, pepper, carrot',recipe:'Pesto, herb butter, chimichurri, herb-infused oil'},
+    {id:'cucumber',  name:'Cucumbers',   emoji:'🥒',sg:['🌱','🌿','🥒','🥒'],color:'#1e8449',bg:'rgba(30,132,73,.18)',desc:'Loves to climb • needs daily water',companion:'lettuce, herb',recipe:'Tzatziki, cucumber salad, pickles, cold gazpacho'},
+    {id:'zucchini',  name:'Zucchini',    emoji:'🥦',sg:['🌱','🌿','🥦','🥦'],color:'#196f3d',bg:'rgba(25,111,61,.18)',desc:'Prolific producer • huge leaves',companion:'herb, lettuce',recipe:'Zucchini bread, stir-fry, grilled, pasta substitute'},
+  ];
+
+  const getCrop = id => CROPS.find(c=>c.id===id);
+  const se = (cid,stage) => { const c=getCrop(cid); return c?c.sg[Math.min(stage,c.sg.length-1)]:'🌱'; };
+  const isReady = id => !!beds[id] && stages[id]>=3;
+
+  const doWater = id => {
+    if(!beds[id]||stages[id]>=3) return;
+    setWatering(id); setWaterDrop(true);
+    setTimeout(()=>{ setWatering(null); setWaterDrop(false); setStages(s=>({...s,[id]:Math.min(s[id]+1,3)})); },1600);
+  };
+
+  const doPlant = cid => {
+    if(sel===null) return;
+    setBeds(b=>({...b,[sel]:cid})); setStages(s=>({...s,[sel]:0}));
+    setSel(null); setPanel('garden');
+  };
+
+  const doHarvest = id => {
+    if(!isReady(id)) return;
+    const c=getCrop(beds[id]);
+    if(c) setHarvested(h=>[...h,{...c,date:new Date().toLocaleDateString(),hid:Date.now()}]);
+    setBeds(b=>({...b,[id]:null})); setStages(s=>({...s,[id]:0})); setSel(null);
+  };
+
+  const doClear = id => { setBeds(b=>({...b,[id]:null})); setStages(s=>({...s,[id]:0})); setSel(null); };
+
+  const askAI = async (type,custom='') => {
+    setAiLoad(true); setPanel('ai');
+    const pl=Object.values(beds).filter(Boolean).map(id=>getCrop(id)?.name).filter(Boolean);
+    const hl=[...new Set(harvested.map(h=>h.name))];
+    const prompts = {
+      companion:`I'm growing: ${pl.join(', ')||'nothing yet — just starting!'}. Give me 3 specific companion planting tips. Which plants grow best together, and why? Include one surprising pairing that people often miss!`,
+      recipe:`I just harvested: ${hl.join(', ')||pl.join(', ')||'fresh garden vegetables'}. Give me 2 healthy, delicious recipes. Include a simple ingredient list, brief steps, and why fresh garden produce is especially beneficial for managing chronic illness!`,
+      tips:`I'm growing: ${pl.join(', ')||'vegetables'}. Give me 3 practical growing tips and explain how tending a garden and eating fresh produce supports health, energy, and wellbeing for people managing chronic illness.`,
+      chat:custom||'Give me one encouraging insight about growing my own food and connecting it to health!',
+    };
+    try {
+      const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({messages:[{role:'user',content:prompts[type]||prompts.chat}],
+          system:'You are a warm, knowledgeable garden coach and nutritionist. Specialize in companion planting, organic growing, and cooking garden-fresh produce. Always connect gardening to health, chronic illness wellness, and the joy of growing your own food. Be practical, specific, and genuinely encouraging. Never include URLs or web links in your response.'})});
+      const d=await r.json();
+      const txt = d.content?.[0]?.text || d.reply || (typeof d.content==='string'?d.content:null) || 'No response received.';
+      setAiResp(txt);
+    } catch(e){ setAiResp('Unable to connect right now. Please try again!'); }
+    setAiLoad(false); setAiInput('');
+  };
+
+  // ── Garden bed positions (SVG flat top-down view, becomes 3D via CSS) ──
+  const BED_LAYOUT = [
+    {id:0, x:268, y:18,  w:88, h:58, label:'Bed A'},
+    {id:1, x:268, y:94,  w:88, h:58, label:'Bed B'},
+    {id:2, x:162, y:18,  w:88, h:58, label:'Bed C'},
+    {id:3, x:162, y:94,  w:88, h:58, label:'Bed D'},
+    {id:4, x:58,  y:55,  w:88, h:92, label:'Bed E'},
+  ];
+
+  const handleBedClick = id => {
+    if(toolMode==='water') { doWater(id); return; }
+    if(toolMode==='harvest') { doHarvest(id); return; }
+    setSel(s=>s===id?null:id);
+    if(sel!==id) setPanel('planting');
+  };
+
+  const bedStroke = id => {
+    if(watering===id) return '#60a5fa';
+    if(isReady(id)) return '#6ee7b7';
+    if(sel===id) return '#C9A84C';
+    return 'rgba(255,255,255,.1)';
+  };
+
+  const readyCount = Object.keys(beds).filter(id=>isReady(Number(id))).length;
+
+  return (
+    <div style={{ maxWidth:620, margin:'0 auto' }}>
+      <div style={{ fontFamily:"'Cinzel',serif", fontSize:20, color:'#C9A84C', marginBottom:4, textAlign:'center' }}>🌱 Grow Your Own</div>
+      <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', textAlign:'center', marginBottom:18 }}>Plant seeds · Water daily · Harvest crops · Cook with Lazuli AI</div>
+
+      {/* ── 3D Garden Visual ── */}
+      <div style={{ position:'relative', width:'100%', display:'flex', justifyContent:'center', marginBottom:20 }}>
+        <div style={{ perspective:'1100px', perspectiveOrigin:'50% 0%' }}>
+          <div style={{ transform:'rotateX(38deg)', transformOrigin:'center top', display:'inline-block', borderRadius:16, overflow:'hidden' }}>
+            <svg viewBox="0 0 470 185" width="470" style={{ display:'block', maxWidth:'95vw' }}>
+              {/* ── Island Base Layers ── */}
+              <ellipse cx="235" cy="98" rx="225" ry="90" fill="#2c2c3a"/>
+              <ellipse cx="235" cy="93" rx="215" ry="84" fill="#3a3a4c"/>
+              <ellipse cx="235" cy="88" rx="204" ry="78" fill="#46465a"/>
+              {/* Grass ring */}
+              <ellipse cx="235" cy="83" rx="193" ry="72" fill="#2d5a27"/>
+              <ellipse cx="235" cy="80" rx="183" ry="67" fill="#3a7a32"/>
+              {/* Soil ground */}
+              <rect x="58"  y="14" width="354" height="147" rx="18" fill="#7a4f2d"/>
+              <rect x="62"  y="17" width="346" height="141" rx="16" fill="#8B5A35"/>
+
+              {/* ── Wooden Fence ── */}
+              {/* Top rail */}
+              <rect x="60" y="14" width="354" height="8" rx="4" fill="#5C3317"/>
+              {/* Bottom rail */}
+              <rect x="60" y="152" width="354" height="8" rx="4" fill="#5C3317"/>
+              {/* Left rail */}
+              <rect x="57" y="14" width="8" height="148" rx="4" fill="#5C3317"/>
+              {/* Right rail */}
+              <rect x="409" y="14" width="8" height="148" rx="4" fill="#5C3317"/>
+              {/* Fence posts top */}
+              {[58,105,152,199,246,293,340,387].map(x=>(
+                <rect key={x} x={x} y="8" width="7" height="18" rx="2" fill="#4A2810"/>
+              ))}
+              {/* Fence posts bottom */}
+              {[58,105,152,199,246,293,340,387].map(x=>(
+                <rect key={`b${x}`} x={x} y="151" width="7" height="18" rx="2" fill="#4A2810"/>
+              ))}
+              {/* Mid fence rails */}
+              <rect x="60" y="78" width="354" height="5" rx="2.5" fill="rgba(92,51,23,.6)"/>
+
+              {/* ── Garden Paths ── */}
+              <rect x="152" y="14" width="9" height="148" fill="#6B4226" opacity=".8"/>
+              <rect x="258" y="14" width="9" height="148" fill="#6B4226" opacity=".8"/>
+              <rect x="60"  y="83" width="352" height="9"  fill="#6B4226" opacity=".8"/>
+
+              {/* ── Greenhouse (right side) ── */}
+              <rect x="372" y="17" width="36" height="65" fill="#7a4f2d" stroke="#5C3317" strokeWidth="2"/>
+              {/* Glass panels */}
+              <rect x="374" y="19" width="15" height="61" rx="1" fill="rgba(147,210,220,.2)" stroke="#8B5E3C" strokeWidth="1"/>
+              <rect x="391" y="19" width="15" height="61" rx="1" fill="rgba(147,210,220,.25)" stroke="#8B5E3C" strokeWidth="1"/>
+              {/* Roof */}
+              <polygon points="370,17 408,17 389,4" fill="#8B5E3C" stroke="#5C3317" strokeWidth="1.5"/>
+              <line x1="370" y1="17" x2="389" y2="4" stroke="#4A2810" strokeWidth="1"/>
+              <line x1="408" y1="17" x2="389" y2="4" stroke="#4A2810" strokeWidth="1"/>
+              {/* Ridge */}
+              <line x1="389" y1="4" x2="389" y2="17" stroke="#4A2810" strokeWidth="1.5"/>
+              {/* Door */}
+              <rect x="382" y="50" width="12" height="17" rx="1" fill="rgba(147,210,220,.15)" stroke="#5C3317" strokeWidth="1"/>
+              {/* Plants inside */}
+              <text x="390" y="46" textAnchor="middle" fontSize="14">🌱</text>
+              <text x="390" y="58" textAnchor="middle" fontSize="12">🌿</text>
+
+              {/* ── Workbench with tools (left of greenhouse) ── */}
+              <rect x="370" y="98" width="36" height="22" rx="3" fill="#8B5E3C" stroke="#5C3317" strokeWidth="1.5"/>
+              <rect x="370" y="118" width="6" height="12" rx="2" fill="#6B3A1E"/>
+              <rect x="400" y="118" width="6" height="12" rx="2" fill="#6B3A1E"/>
+              {/* Watering can on bench */}
+              <text x="389" y="113" textAnchor="middle" fontSize="16" style={{animation: waterDrop?'bounce .4s ease infinite':'none'}}>🚿</text>
+              {/* Fertilizer bag */}
+              <rect x="371" y="128" width="20" height="26" rx="3" fill="#7a5a2a" stroke="#5C3317" strokeWidth="1"/>
+              <text x="381" y="143" textAnchor="middle" fontSize="10">🌾</text>
+
+              {/* ── Compost Bin ── */}
+              <rect x="228" y="92" width="22" height="22" rx="3" fill="#5C3317" stroke="#4A2810" strokeWidth="1.5"/>
+              <line x1="239" y1="92" x2="239" y2="114" stroke="#4A2810" strokeWidth="1.5"/>
+              <line x1="228" y1="103" x2="250" y2="103" stroke="#4A2810" strokeWidth="1.5"/>
+
+              {/* ── Strawberry border plants ── */}
+              {[68,95,122].map(x=>(
+                <g key={x}>
+                  <text x={x} y="156" textAnchor="middle" fontSize="10">🍓</text>
+                </g>
+              ))}
+
+              {/* ── Interactive Garden Beds ── */}
+              {BED_LAYOUT.map(bed=>{
+                const bReady=isReady(bed.id), bWater=watering===bed.id, bSel=sel===bed.id;
+                const plantStage=stages[bed.id];
+                return (
+                  <g key={bed.id} onClick={()=>handleBedClick(bed.id)} style={{cursor:'pointer'}}>
+                    {/* 3D box sides */}
+                    <rect x={bed.x} y={bed.y+bed.h-4} width={bed.w} height={7} rx="2" fill="#4A2810"/>
+                    <rect x={bed.x} y={bed.y+bed.h-8} width={bed.w} height={8} rx="2" fill="#6B3A1E"/>
+                    {/* Top soil face */}
+                    <rect x={bed.x+2} y={bed.y+1} width={bed.w-4} height={bed.h-9} rx="5"
+                      fill="#5D3A1A"
+                      stroke={bedStroke(bed.id)}
+                      strokeWidth={bSel||bReady||bWater?2.5:1.5}
+                    />
+                    {/* Soil texture dots */}
+                    {[0,1,2].map(i=>(
+                      <circle key={i} cx={bed.x+22+i*20} cy={bed.y+bed.h-22} r="1.5" fill="rgba(255,255,255,.06)"/>
+                    ))}
+                    {/* Wooden frame lines */}
+                    <rect x={bed.x+2} y={bed.y+1} width={bed.w-4} height={10} rx="4" fill="rgba(0,0,0,.12)"/>
+                    {/* Glow overlay when ready */}
+                    {bReady && <rect x={bed.x+2} y={bed.y+1} width={bed.w-4} height={bed.h-9} rx="5" fill="rgba(110,231,183,.12)" style={{animation:'pulseGlow 1.8s ease-in-out infinite'}}/>}
+                    {/* Selected overlay */}
+                    {bSel && <rect x={bed.x+2} y={bed.y+1} width={bed.w-4} height={bed.h-9} rx="5" fill="rgba(201,168,76,.08)"/>}
+                    {/* Watering drops */}
+                    {bWater && (
+                      <>
+                        <text x={bed.x+bed.w/2} y={bed.y+8} textAnchor="middle" fontSize="12" style={{animation:'floatUp 1.5s ease-in-out infinite'}}>💧</text>
+                        <text x={bed.x+bed.w/2+12} y={bed.y+14} textAnchor="middle" fontSize="10" style={{animation:'floatUp 1.5s .3s ease-in-out infinite'}}>💧</text>
+                      </>
+                    )}
+                    {/* Plant emoji */}
+                    {beds[bed.id] ? (
+                      <text x={bed.x+bed.w/2} y={bed.y+bed.h/2-6}
+                        textAnchor="middle" dominantBaseline="middle"
+                        fontSize={plantStage>=2?30:22}
+                        style={{filter:bWater?'drop-shadow(0 0 6px rgba(96,165,250,.8))':bReady?'drop-shadow(0 0 6px rgba(110,231,183,.7))':'none',transition:'font-size .4s'}}>
+                        {se(beds[bed.id],plantStage)}
+                      </text>
+                    ) : (
+                      <text x={bed.x+bed.w/2} y={bed.y+bed.h/2-6} textAnchor="middle" dominantBaseline="middle"
+                        fontSize="22" fill="rgba(255,255,255,.15)"
+                        fontFamily="'DM Sans',sans-serif">＋</text>
+                    )}
+                    {/* Growth stage dots */}
+                    {beds[bed.id] && (
+                      <g>
+                        {[0,1,2,3].map(i=>(
+                          <circle key={i} cx={bed.x+bed.w/2-16+i*11} cy={bed.y+bed.h-14} r={3}
+                            fill={i<=stages[bed.id]?'#C9A84C':'rgba(255,255,255,.12)'}/>
+                        ))}
+                      </g>
+                    )}
+                    {/* Harvest ready star */}
+                    {bReady && <text x={bed.x+bed.w-14} y={bed.y+14} fontSize="12">⭐</text>}
+                  </g>
+                );
+              })}
+
+              {/* ── Legend labels (subtle) ── */}
+              {BED_LAYOUT.map(bed=>(
+                <text key={`lbl${bed.id}`} x={bed.x+bed.w/2} y={bed.y+bed.h+6}
+                  textAnchor="middle" fontSize="7" fill="rgba(255,255,255,.2)"
+                  fontFamily="'DM Sans',sans-serif">
+                  {bed.label}
+                </text>
+              ))}
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Tool Mode Bar ── */}
+      <div style={{display:'flex',gap:8,justifyContent:'center',marginBottom:16,flexWrap:'wrap'}}>
+        {[
+          {id:'plant',  icon:'🌱', label:'Plant'},
+          {id:'water',  icon:'💧', label:'Water'},
+          {id:'harvest',icon:'🌾', label:'Harvest', badge: readyCount>0?readyCount:null},
+        ].map(t=>(
+          <button key={t.id} onClick={()=>{setToolMode(t.id);setSel(null);}}
+            style={{position:'relative',padding:'10px 20px',borderRadius:24,border:`1.5px solid ${toolMode===t.id?'#C9A84C':'rgba(42,92,173,.3)'}`,background:toolMode===t.id?'rgba(201,168,76,.15)':'rgba(4,14,52,.6)',color:toolMode===t.id?'#C9A84C':'rgba(240,232,255,.6)',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",transition:'all .18s',display:'flex',alignItems:'center',gap:7}}>
+            <span>{t.icon}</span>{t.label}
+            {t.badge&&<span style={{position:'absolute',top:-5,right:-5,width:18,height:18,borderRadius:'50%',background:'#6ee7b7',color:'#000',fontSize:10,fontWeight:900,display:'flex',alignItems:'center',justifyContent:'center'}}>{t.badge}</span>}
+          </button>
+        ))}
+        <button onClick={()=>{setPanel(panel==='ai'?'garden':'ai');}}
+          style={{padding:'10px 18px',borderRadius:24,border:`1.5px solid ${panel==='ai'?'rgba(168,196,240,.6)':'rgba(42,92,173,.3)'}`,background:panel==='ai'?'rgba(168,196,240,.1)':'rgba(4,14,52,.6)',color:panel==='ai'?'#A8C4F0':'rgba(240,232,255,.6)',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",display:'flex',alignItems:'center',gap:7}}>
+          🤖 Garden AI
+        </button>
+        <button onClick={()=>setPanel(panel==='log'?'garden':'log')}
+          style={{padding:'10px 18px',borderRadius:24,border:`1.5px solid ${panel==='log'?'rgba(110,231,183,.5)':'rgba(42,92,173,.3)'}`,background:panel==='log'?'rgba(110,231,183,.08)':'rgba(4,14,52,.6)',color:panel==='log'?'#6ee7b7':'rgba(240,232,255,.6)',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",display:'flex',alignItems:'center',gap:7}}>
+          📦 Harvests {harvested.length>0&&`(${harvested.length})`}
+        </button>
+      </div>
+
+      {/* ── Tool hint ── */}
+      {toolMode==='water'&&<div style={{textAlign:'center',fontSize:13,color:'rgba(96,165,250,.7)',marginBottom:12}}>💧 Tap a planted bed to water it and advance growth</div>}
+      {toolMode==='harvest'&&<div style={{textAlign:'center',fontSize:13,color:'rgba(110,231,183,.7)',marginBottom:12}}>🌾 Tap a ⭐ bed to harvest your crops</div>}
+      {toolMode==='plant'&&!sel&&<div style={{textAlign:'center',fontSize:13,color:'rgba(201,168,76,.6)',marginBottom:12}}>🌱 Tap any bed on the garden to plant</div>}
+
+      {/* ── Planting Panel ── */}
+      {panel==='planting' && sel!==null && (
+        <div style={{background:'rgba(8,18,48,.95)',border:'1.5px solid rgba(42,92,173,.35)',borderRadius:18,padding:'18px 20px',marginBottom:16,animation:'popIn .25s ease'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:16,color:'#C9A84C'}}>Plant in {BED_LAYOUT.find(b=>b.id===sel)?.label}</div>
+            <div style={{display:'flex',gap:8}}>
+              {beds[sel]&&<button onClick={()=>doClear(sel)} style={{padding:'5px 12px',borderRadius:12,border:'1px solid rgba(248,113,113,.35)',background:'rgba(248,113,113,.08)',color:'#f87171',fontSize:12,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>🗑 Clear</button>}
+              <button onClick={()=>{setSel(null);setPanel('garden');}} style={{padding:'5px 12px',borderRadius:12,border:'1px solid rgba(42,92,173,.25)',background:'transparent',color:'rgba(240,232,255,.5)',fontSize:12,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>✕</button>
+            </div>
+          </div>
+          {/* Show current bed status */}
+          {beds[sel]&&(
+            <div style={{marginBottom:12,padding:'10px 14px',background:'rgba(42,92,173,.1)',border:'1px solid rgba(42,92,173,.25)',borderRadius:10}}>
+              <div style={{fontSize:13,color:'rgba(240,232,255,.7)'}}>Currently growing: <strong style={{color:'#C9A84C'}}>{getCrop(beds[sel])?.name}</strong> — Stage {stages[sel]+1}/4 {stages[sel]>=3?'🌾 Ready to harvest!':''}</div>
+              <div style={{display:'flex',gap:6,marginTop:6}}>
+                {[0,1,2,3].map(i=>(
+                  <div key={i} style={{flex:1,height:5,borderRadius:3,background:i<=stages[sel]?'#C9A84C':'rgba(255,255,255,.1)'}}/>
+                ))}
+              </div>
+            </div>
+          )}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
+            {CROPS.map(c=>(
+              <button key={c.id} onClick={()=>doPlant(c.id)}
+                style={{padding:'12px 14px',borderRadius:14,border:`1.5px solid ${beds[sel]===c.id?c.color:'rgba(42,92,173,.2)'}`,background:beds[sel]===c.id?c.bg:'rgba(4,14,52,.7)',cursor:'pointer',textAlign:'left',transition:'all .18s',fontFamily:"'DM Sans',sans-serif"}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                  <span style={{fontSize:20}}>{c.emoji}</span>
+                  <span style={{fontSize:14,fontWeight:700,color:'rgba(240,232,255,.9)'}}>{c.name}</span>
+                </div>
+                <div style={{fontSize:11,color:'rgba(240,232,255,.4)',lineHeight:1.4}}>{c.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Garden AI Panel ── */}
+      {panel==='ai' && (
+        <div style={{background:'rgba(8,18,48,.95)',border:'1.5px solid rgba(42,92,173,.35)',borderRadius:18,padding:'20px 22px',marginBottom:16,animation:'popIn .25s ease'}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:16,color:'#C9A84C',marginBottom:4}}>🌿 Garden AI</div>
+          <div style={{fontSize:13,color:'rgba(240,232,255,.4)',marginBottom:16}}>Get companion tips, recipes, and growing advice from Lazuli</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16}}>
+            {[
+              {type:'companion',label:'🌱 Companion Tips',color:'rgba(39,174,96,.2)',border:'rgba(39,174,96,.4)'},
+              {type:'recipe',   label:'🍽 Get Recipes',   color:'rgba(201,168,76,.15)',border:'rgba(201,168,76,.4)'},
+              {type:'tips',     label:'💡 Growing Tips',  color:'rgba(42,92,173,.2)',border:'rgba(42,92,173,.4)'},
+            ].map(btn=>(
+              <button key={btn.type} onClick={()=>askAI(btn.type)} disabled={aiLoad}
+                style={{padding:'10px 18px',borderRadius:20,border:`1.5px solid ${btn.border}`,background:btn.color,color:'rgba(240,232,255,.85)',fontSize:13,fontWeight:600,cursor:aiLoad?'not-allowed':'pointer',fontFamily:"'DM Sans',sans-serif",opacity:aiLoad?.6:1}}>
+                {btn.label}
+              </button>
+            ))}
+          </div>
+          {/* Custom question */}
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <input value={aiInput} onChange={e=>setAiInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&aiInput.trim()&&askAI('chat',aiInput)}
+              placeholder="Ask about your garden…" className="field" style={{fontSize:14,padding:'10px 14px'}}/>
+            <button onClick={()=>aiInput.trim()&&askAI('chat',aiInput)} disabled={!aiInput.trim()||aiLoad}
+              style={{padding:'10px 18px',borderRadius:12,background:'linear-gradient(135deg,#C9A84C,#E8C96B)',border:'none',color:'#000',fontWeight:700,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>Ask</button>
+          </div>
+          {/* AI Response */}
+          {aiLoad && (
+            <div style={{textAlign:'center',padding:'20px',color:'rgba(240,232,255,.4)'}}>
+              <div style={{display:'flex',gap:6,justifyContent:'center',alignItems:'center'}}>
+                {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:'50%',background:'#2A5CAD',animation:`bounce .9s ${i*.15}s ease-in-out infinite`}}/>)}
+              </div>
+              <div style={{marginTop:8,fontSize:13}}>Lazuli is consulting the garden…</div>
+            </div>
+          )}
+          {aiResp && !aiLoad && (
+            <div style={{background:'rgba(4,14,52,.8)',border:'1px solid rgba(42,92,173,.3)',borderRadius:14,padding:'16px 18px',fontSize:14,color:'rgba(240,232,255,.85)',lineHeight:1.8,whiteSpace:'pre-wrap',animation:'popIn .3s ease'}}>
+              {aiResp}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Harvest Log ── */}
+      {panel==='log' && (
+        <div style={{background:'rgba(8,18,48,.95)',border:'1.5px solid rgba(110,231,183,.25)',borderRadius:18,padding:'20px 22px',marginBottom:16,animation:'popIn .25s ease'}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:16,color:'#6ee7b7',marginBottom:14}}>📦 Harvest Log</div>
+          {harvested.length===0
+            ? <div style={{textAlign:'center',color:'rgba(240,232,255,.3)',padding:'20px',fontSize:14}}>Nothing harvested yet — plant, grow, and harvest your first crop!</div>
+            : <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {harvested.slice().reverse().map(h=>(
+                  <div key={h.hid} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'rgba(110,231,183,.06)',border:'1px solid rgba(110,231,183,.15)',borderRadius:12}}>
+                    <span style={{fontSize:24}}>{h.emoji}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:700,fontSize:14,color:'rgba(240,232,255,.9)'}}>{h.name}</div>
+                      <div style={{fontSize:12,color:'rgba(240,232,255,.4)'}}>{h.date}</div>
+                      <div style={{fontSize:12,color:'rgba(110,231,183,.6)',marginTop:2}}>🍽 Try: {h.recipe?.split(',')[0]}</div>
+                    </div>
+                    <button onClick={()=>{ setAiResp(''); setAiInput(''); setPanel('ai'); askAI('recipe'); }}
+                      style={{padding:'5px 11px',borderRadius:10,border:'1px solid rgba(201,168,76,.35)',background:'rgba(201,168,76,.1)',color:'#C9A84C',fontSize:12,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",whiteSpace:'nowrap'}}>Get Recipe</button>
+                  </div>
+                ))}
+              </div>
+          }
+        </div>
+      )}
+
+      {/* ── Quick Status ── */}
+      {panel==='garden' && (
+        <div style={{display:'flex',gap:10,flexWrap:'wrap',justifyContent:'center'}}>
+          {BED_LAYOUT.map(bed=>(
+            <div key={bed.id} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:20,background:'rgba(4,14,52,.8)',border:`1px solid ${isReady(bed.id)?'rgba(110,231,183,.4)':watering===bed.id?'rgba(96,165,250,.4)':beds[bed.id]?'rgba(201,168,76,.25)':'rgba(42,92,173,.2)'}`,fontSize:13,cursor:'pointer'}} onClick={()=>{setToolMode('plant');setSel(bed.id);setPanel('planting');}}>
+              <span style={{fontSize:16}}>{beds[bed.id]?se(beds[bed.id],stages[bed.id]):'🪹'}</span>
+              <span style={{color:beds[bed.id]?'rgba(240,232,255,.8)':'rgba(240,232,255,.3)',fontFamily:"'DM Sans',sans-serif"}}>{bed.label}</span>
+              {isReady(bed.id)&&<span style={{fontSize:10,color:'#6ee7b7',fontWeight:700}}>READY</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Zen Garden (Physics + Treasure Dig) ─────────────────────
+// eslint-disable-next-line no-unused-vars
 function ZenGarden() {
   const sandRef      = useRef(null);   // opaque sand layer
   const fxRef        = useRef(null);   // particle/sparkle overlay
@@ -3470,6 +3949,10 @@ function Medications({ data, upd }) {
   const blank = { id:'', name:'', dose:'', frequency:'Daily', time:'', notes:'', active:true, takenDates:[] };
   const [form, setForm] = useState(blank);
   const [open, setOpen] = useState(false);
+  const [checkerOpen, setCheckerOpen] = useState(false);
+  const [checkResult, setCheckResult] = useState('');
+  const [checkLoading, setCheckLoading] = useState(false);
+  const [checkerPulse, setCheckerPulse] = useState(true);
   const toggleTaken = id => upd('medications', data.medications.map(m=>{
     if(m.id!==id) return m;
     const t=todayStr(); const td=m.takenDates||[];
@@ -3481,6 +3964,33 @@ function Medications({ data, upd }) {
     const idx = data.medications.findIndex(m=>m.id===entry.id);
     upd('medications', idx>=0?data.medications.map((m,i)=>i===idx?entry:m):[entry,...data.medications]);
     setForm(blank); setOpen(false);
+  };
+  const runInteractionCheck = async () => {
+    const meds = data.medications.filter(m=>m.active).map(m=>`${m.name}${m.dose?' '+m.dose:''}`);
+    if (meds.length < 2) {
+      setCheckResult('⚠ Add at least 2 active medications to check for interactions.');
+      return;
+    }
+    setCheckLoading(true);
+    setCheckResult('');
+    try {
+      const prompt = `You are a clinical pharmacist assistant. A patient is taking the following medications:\n\n${meds.map((m,i)=>`${i+1}. ${m}`).join('\n')}\n\nPlease analyze these medications for known drug-drug interactions. For each interaction found:\n- State the two drugs involved\n- Describe the interaction mechanism\n- Rate severity: MAJOR, MODERATE, or MINOR\n- State what to watch for\n\nIf no clinically significant interactions are found, say so clearly. Only report well-documented, evidence-based interactions. Do not speculate. If you are uncertain, say so. Always end with: "Consult your prescribing physician or pharmacist before making any changes to your medications."`;
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          messages:[{ role:'user', content: prompt }],
+          systemNote: 'You are a clinical pharmacist. Provide accurate, evidence-based drug interaction information only. Never hallucinate interactions. If unsure, say so.',
+          uid: 'interaction-check',
+        }),
+      });
+      if (!res.ok) throw new Error('API error');
+      const d2 = await res.json();
+      setCheckResult(d2.reply || d2.content || 'No response received.');
+    } catch(e) {
+      setCheckResult('Unable to complete interaction check. Please try again or consult your pharmacist directly.');
+    }
+    setCheckLoading(false);
   };
   const del  = id => { if(window.confirm('Remove?')) upd('medications',data.medications.filter(m=>m.id!==id)); };
   const edit = m => { setForm(m); setOpen(true); };
@@ -3512,6 +4022,68 @@ function Medications({ data, upd }) {
         </div>
       )}
       {data.medications.length===0&&!open && <Nil icon="◉" msg="No medications yet." cta="Add your first" fn={()=>setOpen(true)}/>}
+
+      {/* ── Medication Interaction Checker ── */}
+      <div style={{ position:'relative', marginTop:24, marginBottom:8 }}>
+        {/* Floating glow aura */}
+        <div style={{ position:'absolute', inset:-2, borderRadius:22, background:'linear-gradient(135deg,rgba(42,92,173,.5),rgba(201,168,76,.3),rgba(123,47,190,.4))', filter:'blur(12px)', opacity: checkerOpen ? 0.9 : checkerPulse ? 0.5 : 0.3, animation: checkerPulse && !checkerOpen ? 'pulseGlow 2.5s ease-in-out infinite' : 'none', transition:'opacity .4s', pointerEvents:'none', zIndex:0 }}/>
+        <div style={{ position:'relative', zIndex:1, background:'linear-gradient(135deg,rgba(8,18,48,.95),rgba(4,14,38,.97))', border:'1.5px solid rgba(42,92,173,.55)', borderRadius:20, overflow:'hidden', boxShadow:'0 8px 32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08)' }}>
+          {/* Header bar */}
+          <button onClick={()=>{ setCheckerOpen(o=>!o); setCheckerPulse(false); }} style={{ width:'100%', display:'flex', alignItems:'center', gap:14, padding:'18px 22px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', borderBottom: checkerOpen ? '1px solid rgba(42,92,173,.25)' : 'none', transition:'border .2s' }}>
+            <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,rgba(42,92,173,.8),rgba(123,47,190,.6))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0, boxShadow:'0 0 18px rgba(42,92,173,.5)', animation: checkerPulse && !checkerOpen ? 'pulseGlow 2.5s ease-in-out infinite' : 'none' }}>
+              💊
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:16, fontWeight:700, color:'#C9A84C', marginBottom:3 }}>Medication Interaction Checker</div>
+              <div style={{ fontSize:13, color:'rgba(168,196,240,.55)', lineHeight:1.4 }}>AI-powered · Evidence-based · Always verify with your pharmacist</div>
+            </div>
+            <div style={{ fontSize:12, color:'rgba(201,168,76,.55)', fontWeight:700, flexShrink:0, fontFamily:"'DM Sans',sans-serif" }}>
+              {checkerOpen ? '▲ Close' : '▼ Check Now'}
+            </div>
+          </button>
+
+          {checkerOpen && (
+            <div style={{ padding:'20px 22px' }}>
+              {/* Medications being checked */}
+              <div style={{ marginBottom:16 }}>
+                <div style={{ fontSize:13, fontWeight:700, color:'rgba(240,232,255,.45)', textTransform:'uppercase', letterSpacing:1, marginBottom:10 }}>Checking these active medications</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                  {data.medications.filter(m=>m.active).length === 0
+                    ? <div style={{ fontSize:14, color:'rgba(240,232,255,.3)' }}>No active medications found. Add medications above first.</div>
+                    : data.medications.filter(m=>m.active).map(m => (
+                        <div key={m.id} style={{ padding:'5px 13px', borderRadius:20, background:'rgba(42,92,173,.15)', border:'1px solid rgba(42,92,173,.3)', fontSize:13, color:'rgba(240,232,255,.8)', display:'flex', alignItems:'center', gap:6 }}>
+                          <span style={{ fontSize:16 }}>💊</span> {m.name}{m.dose ? ` ${m.dose}` : ''}
+                        </div>
+                      ))
+                  }
+                </div>
+              </div>
+
+              {/* Run check button */}
+              <button onClick={runInteractionCheck} disabled={checkLoading || data.medications.filter(m=>m.active).length < 2}
+                style={{ width:'100%', padding:'14px', borderRadius:14, background: checkLoading ? 'rgba(42,92,173,.2)' : 'linear-gradient(135deg,rgba(42,92,173,.9),rgba(123,47,190,.7))', border:'1.5px solid rgba(42,92,173,.6)', color:'#E0EFFF', fontSize:15, fontWeight:700, cursor: checkLoading || data.medications.filter(m=>m.active).length < 2 ? 'not-allowed' : 'pointer', fontFamily:"'DM Sans',sans-serif", display:'flex', alignItems:'center', justifyContent:'center', gap:10, opacity: data.medications.filter(m=>m.active).length < 2 ? 0.5 : 1, transition:'all .2s', boxShadow:'0 4px 18px rgba(42,92,173,.3)', marginBottom:16 }}>
+                {checkLoading
+                  ? <><div style={{ width:18, height:18, border:'2px solid rgba(255,255,255,.3)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin .7s linear infinite' }}/> Analyzing interactions…</>
+                  : <>🔬 Run Interaction Check</>
+                }
+              </button>
+
+              {/* Results */}
+              {checkResult && (
+                <div style={{ background: checkResult.startsWith('⚠') ? 'rgba(251,191,36,.07)' : 'rgba(10,20,50,.8)', border: `1px solid ${checkResult.startsWith('⚠') ? 'rgba(251,191,36,.3)' : 'rgba(42,92,173,.3)'}`, borderRadius:14, padding:'18px 20px', animation:'popIn .3s ease' }}>
+                  <div style={{ fontSize:14, color:'rgba(240,232,255,.85)', lineHeight:1.8, whiteSpace:'pre-wrap', fontFamily:"'DM Sans',sans-serif" }}>{checkResult}</div>
+                </div>
+              )}
+
+              {/* Disclaimer */}
+              <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(251,191,36,.05)', border:'1px solid rgba(251,191,36,.15)', borderRadius:10, fontSize:12, color:'rgba(251,191,36,.6)', lineHeight:1.6 }}>
+                ⚕ This tool provides educational information only. It is NOT a substitute for professional medical advice. Always consult your prescribing physician or licensed pharmacist before changing your medications.
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {active.length>0 && <><div style={{ fontSize:16,fontWeight:700,color:'rgba(201,168,76,.4)',textTransform:'uppercase',letterSpacing:1.5,marginBottom:10 }}>Active</div>
         <div style={{ display:'flex',flexDirection:'column',gap:8,marginBottom:22 }}>
           {active.map(m=>{const taken=(m.takenDates||[]).includes(todayStr());return(
@@ -4926,9 +5498,10 @@ function Mindfulness() {
     { id:'imagery',    icon:'🌅', label:'Guided Imagery'   },
     { id:'gratitude',  icon:'🫙', label:'Gratitude Jar'    },
     { id:'worry',      icon:'🪨', label:'Worry Stone'      },
-    { id:'zen',        icon:'🪴', label:'Zen Garden'       },
+    { id:'grow',       icon:'🌱', label:'Grow Your Own'    },
     { id:'soundscapes',icon:'🎧',label:'Soundscapes'       },
     { id:'fountain',   icon:'⛲',label:'Fountain Wishes'   },
+    { id:'koipond',    icon:'🐠', label:'Koi Pond'         },
   ];
 
   const PHASES = [
@@ -4973,6 +5546,10 @@ function Mindfulness() {
   const [imageryScene, setImageryScene]               = useState(null);
   const [imageryStep, setImageryStep]                 = useState(0);
   const [imageryVoicePlaying, setImageryVoicePlaying] = useState(false);
+  const [imageryAutoPlay, setImageryAutoPlay]         = useState(true);
+  const imageryAutoPlayRef                            = useRef(true);
+  const imageryStepRef                                = useRef(0);
+  const imageryStepsRef                               = useRef([]);
 
   const timerRef = useRef(null);
 
@@ -5146,7 +5723,7 @@ function Mindfulness() {
     } catch(e){ console.warn('Audio error:',e); }
   };
 
-  const speakImagery = (text) => {
+  const speakImagery = (text, stepIdx, stepsArr) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
@@ -5156,11 +5733,24 @@ function Mindfulness() {
       || voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))
       || voices[0];
     if (brit) utt.voice = brit;
-    utt.rate = 0.82;
+    utt.rate = 0.78;
     utt.pitch = 1.05;
     utt.volume = 0.9;
     utt.onstart = () => setImageryVoicePlaying(true);
-    utt.onend = () => setImageryVoicePlaying(false);
+    utt.onend = () => {
+      setImageryVoicePlaying(false);
+      // Auto-play next step if enabled and not on last step
+      const steps = stepsArr || imageryStepsRef.current;
+      const idx = stepIdx != null ? stepIdx : imageryStepRef.current;
+      if (imageryAutoPlayRef.current && steps && idx < steps.length - 1) {
+        setTimeout(() => {
+          const nextIdx = idx + 1;
+          setImageryStep(nextIdx);
+          imageryStepRef.current = nextIdx;
+          speakImagery(steps[nextIdx], nextIdx, steps);
+        }, 2800);
+      }
+    };
     utt.onerror = () => setImageryVoicePlaying(false);
     window.speechSynthesis.speak(utt);
   };
@@ -5168,6 +5758,7 @@ function Mindfulness() {
   const stopImageryVoice = () => {
     window.speechSynthesis?.cancel();
     setImageryVoicePlaying(false);
+    if (window.__imageryAudio) { window.__imageryAudio.pause(); window.__imageryAudio = null; }
   };
 
   const q = MINDFUL_QUOTES[quoteIdx];
@@ -5268,20 +5859,34 @@ function Mindfulness() {
 
     {/* Scene selector */}
     {!imageryScene && (
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginTop:8 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:14, marginTop:8 }}>
+        {/* Available guided imagery sessions */}
         {[
-          { id:'ocean',   label:'Ocean Shore',    emoji:'🌊', bg:'rgba(37,99,235,.15)', border:'rgba(37,99,235,.35)' },
-          { id:'mountain',label:'Mountain Peaks',  emoji:'🏔', bg:'rgba(100,116,139,.15)',border:'rgba(100,116,139,.35)'},
-          { id:'forest',  label:'Forest Path',     emoji:'🌲', bg:'rgba(22,163,74,.12)',  border:'rgba(22,163,74,.3)' },
-          { id:'cabin',   label:'Cozy Cabin',      emoji:'🏡', bg:'rgba(180,83,9,.12)',   border:'rgba(180,83,9,.3)'  },
-          { id:'garden',  label:'Healing Garden',  emoji:'🌸', bg:'rgba(236,72,153,.1)',  border:'rgba(236,72,153,.3)'},
-          { id:'stars',   label:'Night Stars',     emoji:'✨', bg:'rgba(109,40,217,.12)', border:'rgba(109,40,217,.3)'},
+          { id:'ocean',         label:'Ocean Shore',         emoji:'🌊', bg:'rgba(37,99,235,.15)',  border:'rgba(37,99,235,.35)',  audio:'/sounds/Ocean Guided Imagery.mp3',          desc:'A guided journey to a warm, sunlit shore. Waves, sand, and deep calm.' },
+          { id:'bioluminescent',label:'Bioluminescent Sea',  emoji:'🌌', bg:'rgba(109,40,217,.15)', border:'rgba(109,40,217,.4)',  audio:'/sounds/Bioluminescent Guided Imagery.mp3', desc:'Drift into a glowing, magical deep-sea dreamscape. Deeply restorative.' },
         ].map(s=>(
-          <button key={s.id} onClick={()=>{ setImageryScene(s.id); setImageryStep(0); }} style={{ padding:'22px 16px', borderRadius:18, border:`1.5px solid ${s.border}`, background:s.bg, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:10, transition:'all .2s', fontFamily:"'DM Sans',sans-serif" }}>
-            <div style={{ fontSize:40 }}>{s.emoji}</div>
-            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(240,232,255,.85)', fontWeight:600 }}>{s.label}</div>
+          <button key={s.id} onClick={()=>{ setImageryScene(s.id); setImageryStep(0); imageryStepRef.current=0; imageryStepsRef.current=[]; }}
+            style={{ padding:'20px 22px', borderRadius:18, border:`1.5px solid ${s.border}`, background:s.bg, cursor:'pointer', display:'flex', alignItems:'center', gap:16, transition:'all .2s', fontFamily:"'DM Sans',sans-serif", textAlign:'left' }}>
+            <div style={{ fontSize:48, flexShrink:0, filter:'drop-shadow(0 0 12px rgba(201,168,76,.4))' }}>{s.emoji}</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:18, fontWeight:700, color:'rgba(240,232,255,.9)', marginBottom:4 }}>{s.label}</div>
+              <div style={{ fontSize:14, color:'rgba(240,232,255,.5)', lineHeight:1.5 }}>{s.desc}</div>
+              <div style={{ marginTop:8, display:'inline-flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:'rgba(42,92,173,.2)', fontSize:12, color:'rgba(168,196,240,.8)', fontWeight:600 }}>
+                🎙 Lazuli Voice · Full Audio
+              </div>
+            </div>
+            <div style={{ fontSize:20, color:'rgba(201,168,76,.5)', flexShrink:0 }}>▶</div>
           </button>
         ))}
+
+        {/* Coming soon */}
+        <div style={{ padding:'16px 20px', borderRadius:16, border:'1px dashed rgba(201,168,76,.25)', background:'rgba(201,168,76,.04)', display:'flex', alignItems:'center', gap:14 }}>
+          <div style={{ fontSize:32 }}>✨</div>
+          <div>
+            <div style={{ fontSize:15, fontWeight:700, color:'rgba(201,168,76,.7)', marginBottom:3 }}>More Guided Imagery Coming Soon</div>
+            <div style={{ fontSize:13, color:'rgba(240,232,255,.35)', lineHeight:1.5 }}>Forest Path, Mountain Peaks, Healing Garden, and Night Stars — all recorded in Lazuli's voice and being added soon.</div>
+          </div>
+        </div>
       </div>
     )}
 
@@ -5329,10 +5934,17 @@ function Mindfulness() {
           "Feel how small you are. Let this feel like relief, not smallness. Your worries are tiny against this sky — and you are part of something enormous and alive.",
           "One by one, release each worry into the stars. Watch them float upward and dissolve into light. You are lighter now. You are made of stardust, returned to itself.",
         ],
+        bioluminescent: [
+          "Close your eyes and imagine sinking gently beneath warm, dark water. Around you, the ocean begins to glow — soft blue and green light pulsing from millions of tiny living things.",
+          "You are weightless here. The bioluminescent sea holds you like a constellation turned liquid. Each breath you take sends ripples of light radiating outward.",
+          "Tiny stars drift past you — plankton, alive with quiet light. They respond to your presence with gentle pulses, as if greeting you. You belong here.",
+          "The deep is peaceful. There is no surface noise, no demands — only this soft, living light and the slow rhythm of your breath. Your nervous system begins to unknot.",
+          "You are luminous too. Every cell in your body carries its own quiet energy. Float here as long as you need. When you return, you carry this light with you.",
+        ],
       };
       const steps = SCENES[imageryScene] || SCENES.ocean;
       const currentStep = steps[imageryStep] || steps[0];
-      const sceneMeta = { ocean:{emoji:'🌊',label:'Ocean Shore'}, mountain:{emoji:'🏔',label:'Mountain Peaks'}, forest:{emoji:'🌲',label:'Forest Path'}, cabin:{emoji:'🏡',label:'Cozy Cabin'}, garden:{emoji:'🌸',label:'Healing Garden'}, stars:{emoji:'✨',label:'Night Stars'} }[imageryScene];
+      const sceneMeta = { ocean:{emoji:'🌊',label:'Ocean Shore'}, bioluminescent:{emoji:'🌌',label:'Bioluminescent Sea'}, mountain:{emoji:'🏔',label:'Mountain Peaks'}, forest:{emoji:'🌲',label:'Forest Path'}, cabin:{emoji:'🏡',label:'Cozy Cabin'}, garden:{emoji:'🌸',label:'Healing Garden'}, stars:{emoji:'✨',label:'Night Stars'} }[imageryScene];
 
       return (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -5344,7 +5956,7 @@ function Mindfulness() {
           {/* Step dots */}
           <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
             {steps.map((_,i)=>(
-              <div key={i} onClick={()=>setImageryStep(i)} style={{ width:i===imageryStep?24:8, height:8, borderRadius:4, background:i===imageryStep?'#C9A84C':i<imageryStep?'rgba(201,168,76,.4)':'rgba(42,92,173,.3)', transition:'all .3s', cursor:'pointer' }}/>
+              <div key={i} onClick={()=>{ stopImageryVoice(); imageryStepRef.current=i; setImageryStep(i); }} style={{ width:i===imageryStep?24:8, height:8, borderRadius:4, background:i===imageryStep?'#C9A84C':i<imageryStep?'rgba(201,168,76,.4)':'rgba(42,92,173,.3)', transition:'all .3s', cursor:'pointer' }}/>
             ))}
           </div>
 
@@ -5358,15 +5970,48 @@ function Mindfulness() {
 
           {/* Controls */}
           <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
-            <button className="btn btn-lapis" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>speakImagery(currentStep)}>
-              {imageryVoicePlaying ? '🔊 Speaking...' : "🎙 Hear Lazuli's Voice"}
-            </button>
+            {/* For ocean & bioluminescent — play the ElevenLabs MP3 directly */}
+            {(imageryScene === 'ocean' || imageryScene === 'bioluminescent') ? (
+              <button className="btn btn-lapis" style={{ fontSize:16, padding:'11px 22px' }}
+                onClick={()=>{
+                  // Stop any existing imagery audio
+                  stopImageryVoice();
+                  const audioFile = imageryScene === 'ocean' ? '/sounds/Ocean Guided Imagery.mp3' : '/sounds/Bioluminescent Guided Imagery.mp3';
+                  const audio = new Audio(audioFile);
+                  audio.volume = 0.92;
+                  audio.play().catch(()=>{});
+                  setImageryVoicePlaying(true);
+                  audio.onended = () => setImageryVoicePlaying(false);
+                  // Store ref for stop button
+                  window.__imageryAudio = audio;
+                }}>
+                {imageryVoicePlaying ? '🎙 Lazuli is speaking...' : '🎙 Play Full Guided Session'}
+              </button>
+            ) : (
+              <button className="btn btn-lapis" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>{ imageryStepsRef.current=steps; imageryStepRef.current=imageryStep; speakImagery(currentStep,imageryStep,steps); }}>
+                {imageryVoicePlaying ? '🔊 Speaking...' : "🎙 Hear Lazuli's Voice"}
+              </button>
+            )}
             {imageryVoicePlaying && (
-              <button className="btn btn-ghost" style={{ fontSize:16 }} onClick={stopImageryVoice}>■ Stop</button>
+              <button className="btn btn-ghost" style={{ fontSize:16 }} onClick={()=>{
+                stopImageryVoice();
+                if (window.__imageryAudio) { window.__imageryAudio.pause(); window.__imageryAudio = null; }
+                setImageryVoicePlaying(false);
+              }}>■ Stop</button>
             )}
             {imageryStep < steps.length-1 && (
-              <button className="btn btn-gold" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>{ stopImageryVoice(); setImageryStep(s=>s+1); }}>Next →</button>
+              <button className="btn btn-gold" style={{ fontSize:16, padding:'11px 22px' }} onClick={()=>{ stopImageryVoice(); const next=imageryStep+1; imageryStepRef.current=next; setImageryStep(next); }}>Next →</button>
             )}
+          </div>
+          {/* Auto-play toggle */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, justifyContent:'center', marginTop:4 }}>
+            <button onClick={()=>{ const next=!imageryAutoPlay; setImageryAutoPlay(next); imageryAutoPlayRef.current=next; }}
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 16px', borderRadius:20, border:`1.5px solid ${imageryAutoPlay?'rgba(110,231,183,.5)':'rgba(42,92,173,.3)'}`, background:imageryAutoPlay?'rgba(110,231,183,.1)':'transparent', color:imageryAutoPlay?'#6ee7b7':'rgba(240,232,255,.4)', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .2s' }}>
+              {imageryAutoPlay ? '▶▶ Auto-play On' : '⏸ Auto-play Off'}
+            </button>
+            <div style={{ fontSize:12, color:'rgba(240,232,255,.3)' }}>
+              {imageryAutoPlay ? 'Steps advance automatically with a pause' : 'Press Next to advance manually'}
+            </div>
           </div>
           {imageryStep === steps.length-1 && (
             <div style={{ textAlign:'center', fontFamily:"'Cormorant Garamond',serif", fontSize:20, color:'rgba(110,231,183,.7)', marginTop:8 }}>
@@ -5557,8 +6202,35 @@ function Mindfulness() {
   </div>
 )}
 
-      {/* ── Zen Garden ── */}
-      {tool==='zen' && <ZenGarden />}
+      {tool==='grow' && <GrowGarden/>}
+      {/* ZenGarden removed from active rooms — code preserved below */}
+      {tool==='koipond' && (
+        <div style={{ maxWidth:440, margin:'0 auto', display:'flex', flexDirection:'column', alignItems:'center', gap:20 }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:20, color:'#C9A84C', textAlign:'center' }}>🐠 Koi Pond</div>
+          <div style={{ fontSize:14, color:'rgba(240,232,255,.45)', textAlign:'center' }}>A peaceful pond to rest beside. Watch the koi swim and let your mind settle.</div>
+          <div style={{ position:'relative', width:280, height:280, borderRadius:'50%', overflow:'hidden', boxShadow:'0 0 60px rgba(64,224,208,.2), 0 0 120px rgba(42,92,173,.15), inset 0 0 40px rgba(0,0,0,.5)' }}>
+            {/* Water surface */}
+            <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'radial-gradient(ellipse at 35% 35%, rgba(80,180,200,.55) 0%, rgba(20,80,140,.75) 40%, rgba(8,30,80,.9) 100%)', animation:'koiWater 4s ease-in-out infinite' }}/>
+            {/* Pond glow */}
+            <div style={{ position:'absolute', top:'50%', left:'50%', width:160, height:160, borderRadius:'50%', transform:'translate(-50%,-50%)', background:'radial-gradient(ellipse, rgba(64,224,208,.28) 0%, transparent 70%)', animation:'koiGlow 2.8s ease-in-out infinite', pointerEvents:'none' }}/>
+            {/* Ripples */}
+            {[0,1,2].map(i=>(
+              <div key={i} style={{ position:'absolute', top:'50%', left:'50%', width:80, height:80, borderRadius:'50%', border:'1.5px solid rgba(200,240,255,.4)', transform:'translate(-50%,-50%) scale(.15)', opacity:.85, animation:`koiRipple 3.2s ${i*.9}s ease-out infinite`, pointerEvents:'none' }}/>
+            ))}
+            {/* Water shimmer */}
+            <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'repeating-linear-gradient(92deg,transparent,transparent 18px,rgba(255,255,255,.04) 18px,rgba(255,255,255,.04) 19px)', animation:'koiWater 4s ease-in-out infinite', pointerEvents:'none' }}/>
+            {/* Koi fish */}
+            <div style={{ position:'absolute', top:'50%', left:'50%', fontSize:28, animation:'koiSwim1 5s linear infinite', pointerEvents:'none' }}>🐠</div>
+            <div style={{ position:'absolute', top:'50%', left:'50%', fontSize:24, animation:'koiSwim2 7s linear infinite', pointerEvents:'none' }}>🐟</div>
+            {/* Lily pads */}
+            <div style={{ position:'absolute', top:'22%', left:'60%', fontSize:18, opacity:.7 }}>🪷</div>
+            <div style={{ position:'absolute', top:'65%', left:'25%', fontSize:16, opacity:.6 }}>🌿</div>
+          </div>
+          <div style={{ fontSize:14, color:'rgba(168,196,240,.5)', textAlign:'center', maxWidth:320, lineHeight:1.8, fontStyle:'italic' }}>
+            "Still water reflects the sky. A quiet mind reflects what truly matters."
+          </div>
+        </div>
+      )}
 
       {/* ── Soundscapes ── */}
       {tool==='soundscapes' && (
@@ -6054,15 +6726,18 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
                 <p style={{ fontSize:16, color:'rgba(240,232,255,.5)', lineHeight:1.8, maxWidth:420, margin:'0 auto 8px' }}>{getProactiveGreeting(data.profile?.name, data.appointments)}</p>
                 <p style={{ fontSize:14, color:'rgba(168,196,240,.35)', fontStyle:'italic', fontFamily:"Georgia,serif" }}>Named for lapis lazuli — used in healing for 6,000 years.</p>
               </div>
-              <div className="two-col" style={{ gap:8 }}>
-                {STARTERS.map(s=>(
-                  <button key={s} onClick={()=>send(s)}
-                    style={{ background:'rgba(4,16,52,.85)', border:'1px solid rgba(42,92,173,.4)', borderRadius:13, padding:'13px 14px', textAlign:'left', fontSize:15, fontWeight:500, color:'rgba(240,232,255,.75)', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", lineHeight:1.5, transition:'all .16s' }}
-                    onMouseEnter={e=>{e.currentTarget.style.background='rgba(42,92,173,.2)';e.currentTarget.style.borderColor='rgba(201,168,76,.4)';e.currentTarget.style.color='#fff';}}
-                    onMouseLeave={e=>{e.currentTarget.style.background='rgba(4,16,52,.85)';e.currentTarget.style.borderColor='rgba(42,92,173,.4)';e.currentTarget.style.color='rgba(240,232,255,.75)';}}>
-                    💙 {s}
-                  </button>
-                ))}
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:'rgba(201,168,76,.45)', letterSpacing:1.5, textTransform:'uppercase', fontFamily:"'DM Sans',sans-serif", paddingLeft:2 }}>Quick Start</div>
+                <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:4, WebkitOverflowScrolling:'touch', scrollbarWidth:'none', msOverflowStyle:'none' }}>
+                  {STARTERS.map(s=>(
+                    <button key={s} onClick={()=>send(s)}
+                      style={{ flexShrink:0, background:'#0A0F1E', border:'1px solid rgba(201,168,76,.45)', borderRadius:20, padding:'8px 14px', fontSize:13, fontWeight:600, color:'#C9A84C', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", whiteSpace:'nowrap', transition:'all .15s', letterSpacing:.2 }}
+                      onMouseEnter={e=>{e.currentTarget.style.background='rgba(201,168,76,.12)';e.currentTarget.style.borderColor='rgba(201,168,76,.8)';}}
+                      onMouseLeave={e=>{e.currentTarget.style.background='#0A0F1E';e.currentTarget.style.borderColor='rgba(201,168,76,.45)';}}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -6125,14 +6800,14 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
               <button onClick={()=>setPhotoAttach(null)} style={{ padding:'4px 8px', borderRadius:6, background:'transparent', border:'1px solid rgba(248,113,113,.3)', color:'rgba(248,113,113,.6)', fontSize:12, cursor:'pointer' }}>✕</button>
             </div>
           )}
-          <div style={{ display:'flex', gap:8, alignItems:'flex-end', background:'rgba(4,16,52,.8)', borderRadius:14, padding:'10px 10px 10px 16px', border:'1px solid rgba(42,92,173,.3)', boxShadow:'inset 0 1px 0 rgba(168,196,240,.06)' }}>
+          <div style={{ display:'flex', gap:8, alignItems:'flex-end', background:'#0D1630', borderRadius:14, padding:'10px 10px 10px 16px', border:'1.5px solid rgba(201,168,76,.35)', boxShadow:'inset 0 1px 0 rgba(168,196,240,.06), 0 0 0 1px rgba(0,0,0,.3)' }}>
             <textarea ref={inputRef} style={{ flex:1, border:'none', background:'transparent', color:'#F0E8FF', fontFamily:"'DM Sans',sans-serif", fontSize:17, lineHeight:1.55, resize:'none', outline:'none', minHeight:24, maxHeight:120, caretColor:'#C9A84C', padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
             <button
               onClick={() => photoInputRef.current?.click()}
               title="Attach photo for analysis"
               style={{ alignSelf:'flex-end', padding:'8px 10px', borderRadius:10, background: photoAttach ? 'rgba(201,168,76,.15)' : 'rgba(42,92,173,.08)', border: photoAttach ? '1.5px solid rgba(201,168,76,.5)' : '1px solid rgba(42,92,173,.25)', color: photoAttach ? '#C9A84C' : 'rgba(168,196,240,.5)', fontSize:18, cursor:'pointer', lineHeight:1, flexShrink:0, transition:'all .2s' }}
             >📷</button>
-            <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end', padding:'8px 18px', fontSize:15, opacity:loading||!input.trim()||limitHit?.35:1, flexShrink:0 }}>Send</button>
+            <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end', padding:'10px 20px', fontSize:15, fontWeight:700, opacity:loading||!input.trim()||limitHit?.4:1, flexShrink:0, borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', color:'#000', border:'none', boxShadow:'0 2px 8px rgba(201,168,76,.4)' }}>Send</button>
           </div>
           <div className="ai-hint" style={{ display:'flex', justifyContent:'space-between', marginTop:6, alignItems:'center', paddingLeft:4 }}>
             <div style={{ fontSize:13, color:'rgba(240,232,255,.15)' }}>Enter to send · Shift+Enter new line · 📷 attach photo for AI analysis</div>
@@ -6147,6 +6822,329 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
   );
 }
 
+// ─── Health Analytics ─────────────────────────────────────────
+function HealthAnalytics({ data }) {
+  const [view, setView] = useState('overview');
+
+  // ── 14-day date range ──────────────────────────────────────
+  const days14 = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (13 - i));
+    return d.toISOString().slice(0, 10);
+  });
+
+  // ── Merge all log sources by date ──────────────────────────
+  const logsByDate = {};
+  days14.forEach(d => { logsByDate[d] = { pain: null, energy: null, mood: null, count: 0 }; });
+
+  (data.symptoms || []).forEach(s => {
+    if (!logsByDate[s.date]) return;
+    logsByDate[s.date].pain   = s.pain   != null ? Number(s.pain)   : logsByDate[s.date].pain;
+    logsByDate[s.date].energy = s.energy != null ? Number(s.energy) : logsByDate[s.date].energy;
+    logsByDate[s.date].mood   = s.mood   != null ? Number(s.mood)   : logsByDate[s.date].mood;
+    logsByDate[s.date].count += 1;
+  });
+  (data.bodyMap || []).forEach(b => { if (logsByDate[b.date]) logsByDate[b.date].count += 1; });
+  (data.brain   || []).forEach(b => { if (logsByDate[b.date]) logsByDate[b.date].count += 1; });
+
+  const days = days14.map(d => ({ date: d, label: d.slice(5), ...logsByDate[d] }));
+
+  // ── Stats ──────────────────────────────────────────────────
+  const withPain   = days.filter(d => d.pain   != null);
+  const withEnergy = days.filter(d => d.energy != null);
+  const withMood   = days.filter(d => d.mood   != null);
+  const avgPain    = withPain.length   ? (withPain.reduce((s,d)=>s+d.pain,0)   / withPain.length).toFixed(1)   : '—';
+  const avgEnergy  = withEnergy.length ? (withEnergy.reduce((s,d)=>s+d.energy,0) / withEnergy.length).toFixed(1) : '—';
+  const avgMood    = withMood.length   ? (withMood.reduce((s,d)=>s+d.mood,0)   / withMood.length).toFixed(1)   : '—';
+  const totalLogs  = (data.symptoms||[]).length + (data.bodyMap||[]).length + (data.brain||[]).length;
+
+  // ── Log streak ─────────────────────────────────────────────
+  let logStreak = 0;
+  for (let i = days14.length - 1; i >= 0; i--) {
+    if (logsByDate[days14[i]].count > 0) logStreak++;
+    else break;
+  }
+
+  // ── Flare detection (pain >= 7) ────────────────────────────
+  const flareDays  = withPain.filter(d => d.pain >= 7).length;
+  let flareStreak = 0, curStreak = 0;
+  days.forEach(d => {
+    if (d.pain != null && d.pain >= 7) { curStreak++; flareStreak = Math.max(flareStreak, curStreak); }
+    else curStreak = 0;
+  });
+
+  // ── Top symptoms ───────────────────────────────────────────
+  const symFreq = {};
+  (data.symptoms || []).forEach(s => (s.entries || []).forEach(e => {
+    if (e.symptom) symFreq[e.symptom] = (symFreq[e.symptom] || 0) + 1;
+  }));
+  const topSyms = Object.entries(symFreq).sort((a,b)=>b[1]-a[1]).slice(0, 8);
+
+  // ── Top body regions ───────────────────────────────────────
+  const regionFreq = {};
+  (data.bodyMap || []).forEach(b => {
+    if (b.label) regionFreq[b.label] = (regionFreq[b.label] || 0) + 1;
+  });
+  const topRegions = Object.entries(regionFreq).sort((a,b)=>b[1]-a[1]).slice(0, 6);
+
+  // ── Severity distribution ──────────────────────────────────
+  const sevBuckets = { mild:[0,0,0], moderate:[0,0,0], severe:[0,0,0] };
+  (data.symptoms||[]).forEach(s => {
+    const p = Number(s.pain||0);
+    if (p <= 3) sevBuckets.mild[0]++;
+    else if (p <= 6) sevBuckets.moderate[1]++;
+    else sevBuckets.severe[2]++;
+  });
+
+  // ── SVG LineChart helper ───────────────────────────────────
+  const LineChart = ({ dataPoints, color, label, maxVal = 10 }) => {
+    const W = 280, H = 80, pad = 16;
+    const pts = dataPoints.filter(d => d != null);
+    if (pts.length < 2) return (
+      <div style={{ textAlign:'center', color:'rgba(240,232,255,.25)', fontSize:13, padding:'20px 0' }}>Not enough data yet</div>
+    );
+    const xs = dataPoints.map((_, i) => pad + (i / (dataPoints.length - 1)) * (W - pad * 2));
+    const ys = dataPoints.map(v => v == null ? null : H - pad - ((v / maxVal) * (H - pad * 2)));
+    const pathParts = [];
+    let inSeg = false;
+    dataPoints.forEach((v, i) => {
+      if (v == null) { inSeg = false; return; }
+      if (!inSeg) { pathParts.push(`M ${xs[i]} ${ys[i]}`); inSeg = true; }
+      else pathParts.push(`L ${xs[i]} ${ys[i]}`);
+    });
+    const areaPath = pathParts.join(' ') + ` L ${xs[dataPoints.length-1]} ${H} L ${xs[0]} ${H} Z`;
+    return (
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow:'visible' }}>
+        <defs>
+          <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity=".35"/>
+            <stop offset="100%" stopColor={color} stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        {/* Grid lines */}
+        {[0,2.5,5,7.5,10].map(v => {
+          const y = H - pad - ((v / maxVal) * (H - pad * 2));
+          return <line key={v} x1={pad} y1={y} x2={W-pad} y2={y} stroke="rgba(255,255,255,.06)" strokeWidth="1"/>;
+        })}
+        {/* Area fill */}
+        <path d={areaPath} fill={`url(#grad-${label})`}/>
+        {/* Line */}
+        <path d={pathParts.join(' ')} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        {/* Dots */}
+        {dataPoints.map((v, i) => v == null ? null : (
+          <circle key={i} cx={xs[i]} cy={ys[i]} r="3.5" fill={color} stroke="#0A0F1E" strokeWidth="1.5"/>
+        ))}
+        {/* X labels */}
+        {dataPoints.map((_, i) => i % 3 === 0 ? (
+          <text key={i} x={xs[i]} y={H + 4} textAnchor="middle" fontSize="9" fill="rgba(240,232,255,.3)" fontFamily="'DM Sans',sans-serif">{days[i]?.label}</text>
+        ) : null)}
+      </svg>
+    );
+  };
+
+  // ── Download report ────────────────────────────────────────
+  const downloadReport = () => {
+    const lines = [
+      'LAZULI BIO — HEALTH ANALYTICS REPORT',
+      `Generated: ${new Date().toLocaleString()}`,
+      '═══════════════════════════════════════',
+      '',
+      '14-DAY AVERAGES',
+      `  Avg Pain:   ${avgPain}/10`,
+      `  Avg Energy: ${avgEnergy}/10`,
+      `  Avg Mood:   ${avgMood}/10`,
+      `  Log Streak: ${logStreak} days`,
+      `  Total Logs: ${totalLogs}`,
+      `  Flare Days: ${flareDays} (pain ≥ 7)`,
+      `  Longest Flare Streak: ${flareStreak} days`,
+      '',
+      'TOP SYMPTOMS',
+      ...topSyms.map(([s, n]) => `  ${s}: ${n}x`),
+      '',
+      'TOP BODY REGIONS',
+      ...topRegions.map(([r, n]) => `  ${r}: ${n}x`),
+      '',
+      'DAILY LOG (14 DAYS)',
+      ...days.map(d => `  ${d.date}: Pain=${d.pain??'—'} Energy=${d.energy??'—'} Mood=${d.mood??'—'} Logs=${d.count}`),
+      '',
+      '── This report is for personal tracking only. Always consult your physician. ──',
+    ];
+    const blob = new Blob([lines.join('\n')], { type:'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `lazuli-health-report-${todayStr()}.txt`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const TABS = [
+    { id:'overview', label:'Overview' },
+    { id:'trends',   label:'Trends'   },
+    { id:'symptoms', label:'Symptoms' },
+    { id:'body',     label:'Body'     },
+    { id:'flares',   label:'Flares'   },
+  ];
+
+  const cardStyle = { background:'rgba(10,20,50,.85)', border:'1px solid rgba(42,92,173,.3)', borderRadius:18, padding:'18px 20px', marginBottom:16 };
+  const statBox   = (label, val, color, sub) => (
+    <div style={{ background:`rgba(${color},.08)`, border:`1px solid rgba(${color},.22)`, borderRadius:14, padding:'16px 18px', flex:1, minWidth:130 }}>
+      <div style={{ fontSize:13, color:`rgba(${color},.65)`, textTransform:'uppercase', letterSpacing:1, marginBottom:4, fontWeight:600 }}>{label}</div>
+      <div style={{ fontSize:32, fontWeight:800, color:`rgba(${color},1)`, lineHeight:1 }}>{val}</div>
+      {sub && <div style={{ fontSize:12, color:`rgba(${color},.45)`, marginTop:3 }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div>
+      <PH emoji="📊" title="Health Analytics" sub="14-day trends, patterns, and exportable reports for your medical team">
+        <button className="btn btn-gold" onClick={downloadReport} style={{ fontSize:13, padding:'8px 16px' }}>⬇ Export Report</button>
+      </PH>
+
+      {/* Tab bar */}
+      <div style={{ display:'flex', gap:6, marginBottom:20, flexWrap:'wrap' }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setView(t.id)}
+            style={{ padding:'8px 18px', borderRadius:20, border:`1.5px solid ${view===t.id?'#C9A84C':'rgba(42,92,173,.3)'}`, background:view===t.id?'rgba(201,168,76,.12)':'transparent', color:view===t.id?'#C9A84C':'rgba(240,232,255,.5)', fontSize:14, fontWeight:600, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .18s' }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Overview ── */}
+      {view === 'overview' && (
+        <div>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:16 }}>
+            {statBox('Avg Pain',   avgPain,   '249,115,22', '14 days')}
+            {statBox('Avg Energy', avgEnergy, '110,231,183','14 days')}
+            {statBox('Avg Mood',   avgMood,   '168,196,240','14 days')}
+            {statBox('Log Streak', `${logStreak}d`, '201,168,76', 'consecutive')}
+          </div>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:20 }}>
+            {statBox('Total Logs', totalLogs, '93,197,255', 'all time')}
+            {statBox('Flare Days', flareDays,  '248,113,113','pain ≥ 7')}
+            {statBox('Flare Streak', flareStreak, '220,100,100', 'days')}
+          </div>
+          {totalLogs === 0 && (
+            <div style={{ textAlign:'center', padding:'40px 20px', color:'rgba(240,232,255,.3)', fontSize:16 }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>📊</div>
+              Start logging your symptoms, body map, or brain notes to see analytics here.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Trends ── */}
+      {view === 'trends' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+          {[
+            { label:'Pain', color:'#f97316', key:'pain' },
+            { label:'Energy', color:'#6ee7b7', key:'energy' },
+            { label:'Mood', color:'#93c5fd', key:'mood' },
+          ].map(({ label, color, key }) => (
+            <div key={key} style={cardStyle}>
+              <div style={{ fontSize:14, fontWeight:700, color:'rgba(240,232,255,.6)', textTransform:'uppercase', letterSpacing:1, marginBottom:12 }}>{label} — 14 Days</div>
+              <LineChart dataPoints={days.map(d => d[key])} color={color} label={label}/>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Symptoms ── */}
+      {view === 'symptoms' && (
+        <div style={cardStyle}>
+          <div style={{ fontSize:14, fontWeight:700, color:'rgba(240,232,255,.6)', textTransform:'uppercase', letterSpacing:1, marginBottom:16 }}>Top Reported Symptoms</div>
+          {topSyms.length === 0
+            ? <div style={{ color:'rgba(240,232,255,.3)', fontSize:14 }}>No symptom data yet.</div>
+            : topSyms.map(([sym, count]) => {
+                const maxCount = topSyms[0][1];
+                return (
+                  <div key={sym} style={{ marginBottom:12 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                      <span style={{ fontSize:14, color:'rgba(240,232,255,.8)', fontWeight:500 }}>{sym}</span>
+                      <span style={{ fontSize:13, color:'#C9A84C', fontWeight:700 }}>{count}×</span>
+                    </div>
+                    <div style={{ height:8, borderRadius:4, background:'rgba(42,92,173,.15)', overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${(count/maxCount)*100}%`, background:'linear-gradient(90deg,#2A5CAD,#C9A84C)', borderRadius:4, transition:'width .6s ease' }}/>
+                    </div>
+                  </div>
+                );
+              })}
+        </div>
+      )}
+
+      {/* ── Body ── */}
+      {view === 'body' && (
+        <div style={cardStyle}>
+          <div style={{ fontSize:14, fontWeight:700, color:'rgba(240,232,255,.6)', textTransform:'uppercase', letterSpacing:1, marginBottom:16 }}>Most Affected Body Regions</div>
+          {topRegions.length === 0
+            ? <div style={{ color:'rgba(240,232,255,.3)', fontSize:14 }}>No body map data yet.</div>
+            : topRegions.map(([region, count]) => {
+                const maxCount = topRegions[0][1];
+                return (
+                  <div key={region} style={{ marginBottom:12 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                      <span style={{ fontSize:14, color:'rgba(240,232,255,.8)', fontWeight:500 }}>{region}</span>
+                      <span style={{ fontSize:13, color:'#f97316', fontWeight:700 }}>{count}×</span>
+                    </div>
+                    <div style={{ height:8, borderRadius:4, background:'rgba(249,115,22,.1)', overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${(count/maxCount)*100}%`, background:'linear-gradient(90deg,#f97316,#fbbf24)', borderRadius:4, transition:'width .6s ease' }}/>
+                    </div>
+                  </div>
+                );
+              })}
+        </div>
+      )}
+
+      {/* ── Flares ── */}
+      {view === 'flares' && (
+        <div>
+          <div style={cardStyle}>
+            <div style={{ fontSize:14, fontWeight:700, color:'rgba(248,113,113,.7)', textTransform:'uppercase', letterSpacing:1, marginBottom:16 }}>Flare Pattern Detection</div>
+            <div style={{ fontSize:13, color:'rgba(240,232,255,.45)', marginBottom:16, lineHeight:1.6 }}>
+              Flare days = days where pain was logged as 7 or higher. Consecutive flares may indicate a flare period.
+            </div>
+            <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+              <div style={{ background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)', borderRadius:12, padding:'14px 18px', flex:1, minWidth:120 }}>
+                <div style={{ fontSize:12, color:'rgba(248,113,113,.6)', textTransform:'uppercase', letterSpacing:1 }}>Flare Days</div>
+                <div style={{ fontSize:28, fontWeight:800, color:'#f87171' }}>{flareDays}</div>
+                <div style={{ fontSize:11, color:'rgba(248,113,113,.4)' }}>in 14 days</div>
+              </div>
+              <div style={{ background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)', borderRadius:12, padding:'14px 18px', flex:1, minWidth:120 }}>
+                <div style={{ fontSize:12, color:'rgba(248,113,113,.6)', textTransform:'uppercase', letterSpacing:1 }}>Longest Flare</div>
+                <div style={{ fontSize:28, fontWeight:800, color:'#f87171' }}>{flareStreak}</div>
+                <div style={{ fontSize:11, color:'rgba(248,113,113,.4)' }}>consecutive days</div>
+              </div>
+            </div>
+            {/* Flare calendar strip */}
+            <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+              {days.map(d => {
+                const isFlare = d.pain != null && d.pain >= 7;
+                const hasLog  = d.pain != null;
+                return (
+                  <div key={d.date} title={`${d.date}: Pain ${d.pain??'—'}`}
+                    style={{ width:28, height:28, borderRadius:6, background: isFlare ? 'rgba(248,113,113,.6)' : hasLog ? 'rgba(42,92,173,.25)' : 'rgba(255,255,255,.04)', border: `1px solid ${isFlare?'rgba(248,113,113,.4)':hasLog?'rgba(42,92,173,.3)':'rgba(255,255,255,.05)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:isFlare?'#fff':'rgba(240,232,255,.3)', fontWeight:700, cursor:'default' }}>
+                    {d.label.slice(3)}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display:'flex', gap:14, marginTop:10, fontSize:11, color:'rgba(240,232,255,.35)' }}>
+              <span><span style={{ display:'inline-block', width:10, height:10, borderRadius:2, background:'rgba(248,113,113,.6)', marginRight:4, verticalAlign:'middle' }}/>Flare day</span>
+              <span><span style={{ display:'inline-block', width:10, height:10, borderRadius:2, background:'rgba(42,92,173,.25)', marginRight:4, verticalAlign:'middle' }}/>Logged</span>
+              <span><span style={{ display:'inline-block', width:10, height:10, borderRadius:2, background:'rgba(255,255,255,.04)', marginRight:4, verticalAlign:'middle' }}/>No entry</span>
+            </div>
+          </div>
+          {flareStreak >= 3 && (
+            <div style={{ padding:'16px 20px', background:'rgba(248,113,113,.08)', border:'1.5px solid rgba(248,113,113,.3)', borderRadius:14 }}>
+              <div style={{ fontWeight:700, color:'#f87171', marginBottom:6 }}>⚠ Extended Flare Detected</div>
+              <div style={{ fontSize:14, color:'rgba(240,232,255,.6)', lineHeight:1.6 }}>
+                You had {flareStreak} consecutive high-pain days. Consider sharing this report with your care team. Rest and gentle pacing are important during a flare.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Updates / What's New ─────────────────────────────────────
 function Updates() {
   const features = [
@@ -6156,13 +7154,13 @@ function Updates() {
     { icon:'💧', title:'Hydration Station', desc:'Track daily hydration with a gorgeous animated glass pitcher. Customize drink types and amounts to your routine.', status:'live' },
     { icon:'📖', title:'Secure Diary', desc:'A fully private, beautiful diary with custom fonts, mood tracking, and photo uploads. Never shared, always encrypted.', status:'live' },
     { icon:'🔗', title:'Shareable Health Summary', desc:'Generate a PIN-protected, read-only health snapshot to share with doctors, caregivers, or specialists — you control exactly what\'s included.', status:'live' },
-    { icon:'🏋️', title:'Adaptive Gym', desc:'AI-powered gentle exercise guidance designed specifically for chronic illness patients. Your occupational therapist in your pocket.', status:'coming' },
+    { icon:'🏋️', title:'Adaptive Gym', desc:'AI-powered gentle exercise guidance designed specifically for chronic illness patients. Your occupational therapist in your pocket.', status:'live' },
     { icon:'📱', title:'Google Play Store App', desc:'Take the app everywhere — the full native Android experience is in development and coming to Google Play Store soon.', status:'coming' },
-    { icon:'🤝', title:'Care Team Collaboration', desc:'Invite a caregiver, family member, or care coordinator to view your health data in a separate read-only care portal.', status:'coming' },
+    { icon:'🤝', title:'Care Team Collaboration', desc:'Invite a caregiver, family member, or care coordinator to view your health data in a separate read-only care portal.', status:'live' },
     { icon:'📚', title:'Research Library & AI Librarian', desc:'A curated library of peer-reviewed research on chronic illness, rare disease, and treatment options. Click any book to read the source — or ask the AI Librarian for a plain-language summary of the science.', status:'live' },
-    { icon:'📊', title:'Advanced Health Analytics', desc:'Trend charts, symptom correlations, flare pattern detection, and exportable health reports for your medical team.', status:'coming' },
+    { icon:'📊', title:'Advanced Health Analytics', desc:'Trend charts, symptom correlations, flare pattern detection, and exportable health reports for your medical team.', status:'live' },
     { icon:'🏥', title:'Doctor Finder & Specialist Map', desc:'Find chronic illness specialists, patient advocates, and rare disease centers near you — filtered by your conditions.', status:'coming' },
-    { icon:'💊', title:'Medication Interaction Checker', desc:'AI-powered medication safety checker that flags potential interactions and reminds you of time-sensitive doses.', status:'coming' },
+    { icon:'💊', title:'Medication Interaction Checker', desc:'AI-powered medication safety checker that flags potential interactions and reminds you of time-sensitive doses. Now live in your Medications section.', status:'live' },
   ];
 
   return (
@@ -6389,7 +7387,7 @@ function LazuliLibrarian({ user, data, upd }) {
   const [libConvId, setLibConvId] = React.useState(null);
   const inputRef = React.useRef();
 
-  const LIBRARIAN_SYSTEM = `You are Lazuli, the Lazuli Librarian — a warm, knowledgeable research guide at the Lazuli Bio health library. When someone asks about a health topic, condition, symptom, or treatment, respond concisely and always include 2–4 specific, direct URLs to trusted medical sources (PubMed, NIH, Mayo Clinic, Johns Hopkins, CDC, Sjogren's Foundation, Arthritis Foundation, etc.). Format each link on its own line like: • [Title](URL). Be warm, clear, and supportive. Never diagnose. Always remind users to discuss findings with their care team.`;
+  const LIBRARIAN_SYSTEM = `You are Lazuli, the Lazuli Librarian — a warm, knowledgeable research guide at the Lazuli Bio health library. When someone asks about a health topic, condition, symptom, or treatment, respond concisely with clear, accurate information. When referencing research or sources, include the TITLE and AUTHOR/ORGANIZATION in markdown link format [Title](URL) — but ONLY use URLs you are absolutely certain exist and are correct. If you are not 100% certain of a URL, write the title only without a URL rather than guessing. Never fabricate or guess URLs. Be warm, clear, and supportive. Never diagnose. Always remind users to discuss findings with their care team.`;
 
   const sendQuery = async () => {
     const q = query.trim();
@@ -6435,30 +7433,35 @@ function LazuliLibrarian({ user, data, upd }) {
     }
   };
 
-  // Split on newlines and render markdown links + bare URLs inline
+  // Split on newlines and render text safely — markdown links become PubMed search buttons
+  // (AI-generated URLs are unreliable; we redirect to a verified search instead)
   const renderContent = (text) => {
     return text.split('\n').map((line, li) => {
       const parts = [];
+      // Match markdown links [Title](url)
       const linkRe = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
       let last = 0;
       let m;
       while ((m = linkRe.exec(line)) !== null) {
         if (m.index > last) parts.push(<React.Fragment key={`t${last}`}>{line.slice(last, m.index)}</React.Fragment>);
-        parts.push(<a key={`l${m.index}`} href={m[2]} target="_blank" rel="noopener noreferrer" style={{ color:'#4A90D9', textDecoration:'underline', wordBreak:'break-all', fontWeight:600 }}>{m[1]}</a>);
+        const title = m[1];
+        const searchUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(title)}`;
+        parts.push(
+          <span key={`l${m.index}`} style={{ display:'inline-flex', alignItems:'center', gap:4, flexWrap:'wrap' }}>
+            <span style={{ color:'rgba(168,196,240,.85)', fontWeight:600 }}>{title}</span>
+            <a href={searchUrl} target="_blank" rel="noopener noreferrer"
+              title="Search PubMed for this topic (AI-generated links may be inaccurate)"
+              style={{ fontSize:11, padding:'1px 7px', borderRadius:8, background:'rgba(42,92,173,.18)', border:'1px solid rgba(74,144,217,.3)', color:'rgba(74,144,217,.8)', textDecoration:'none', whiteSpace:'nowrap' }}>
+              🔍 Search PubMed
+            </a>
+          </span>
+        );
         last = m.index + m[0].length;
       }
-      // Also render bare URLs
-      const bareRe = /https?:\/\/[^\s)]+/g;
-      const remainingLine = line.slice(last);
-      let blast = 0;
-      let bm;
-      while ((bm = bareRe.exec(remainingLine)) !== null) {
-        if (bm.index > blast) parts.push(<React.Fragment key={`bt${blast}`}>{remainingLine.slice(blast, bm.index)}</React.Fragment>);
-        parts.push(<a key={`bu${bm.index}`} href={bm[0]} target="_blank" rel="noopener noreferrer" style={{ color:'#4A90D9', textDecoration:'underline', wordBreak:'break-all', fontWeight:600 }}>{bm[0]}</a>);
-        blast = bm.index + bm[0].length;
-      }
-      if (blast < remainingLine.length) parts.push(<React.Fragment key={`bend`}>{remainingLine.slice(blast)}</React.Fragment>);
-      if (parts.length === 0 && last < line.length) parts.push(<React.Fragment key="plain">{line}</React.Fragment>);
+      // Strip bare URLs entirely — they are AI-hallucinated and unreliable
+      const remainingLine = line.slice(last).replace(/https?:\/\/[^\s)]+/g, '[link removed — use Search PubMed above]');
+      if (remainingLine) parts.push(<React.Fragment key={`rest`}>{remainingLine}</React.Fragment>);
+      if (parts.length === 0) parts.push(<React.Fragment key="plain">{line}</React.Fragment>);
       return <div key={li} style={{ minHeight: line ? 'auto' : 8 }}>{parts}</div>;
     });
   };
