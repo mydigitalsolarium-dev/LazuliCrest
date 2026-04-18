@@ -1295,9 +1295,34 @@ const GLOBAL_CSS = `
     --lz-nav-icon:#374151;
   }
   /* ═══ SUNLIGHT MODE — HIGH-CONTRAST PARCHMENT ════════════════════════ */
-  /* Kill the dark animated background */
-  [data-theme='light'] .aurora-orb,[data-theme='light'] .float-sym,[data-theme='light'] .float-quote{display:none !important}
-  [data-theme='light'] #lz-animated-bg{opacity:0 !important}
+  /* Light mode background — keep animations but recolor to neon aura blue + dark purple */
+  /* Canvas-based DNA/biometric layers draw on black rect — hide them in light mode */
+  [data-theme='light'] #lz-animated-bg canvas { display:none !important; }
+  /* Aurora orbs — recolor to light neon aura blue + purple (no black-out) */
+  [data-theme='light'] .aurora-orb {
+    opacity: .55 !important;
+    mix-blend-mode: multiply !important;
+  }
+  [data-theme='light'] .aurora-orb:nth-child(2) { background: radial-gradient(ellipse, rgba(0,140,255,.22) 0%, transparent 65%) !important; }
+  [data-theme='light'] .aurora-orb:nth-child(3) { background: radial-gradient(ellipse, rgba(80,0,200,.18) 0%, transparent 65%) !important; }
+  [data-theme='light'] .aurora-orb:nth-child(4) { background: radial-gradient(ellipse, rgba(0,160,255,.16) 0%, transparent 65%) !important; }
+  [data-theme='light'] .aurora-orb:nth-child(5) { background: radial-gradient(ellipse, rgba(100,0,220,.14) 0%, transparent 65%) !important; }
+  [data-theme='light'] .aurora-orb:nth-child(6) { background: radial-gradient(ellipse, rgba(0,120,255,.18) 0%, transparent 65%) !important; }
+  [data-theme='light'] .aurora-orb:nth-child(7) { background: radial-gradient(ellipse, rgba(90,0,210,.15) 0%, transparent 65%) !important; }
+  /* Float symbols — neon aura blue, visible but soft */
+  [data-theme='light'] .float-sym {
+    color: rgba(0,100,240,.55) !important;
+    text-shadow: 0 0 10px rgba(0,100,240,.5), 0 0 22px rgba(0,100,240,.2) !important;
+    /* animation opacity stays — don't override here */
+  }
+  /* Float quotes — neon dark purple */
+  [data-theme='light'] .float-quote {
+    color: rgba(80,0,180,.6) !important;
+    text-shadow: 0 0 12px rgba(80,0,180,.45), 0 0 28px rgba(80,0,180,.18) !important;
+    display: block !important;
+  }
+  /* Ensure the animated bg container stays visible but doesn't darken the page */
+  [data-theme='light'] #lz-animated-bg { opacity: 1 !important; }
   /* App root base */
   .lz-app-root{background:var(--lz-bg-root);color:var(--lz-text);transition:background .3s,color .3s}
   [data-theme='light'] .lz-app-root{background:#FBF4DC;}
@@ -1392,7 +1417,12 @@ const GLOBAL_CSS = `
   [data-theme='light'] .main-content { background:#F3F4F6; color:#111827 !important; }
   [data-theme='light'] .page-inner { color:#111827 !important; }
 
-  /* ── ALL INLINE DARK BACKGROUNDS → parchment ── */
+  /* ── ALL INLINE DARK BACKGROUNDS → white (fridge, diet, all sections) ── */
+  /* Covers rgba(0–32,...) dark ranges — catches any dark card/container */
+  [data-theme='light'] .main-content div[style*="background:rgba(0,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(1,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(2,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(3,"],
   [data-theme='light'] .main-content div[style*="background:rgba(4,"],
   [data-theme='light'] .main-content div[style*="background:rgba(5,"],
   [data-theme='light'] .main-content div[style*="background:rgba(6,"],
@@ -1400,19 +1430,67 @@ const GLOBAL_CSS = `
   [data-theme='light'] .main-content div[style*="background:rgba(8,"],
   [data-theme='light'] .main-content div[style*="background:rgba(9,"],
   [data-theme='light'] .main-content div[style*="background:rgba(10,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(11,"],
   [data-theme='light'] .main-content div[style*="background:rgba(12,"],
   [data-theme='light'] .main-content div[style*="background:rgba(14,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(15,"],
   [data-theme='light'] .main-content div[style*="background:rgba(16,"],
   [data-theme='light'] .main-content div[style*="background:rgba(18,"],
   [data-theme='light'] .main-content div[style*="background:rgba(20,"],
   [data-theme='light'] .main-content div[style*="background:rgba(22,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(24,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(26,"],
+  [data-theme='light'] .main-content div[style*="background:rgba(28,"],
   [data-theme='light'] .main-content div[style*="background:rgba(30,"],
   [data-theme='light'] .main-content div[style*="background:rgba(32,"] {
     background:#FFFFFF !important;
     color:#111827 !important;
   }
+  /* All * inside those containers must also be dark text */
+  [data-theme='light'] .main-content div[style*="background:rgba(0,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(1,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(2,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(3,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(4,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(5,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(6,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(7,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(8,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(9,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(10,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(12,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(14,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(16,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(20,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(22,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(30,"]*,
+  [data-theme='light'] .main-content div[style*="background:rgba(32,"]* { color:#111827 !important; }
+  /* Hex dark backgrounds */
+  [data-theme='light'] .main-content div[style*="background:#00"],
+  [data-theme='light'] .main-content div[style*="background:#001"],
+  [data-theme='light'] .main-content div[style*="background:#002"],
+  [data-theme='light'] .main-content div[style*="background:#010"],
+  [data-theme='light'] .main-content div[style*="background:#020"],
+  [data-theme='light'] .main-content div[style*="background:#030"] {
+    background:#FFFFFF !important;
+    color:#111827 !important;
+  }
   [data-theme='light'] .main-content div[style*="background:linear-gradient"] {
     background:#FFFFFF !important;
+    color:#111827 !important;
+  }
+  /* Buttons with dark backgrounds in light mode */
+  [data-theme='light'] .main-content button[style*="background:rgba(4,"],
+  [data-theme='light'] .main-content button[style*="background:rgba(0,"],
+  [data-theme='light'] .main-content button[style*="background:rgba(1,"],
+  [data-theme='light'] .main-content button[style*="background:rgba(2,"],
+  [data-theme='light'] .main-content button[style*="background:rgba(3,"],
+  [data-theme='light'] .main-content button[style*="background:#00"],
+  [data-theme='light'] .main-content button[style*="background:#001"],
+  [data-theme='light'] .main-content button[style*="background:linear-gradient"] {
+    background:rgba(37,99,235,.08) !important;
+    color:#1E3A8A !important;
+    border-color:rgba(37,99,235,.3) !important;
   }
   /* Flip rgba(255,255,255, near-transparent) overlays to light gray tint */
   [data-theme='light'] .main-content [style*="background:rgba(255,255,255,.0"],
@@ -1814,15 +1892,16 @@ const GLOBAL_CSS = `
   @media(max-width:768px){
     .ai-chat-page {
       position: fixed !important;
-      inset: 0 !important;
-      top: calc(64px + env(safe-area-inset-top)) !important;
-      bottom: calc(60px + env(safe-area-inset-bottom)) !important;
+      /* Explicit 4-side positioning — no inset shorthand (avoids cascade conflicts) */
+      top: 64px !important;
+      bottom: 56px !important;
       left: 0 !important;
       right: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
+      /* Override any inline height/min-height so CSS controls the size */
       height: auto !important;
       min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
       gap: 0 !important;
       border-radius: 0 !important;
       z-index: 50 !important;
@@ -1830,6 +1909,13 @@ const GLOBAL_CSS = `
       display: flex !important;
       flex-direction: column !important;
       background: #020818 !important;
+    }
+    /* Safe-area refinement for notched phones */
+    @supports (padding: env(safe-area-inset-top)) {
+      .ai-chat-page {
+        top: calc(64px + env(safe-area-inset-top)) !important;
+        bottom: calc(56px + env(safe-area-inset-bottom)) !important;
+      }
     }
     .ai-chat-header {
       padding: 10px 16px 8px !important;
@@ -6491,6 +6577,12 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
   const photoInputRef = useRef();
   const [historyOpen, setHistoryOpen]         = useState(false);
   const [activeConvId, setActiveConvId]       = useState(null);
+  // ── Microphone / speech recognition ──
+  const [micListening, setMicListening]   = useState(false);
+  const [micError, setMicError]           = useState('');
+  const [micInterim, setMicInterim]       = useState(''); // live transcript
+  const [micSupported]                    = useState(() => !!(window.SpeechRecognition || window.webkitSpeechRecognition));
+  const recognitionRef                    = useRef(null);
   const bottomRef = useRef();
   const inputRef  = useRef();
   const synthRef  = useRef(null); // eslint-disable-line no-unused-vars
@@ -6526,6 +6618,55 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
     utt.onerror = () => setVoiceSpeaking(false);
     window.speechSynthesis.speak(utt);
   };
+
+  // ── Microphone speech-to-text ──────────────────────────────
+  const stopMic = () => {
+    try { recognitionRef.current?.stop(); } catch {}
+    setMicListening(false);
+    setMicInterim('');
+  };
+
+  const startMic = async () => {
+    setMicError('');
+    if (!micSupported) { setMicError('Speech recognition is not supported in this browser. Try Chrome or Safari.'); return; }
+    // Request mic permission explicitly first
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setMicError('Microphone access denied. Please allow microphone permission in your browser settings, then try again.');
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    recognitionRef.current = rec;
+    rec.onstart = () => { setMicListening(true); setMicInterim(''); };
+    rec.onresult = (e) => {
+      let interim = '', final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      setMicInterim(interim);
+      if (final) {
+        setInput(prev => (prev ? prev + ' ' + final.trim() : final.trim()));
+        setMicInterim('');
+      }
+    };
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed') setMicError('Microphone permission denied. Please allow it in browser settings.');
+      else if (e.error === 'no-speech') setMicError('No speech detected. Please try again.');
+      else setMicError('Microphone error. Please try again.');
+      setMicListening(false);
+    };
+    rec.onend = () => { setMicListening(false); setMicInterim(''); };
+    try { rec.start(); } catch { setMicError('Could not start microphone. Please try again.'); }
+  };
+
+  const toggleMic = () => { if (micListening) stopMic(); else startMic(); };
 
   const attachPhoto = (file) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -6625,7 +6766,7 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
   if (!user) return <GuestAIWall feature="💙 AI Advocate" />;
 
   return (
-    <div className="ai-chat-page" style={{ display:'flex', flexDirection:'column', gap:16, height:'calc(100vh - 120px)', minHeight:500 }}>
+    <div className="ai-chat-page" style={{ display:'flex', flexDirection:'column', gap:0 }}>
       {/* Header */}
       <div className="ai-chat-header" style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10, flexShrink:0 }}>
         <div>
@@ -6800,8 +6941,33 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
               <button onClick={()=>setPhotoAttach(null)} style={{ padding:'4px 8px', borderRadius:6, background:'transparent', border:'1px solid rgba(248,113,113,.3)', color:'rgba(248,113,113,.6)', fontSize:12, cursor:'pointer' }}>✕</button>
             </div>
           )}
+          {/* Mic status bar */}
+          {(micListening || micInterim || micError) && (
+            <div style={{ marginBottom:8, padding:'8px 14px', borderRadius:10, display:'flex', alignItems:'center', gap:10,
+              background: micError ? 'rgba(248,113,113,.1)' : 'rgba(42,92,173,.14)',
+              border: `1px solid ${micError ? 'rgba(248,113,113,.4)' : 'rgba(100,160,255,.4)'}` }}>
+              {micListening && !micError && <span style={{ display:'inline-flex', gap:2, alignItems:'flex-end', height:16 }}>
+                {[1,2,3,2,1].map((h,i)=><span key={i} style={{ width:3, background:'#4A90D9', borderRadius:2, height:`${h*4}px`, animation:`barBounce .5s ${i*.1}s ease-in-out infinite alternate` }}/>)}
+              </span>}
+              <span style={{ fontSize:13, color: micError ? '#f87171' : 'rgba(168,196,240,.9)', fontFamily:"'DM Sans',sans-serif", flex:1 }}>
+                {micError || (micInterim ? `"${micInterim}"` : '🎙 Listening… speak now')}
+              </span>
+              {micListening && <button onClick={stopMic} style={{ padding:'3px 9px', borderRadius:8, background:'rgba(248,113,113,.15)', border:'1px solid rgba(248,113,113,.35)', color:'#f87171', fontSize:12, cursor:'pointer' }}>Stop</button>}
+            </div>
+          )}
           <div style={{ display:'flex', gap:8, alignItems:'flex-end', background:'#0D1630', borderRadius:14, padding:'10px 10px 10px 16px', border:'1.5px solid rgba(201,168,76,.35)', boxShadow:'inset 0 1px 0 rgba(168,196,240,.06), 0 0 0 1px rgba(0,0,0,.3)' }}>
-            <textarea ref={inputRef} style={{ flex:1, border:'none', background:'transparent', color:'#F0E8FF', fontFamily:"'DM Sans',sans-serif", fontSize:17, lineHeight:1.55, resize:'none', outline:'none', minHeight:24, maxHeight:120, caretColor:'#C9A84C', padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Talk to Lazuli…" disabled={limitHit}/>
+            <textarea ref={inputRef} style={{ flex:1, border:'none', background:'transparent', color:'#F0E8FF', fontFamily:"'DM Sans',sans-serif", fontSize:17, lineHeight:1.55, resize:'none', outline:'none', minHeight:24, maxHeight:120, caretColor:'#C9A84C', padding:0 }} rows={1} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder={micListening ? 'Listening…' : 'Talk to Lazuli…'} disabled={limitHit}/>
+            {/* Mic button */}
+            {micSupported && (
+              <button onClick={toggleMic} title={micListening ? 'Stop listening' : 'Speak to Lazuli (microphone)'}
+                style={{ alignSelf:'flex-end', padding:'8px 10px', borderRadius:10, lineHeight:1, flexShrink:0, cursor:'pointer', transition:'all .2s',
+                  background: micListening ? 'rgba(239,68,68,.18)' : 'rgba(42,92,173,.1)',
+                  border: micListening ? '1.5px solid rgba(239,68,68,.55)' : '1px solid rgba(42,92,173,.3)',
+                  color: micListening ? '#f87171' : 'rgba(100,160,255,.7)',
+                  fontSize:18,
+                  animation: micListening ? 'pulseGlow 1.2s ease-in-out infinite' : 'none',
+                }}>🎙</button>
+            )}
             <button
               onClick={() => photoInputRef.current?.click()}
               title="Attach photo for analysis"
@@ -6810,7 +6976,7 @@ function Advocate({ data, upd, user, onCreditsUpdate }) {
             <button className="btn btn-gold" onClick={()=>send()} disabled={loading||!input.trim()||limitHit} style={{ alignSelf:'flex-end', padding:'10px 20px', fontSize:15, fontWeight:700, opacity:loading||!input.trim()||limitHit?.4:1, flexShrink:0, borderRadius:12, background:'linear-gradient(135deg,#C9A84C,#E8C96B)', color:'#000', border:'none', boxShadow:'0 2px 8px rgba(201,168,76,.4)' }}>Send</button>
           </div>
           <div className="ai-hint" style={{ display:'flex', justifyContent:'space-between', marginTop:6, alignItems:'center', paddingLeft:4 }}>
-            <div style={{ fontSize:13, color:'rgba(240,232,255,.15)' }}>Enter to send · Shift+Enter new line · 📷 attach photo for AI analysis</div>
+            <div style={{ fontSize:13, color:'rgba(240,232,255,.15)' }}>Enter to send · Shift+Enter new line · 🎙 voice · 📷 photo</div>
             {msgs.length>0 && <button onClick={handleShare} style={{ fontSize:13, color:'rgba(201,168,76,.45)', background:'transparent', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif" }}>📋 Share with Doctor</button>}
           </div>
         </div>
